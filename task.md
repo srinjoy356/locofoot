@@ -1,0 +1,11 @@
+- `[/]` 1. Create SQL migration `0056_phase5c_advanced_analytics.sql`
+  - `[ ]` `match_goal_chronology_view`
+  - `[ ]` `tournament_clutch_player_stats_view`
+  - `[ ]` `tournament_comeback_team_stats_view`
+  - `[ ]` `tournament_records_view`
+  - `[ ]` `tournament_trends_view`
+- `[ ]` 2. Apply the migration to Supabase
+- `[ ]` 3. Update FastAPI `statistics.py` with advanced routes
+- `[ ]` 4. Create Next.js `/advanced` statistics page
+- `[ ]` 5. Add horizontal navigation links for `Advanced`
+- `[ ]` 6. Verify and walkthrough

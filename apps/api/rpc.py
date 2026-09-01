@@ -1,0 +1,7 @@
+import os  
+from supabase import create_client  
+url = 'https://lcxgjwdffkexrrnfcuik.supabase.co'  
+key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxjeGdqd2RmZmtleHJybmZjdWlrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NzU0MDEwMCwiZXhwIjoyMTAzMTE2MTAwfQ.rU1nB3a9wmRR_lXOMbGbm7od6kVlXLY6-S7bDgJR0nM'  
+import urllib.request, json  
+req = urllib.request.Request(url + '/rest/v1/', headers={'apikey': key})  
+print(urllib.request.urlopen(req).read().decode())  

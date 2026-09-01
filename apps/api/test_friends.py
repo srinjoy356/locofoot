@@ -1,0 +1,1 @@
+import os, asyncio; from dotenv import load_dotenv; load_dotenv('../../.env.local'); load_dotenv('../../.env'); from supabase import create_client; supabase = create_client(os.environ['NEXT_PUBLIC_SUPABASE_URL'], os.environ['SUPABASE_SERVICE_ROLE_KEY']); print(supabase.table('friendships').select('*').execute())  

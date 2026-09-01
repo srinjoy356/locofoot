@@ -1,0 +1,1 @@
+import os; from supabase import create_client; supabase = create_client(os.environ['SUPABASE_URL'], os.environ['SUPABASE_SERVICE_ROLE_KEY']); print(supabase.table('event_roles').select('*').eq('event_id', 'e580d21c-52f0-43d2-a140-6c602afce51f').execute())  

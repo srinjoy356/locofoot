@@ -1,0 +1,1 @@
+import os; from dotenv import load_dotenv; load_dotenv('apps/api/.env'); from supabase import create_client; supabase = create_client(os.environ['SUPABASE_URL'], os.environ['SUPABASE_SERVICE_ROLE_KEY']); print(supabase.auth.sign_in_with_password({'email': 'referee@gmail.com', 'password': 'TestPassword123!'}))  
