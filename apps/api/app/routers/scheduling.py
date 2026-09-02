@@ -24,6 +24,10 @@ async def generate_slots_ai(event_id: UUID, payload: AISlotGenerationRequest, cu
 async def finalize_slots(event_id: UUID, payload: SlotFinalizeRequest, current_user = Depends(get_current_user)):
     return await slot_service.finalize_slots(event_id, payload)
 
+@router.post("/slots/append")
+async def append_slots(event_id: UUID, payload: SlotAppendRequest, current_user = Depends(get_current_user)):
+    return await slot_service.append_slots(event_id, payload)
+
 @router.post("/schedule/next")
 async def generate_next_slot(event_id: UUID, payload: ScheduleNextRequest, current_user = Depends(get_current_user)):
     return await scheduling_service.generate_next_slot(event_id, payload, UUID(current_user["id"]))
@@ -36,7 +40,7 @@ async def override_schedule(event_id: UUID, payload: ScheduleOverrideRequest, cu
 async def generate_fixtures(event_id: UUID, payload: GenerateFixturesRequest, current_user = Depends(get_current_user)):
     return await scheduling_service.generate_fixtures(event_id, payload, UUID(current_user["id"]))
 
-from app.schemas.scheduling import BroadcastStateRequest
+from app.schemas.scheduling import BroadcastStateRequest, SlotAppendRequest
 
 @router.post("/broadcast-state")
 async def update_broadcast_state(event_id: UUID, payload: BroadcastStateRequest, current_user = Depends(get_current_user)):
@@ -45,4 +49,11 @@ async def update_broadcast_state(event_id: UUID, payload: BroadcastStateRequest,
 @router.post("/schedule/unassign")
 async def unassign_fixture(event_id: UUID, payload: ScheduleUnassignRequest, current_user = Depends(get_current_user)):
     return await scheduling_service.unassign_fixture(event_id, payload)
+
+from app.schemas.scheduling import ManualMatchCreateRequest
+
+@router.post("/fixtures/manual")
+async def create_manual_match(event_id: UUID, payload: ManualMatchCreateRequest, current_user = Depends(get_current_user)):
+    return await scheduling_service.create_manual_match(event_id, payload, UUID(current_user["id"]))
+
 

@@ -157,14 +157,14 @@ export default function E2ETestPage() {
         <h2 className="font-bold">Auth (Current: {session?.user?.email || "None"})</h2>
         <input data-testid="login-email" className="border p-1 mr-2 text-black" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" />
         <input data-testid="login-password" type="password" className="border p-1 mr-2 text-black" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" />
-        <button data-testid="login-btn" onClick={login} className="bg-blue-500 text-white px-2 py-1 mr-2">Login</button>
-        <button data-testid="logout-btn" onClick={logout} className="bg-red-500 text-white px-2 py-1">Logout</button>
+        <button data-testid="login-btn" onClick={login} className="bg-blue-50 dark:bg-blue-950/200 text-white px-2 py-1 mr-2">Login</button>
+        <button data-testid="logout-btn" onClick={logout} className="bg-red-50 dark:bg-red-950/200 text-white px-2 py-1">Logout</button>
       </div>
 
       <div className="border p-4">
         <h2 className="font-bold">Events (Organizer)</h2>
         <button data-testid="create-event-btn" onClick={createEvent} className="bg-green-500 text-white px-2 py-1 mr-2">Create Event</button>
-        <button data-testid="fetch-events-btn" onClick={fetchEvents} className="bg-gray-500 text-white px-2 py-1 mr-2">Fetch Events</button>
+        <button data-testid="fetch-events-btn" onClick={fetchEvents} className="bg-slate-50 dark:bg-zinc-900/500 text-white px-2 py-1 mr-2">Fetch Events</button>
         <div data-testid="events-list">
           {events.map(ev => (
             <div key={ev.id} className="text-sm mt-2">
@@ -178,7 +178,7 @@ export default function E2ETestPage() {
       <div className="border p-4">
         <h2 className="font-bold">Teams (Captain/Player)</h2>
         <button data-testid="create-team-btn" onClick={createTeam} className="bg-green-500 text-white px-2 py-1 mr-2">Create Team</button>
-        <button data-testid="fetch-teams-btn" onClick={fetchTeams} className="bg-gray-500 text-white px-2 py-1 mr-2">Fetch Teams</button>
+        <button data-testid="fetch-teams-btn" onClick={fetchTeams} className="bg-slate-50 dark:bg-zinc-900/500 text-white px-2 py-1 mr-2">Fetch Teams</button>
         <div data-testid="teams-list">
           {teams.map(t => (
             <div key={t.id} className="text-sm mt-2">
@@ -200,7 +200,7 @@ export default function E2ETestPage() {
           <button data-testid="register-team-btn" onClick={() => registerForEvent(
             (document.getElementById("ev-id") as HTMLInputElement).value,
             (document.getElementById("tm-id") as HTMLInputElement).value
-          )} className="bg-blue-500 text-white px-2 py-1">Register Team</button>
+          )} className="bg-blue-50 dark:bg-blue-950/200 text-white px-2 py-1">Register Team</button>
 
           <input id="reg-id" className="border p-1 text-black" placeholder="Registration ID" />
           <input id="usr-id" className="border p-1 text-black" placeholder="User ID" />
@@ -208,7 +208,7 @@ export default function E2ETestPage() {
             (document.getElementById("ev-id") as HTMLInputElement).value,
             (document.getElementById("reg-id") as HTMLInputElement).value,
             (document.getElementById("usr-id") as HTMLInputElement).value
-          )} className="bg-blue-500 text-white px-2 py-1">Add to Roster</button>
+          )} className="bg-blue-50 dark:bg-blue-950/200 text-white px-2 py-1">Add to Roster</button>
 
           <button data-testid="approve-reg-btn" onClick={() => approveRegistration(
             (document.getElementById("ev-id") as HTMLInputElement).value,

@@ -66,6 +66,22 @@ export function useMatchClock(eventId: string, matchId: string) {
   }, [eventId, matchId]);
 
   useEffect(() => {
+    const getMatchTimeLimits = () => {
+      let firstHalfMins = eventSettings?.first_half_minutes || 45;
+      let secondHalfMins = eventSettings?.second_half_minutes || 45;
+      
+      if (matchData?.metadata) {
+        if (typeof matchData.metadata.first_half_minutes === 'number') {
+          firstHalfMins = matchData.metadata.first_half_minutes;
+        }
+        if (typeof matchData.metadata.second_half_minutes === 'number') {
+          secondHalfMins = matchData.metadata.second_half_minutes;
+        }
+      }
+      
+      return { firstHalfMins, secondHalfMins };
+    };
+
     let timer: any;
     
     const calculateElapsed = () => {
@@ -76,12 +92,14 @@ export function useMatchClock(eventId: string, matchId: string) {
       const now = new Date().getTime();
       
       let baseSeconds = 0;
+      const { firstHalfMins, secondHalfMins } = getMatchTimeLimits();
+      
       if (matchState === 'SECOND_HALF' && eventSettings) {
-        baseSeconds = eventSettings.first_half_minutes * 60;
+        baseSeconds = firstHalfMins * 60;
       } else if (matchState === 'EXTRA_TIME_1' && eventSettings) {
-        baseSeconds = (eventSettings.first_half_minutes + eventSettings.second_half_minutes) * 60;
+        baseSeconds = (firstHalfMins + secondHalfMins) * 60;
       } else if (matchState === 'EXTRA_TIME_2' && eventSettings) {
-        baseSeconds = (eventSettings.first_half_minutes + eventSettings.second_half_minutes + eventSettings.extra_time_minutes / 2) * 60;
+        baseSeconds = (firstHalfMins + secondHalfMins + eventSettings.extra_time_minutes / 2) * 60;
       }
 
       if (matchState === 'PAUSED' || matchState === 'HALF_TIME' || matchState === 'FULL_TIME') {
@@ -109,19 +127,37 @@ export function useMatchClock(eventId: string, matchId: string) {
   const formatClock = () => {
     let baseTimeMinutes = 45; // safe default
     let injuryTimeTracking = true;
+    
+    const getMatchTimeLimits = () => {
+      let firstHalfMins = eventSettings?.first_half_minutes || 45;
+      let secondHalfMins = eventSettings?.second_half_minutes || 45;
+      
+      if (matchData?.metadata) {
+        if (typeof matchData.metadata.first_half_minutes === 'number') {
+          firstHalfMins = matchData.metadata.first_half_minutes;
+        }
+        if (typeof matchData.metadata.second_half_minutes === 'number') {
+          secondHalfMins = matchData.metadata.second_half_minutes;
+        }
+      }
+      return { firstHalfMins, secondHalfMins };
+    };
+
     if (eventSettings) {
       if (eventSettings.injury_time_tracking !== undefined && eventSettings.injury_time_tracking !== null) {
         injuryTimeTracking = eventSettings.injury_time_tracking;
       }
       
+      const { firstHalfMins, secondHalfMins } = getMatchTimeLimits();
+      
       if (matchState === 'LIVE' || matchState === 'PAUSED' || matchState === 'HALF_TIME') {
-        baseTimeMinutes = eventSettings.first_half_minutes;
+        baseTimeMinutes = firstHalfMins;
       } else if (matchState === 'SECOND_HALF' || matchState === 'FULL_TIME') {
-        baseTimeMinutes = eventSettings.first_half_minutes + eventSettings.second_half_minutes;
+        baseTimeMinutes = firstHalfMins + secondHalfMins;
       } else if (matchState === 'EXTRA_TIME_1' || matchState === 'EXTRA_TIME_BREAK') {
-        baseTimeMinutes = eventSettings.first_half_minutes + eventSettings.second_half_minutes + (eventSettings.extra_time_minutes / 2);
+        baseTimeMinutes = firstHalfMins + secondHalfMins + (eventSettings.extra_time_minutes / 2);
       } else if (matchState === 'EXTRA_TIME_2') {
-        baseTimeMinutes = eventSettings.first_half_minutes + eventSettings.second_half_minutes + eventSettings.extra_time_minutes;
+        baseTimeMinutes = firstHalfMins + secondHalfMins + eventSettings.extra_time_minutes;
       }
     }
 
@@ -150,14 +186,23 @@ export function useMatchClock(eventId: string, matchId: string) {
   };
 
   const isHalfTimeAllowed = () => {
-    if (!eventSettings) return false;
-    const firstHalfMins = eventSettings.first_half_minutes || 45;
+    let firstHalfMins = eventSettings?.first_half_minutes || 45;
+    if (matchData?.metadata?.first_half_minutes !== undefined) {
+      firstHalfMins = matchData.metadata.first_half_minutes;
+    }
     return elapsed >= firstHalfMins * 60;
   };
 
   const isFullTimeAllowed = () => {
-    if (!eventSettings) return false;
-    const totalMins = (eventSettings.first_half_minutes || 45) + (eventSettings.second_half_minutes || 45);
+    let firstHalfMins = eventSettings?.first_half_minutes || 45;
+    let secondHalfMins = eventSettings?.second_half_minutes || 45;
+    if (matchData?.metadata?.first_half_minutes !== undefined) {
+      firstHalfMins = matchData.metadata.first_half_minutes;
+    }
+    if (matchData?.metadata?.second_half_minutes !== undefined) {
+      secondHalfMins = matchData.metadata.second_half_minutes;
+    }
+    const totalMins = firstHalfMins + secondHalfMins;
     return elapsed >= totalMins * 60;
   };
 

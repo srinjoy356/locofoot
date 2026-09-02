@@ -168,10 +168,10 @@ export default function RegistrationManagementPage({ params }: { params: Promise
           &larr; Back to {event.name}
         </Link>
         
-        <div className="bg-white p-6 rounded border flex justify-between items-start">
+        <div className="bg-white dark:bg-zinc-900 p-6 rounded border flex justify-between items-start">
           <div>
             <h1 className="text-2xl font-bold">{registration.team_name}</h1>
-            <p className="text-gray-500 text-sm">Status: <span className="font-semibold text-black">{registration.status}</span></p>
+            <p className="text-slate-500 dark:text-zinc-400 text-sm">Status: <span className="font-semibold text-black">{registration.status}</span></p>
           </div>
           {isCaptain && isDraft && (
             <button onClick={handleSubmitRegistration} className="bg-green-600 text-white px-4 py-2 rounded text-sm font-medium">
@@ -180,21 +180,21 @@ export default function RegistrationManagementPage({ params }: { params: Promise
           )}
         </div>
 
-        <div className="bg-white p-6 rounded border space-y-4">
+        <div className="bg-white dark:bg-zinc-900 p-6 rounded border space-y-4">
           <h2 className="text-xl font-bold">Squad</h2>
           {players.length === 0 ? (
-            <p className="text-gray-500 text-sm">No players added yet.</p>
+            <p className="text-slate-500 dark:text-zinc-400 text-sm">No players added yet.</p>
           ) : (
             <ul className="divide-y border rounded">
               {players.map(p => (
                 <li key={p.id} className="p-3 flex justify-between items-center">
                   <div>
                     <div className="font-medium">{p.users?.display_name || p.users?.username || 'Unknown User'}</div>
-                    <div className="text-xs text-gray-500 font-mono">{p.users?.unique_code}</div>
+                    <div className="text-xs text-slate-500 dark:text-zinc-400 font-mono">{p.users?.unique_code}</div>
                   </div>
                   <div className="flex gap-2 items-center">
-                    {p.is_captain_for_event && <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded font-bold">CAPTAIN</span>}
-                    <span className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">{p.status}</span>
+                    {p.is_captain_for_event && <span className="bg-blue-100 text-blue-800 dark:text-blue-400 text-xs px-2 py-1 rounded font-bold">CAPTAIN</span>}
+                    <span className="bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 text-xs px-2 py-1 rounded">{p.status}</span>
                     {isCaptain && isDraft && !isRosterLocked && !p.is_captain_for_event && (
                       <button 
                         onClick={() => handleRemove(p.user_id)} 
@@ -213,11 +213,11 @@ export default function RegistrationManagementPage({ params }: { params: Promise
 
       {isCaptain && isDraft && !isRosterLocked && (
         <div className="col-span-1">
-          <div className="bg-white p-6 rounded border sticky top-20">
+          <div className="bg-white dark:bg-zinc-900 p-6 rounded border sticky top-20">
             <h2 className="font-bold mb-4">Invite Friends</h2>
             {inviteError && <div className="text-red-600 text-sm mb-4">{inviteError}</div>}
             {friends.length === 0 ? (
-              <p className="text-gray-500 text-sm">You don't have any friends to invite.</p>
+              <p className="text-slate-500 dark:text-zinc-400 text-sm">You don't have any friends to invite.</p>
             ) : (
               <ul className="space-y-3">
                 {friends.map(f => {

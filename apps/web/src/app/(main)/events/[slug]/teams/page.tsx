@@ -42,23 +42,23 @@ export default function PublicEventTeamsPage({ params }: { params: Promise<{ slu
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Link href={`/events/${slug}`} className="text-gray-500 hover:text-black">← Back to Event</Link>
+        <Link href={`/events/${slug}`} className="text-slate-500 dark:text-zinc-400 hover:text-black">← Back to Event</Link>
         <h1 className="text-2xl font-bold">{event.name} - Participating Teams</h1>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {registrations.map(reg => (
-          <div key={reg.id} className="border p-4 rounded bg-white flex justify-between items-center">
+          <div key={reg.id} className="border p-4 rounded bg-white dark:bg-zinc-900 flex justify-between items-center">
             <div>
               <h3 className="font-bold text-lg">{reg.team_name}</h3>
-              <p className="text-gray-500">{reg.team_short_name}</p>
+              <p className="text-slate-500 dark:text-zinc-400">{reg.team_short_name}</p>
             </div>
             <div className="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded">
               APPROVED
             </div>
           </div>
         ))}
-        {registrations.length === 0 && <p className="text-gray-500 col-span-2">No teams have been approved yet.</p>}
+        {registrations.length === 0 && <p className="text-slate-500 dark:text-zinc-400 col-span-2">No teams have been approved yet.</p>}
       </div>
     </div>
   );

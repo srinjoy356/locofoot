@@ -50,12 +50,12 @@ export default function VenuesPage() {
 
       <div className="grid gap-6">
         {venues.map(v => (
-          <div key={v.id} className="border p-4 rounded bg-white">
+          <div key={v.id} className="border p-4 rounded bg-white dark:bg-zinc-900">
             <h2 className="font-bold text-lg mb-4">{v.name}</h2>
             
             <div className="space-y-2 mb-4">
               {v.fields?.map((f: any) => (
-                <div key={f.id} className="flex gap-2 items-center bg-gray-50 p-2 rounded">
+                <div key={f.id} className="flex gap-2 items-center bg-slate-50 dark:bg-zinc-900/50 p-2 rounded">
                   <span>{f.name}</span>
                 </div>
               ))}
@@ -64,7 +64,7 @@ export default function VenuesPage() {
             <button onClick={() => {
               const fName = prompt("Field name:");
               if (fName) createField(v.id, fName);
-            }} className="text-sm bg-gray-100 px-3 py-1 rounded">Add Field</button>
+            }} className="text-sm bg-slate-100 dark:bg-zinc-800 px-3 py-1 rounded">Add Field</button>
           </div>
         ))}
       </div>

@@ -87,14 +87,14 @@ export default function EventRegistrationPage({ params }: { params: Promise<{ sl
       <h1 className="text-2xl font-bold mb-6">Register a Team for {event.name}</h1>
       
       {error && (
-        <div className="bg-red-50 text-red-600 p-3 rounded mb-4 text-sm">
+        <div className="bg-red-50 dark:bg-red-950/20 text-red-600 p-3 rounded mb-4 text-sm">
           {error}
         </div>
       )}
 
-      <form onSubmit={handleRegister} className="space-y-4 bg-white p-6 rounded border">
+      <form onSubmit={handleRegister} className="space-y-4 bg-white dark:bg-zinc-900 p-6 rounded border">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Team Name</label>
+          <label className="block text-sm font-medium text-slate-700 dark:text-zinc-300 mb-1">Team Name</label>
           <input
             required
             type="text"
@@ -105,7 +105,7 @@ export default function EventRegistrationPage({ params }: { params: Promise<{ sl
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Short Name (Optional)</label>
+          <label className="block text-sm font-medium text-slate-700 dark:text-zinc-300 mb-1">Short Name (Optional)</label>
           <input
             type="text"
             className="w-full border p-2 rounded"

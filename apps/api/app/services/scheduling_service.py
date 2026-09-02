@@ -306,4 +306,67 @@ class SchedulingService:
         supabase.table('events').update({'scheduling_state': state}).eq('id', str(event_id)).execute()
         return {'success': True}
 
+    async def create_manual_match(self, event_id: UUID, payload: Any, actor_id: UUID) -> dict:
+        cached = IdempotencyService.check_idempotency(payload.idempotency_key, event_id, "CREATE_MANUAL_MATCH")
+        if cached:
+            return cached
+
+        supabase = get_service_supabase()
+        
+        # 1. Fetch and validate the slot assignment
+        assignment_res = supabase.table("slot_field_assignments")\
+            .select("*, schedule_slots(*)")\
+            .eq("id", str(payload.slot_assignment_id)).execute()
+            
+        if not assignment_res.data:
+            raise HTTPException(status_code=404, detail="Slot assignment not found")
+            
+        assignment = assignment_res.data[0]
+        if assignment.get("fixture_id"):
+            raise HTTPException(status_code=400, detail="Slot is already occupied")
+            
+        slot = assignment["schedule_slots"]
+        if slot["event_id"] != str(event_id):
+            raise HTTPException(status_code=400, detail="Slot belongs to a different event")
+        
+        # 2. Insert the manual match
+        match_data = {
+            "event_id": str(event_id),
+            "home_registration_id": str(payload.home_registration_id) if payload.home_registration_id else None,
+            "away_registration_id": str(payload.away_registration_id) if payload.away_registration_id else None,
+            "status": "SCHEDULED",
+            "scheduling_status": "ASSIGNED",
+            "scheduled_start": slot["scheduled_start"],
+            "venue_field_id": assignment["venue_field_id"],
+            "group_id": str(payload.group_id) if payload.group_id else None,
+            "bracket_id": str(payload.bracket_id) if payload.bracket_id else None,
+            "metadata": payload.metadata if payload.metadata else {}
+        }
+        
+        r = supabase.table("matches").insert(match_data).execute()
+        
+        if not r.data:
+            raise HTTPException(status_code=500, detail="Failed to create manual match")
+            
+        match_id = r.data[0]["id"]
+        
+        # 3. Update slot_field_assignments
+        supabase.table("slot_field_assignments").update({
+            "fixture_id": match_id
+        }).eq("id", assignment["id"]).execute()
+        
+        # 4. Update schedule_slots status
+        supabase.table("schedule_slots").update({
+            "status": "PARTIALLY_ASSIGNED"  # Optimistic update, it could be FULLY_ASSIGNED but PARTIALLY is safer for Phase 3
+        }).eq("id", slot["id"]).execute()
+        
+        response_payload = {
+            "success": True,
+            "match_id": match_id,
+            "message": "Manual match created successfully"
+        }
+        
+        IdempotencyService.save_idempotency(payload.idempotency_key, actor_id, event_id, "CREATE_MANUAL_MATCH", response_payload)
+        return response_payload
+
 scheduling_service = SchedulingService()

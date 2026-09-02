@@ -126,11 +126,11 @@ export default function FriendsPage() {
         </form>
 
         {searchResults.length > 0 && (
-          <div className="mb-8 p-4 border rounded bg-gray-50">
+          <div className="mb-8 p-4 border rounded bg-slate-50 dark:bg-zinc-900/50">
             <h2 className="font-semibold mb-2">Search Results</h2>
             <ul className="space-y-2">
               {searchResults.map(u => (
-                <li key={u.id} className="flex justify-between items-center bg-white p-2 border rounded">
+                <li key={u.id} className="flex justify-between items-center bg-white dark:bg-zinc-900 p-2 border rounded">
                   <span>{u.display_name || u.username || u.unique_code}</span>
                   <div className="flex gap-2">
                     <button 
@@ -175,10 +175,10 @@ export default function FriendsPage() {
 
         <div>
           <h2 className="text-xl font-semibold mb-4 border-b pb-2">Pending Requests</h2>
-          <h3 className="font-semibold text-gray-600 mt-4 mb-2">Incoming</h3>
+          <h3 className="font-semibold text-slate-600 dark:text-zinc-400 mt-4 mb-2">Incoming</h3>
           <ul className="space-y-2 mb-4">
             {friendships.filter(f => f.status === 'PENDING' && f.addressee_id === currentUser.id).map(f => (
-              <li key={f.id} className="flex justify-between items-center border p-3 rounded bg-blue-50">
+              <li key={f.id} className="flex justify-between items-center border p-3 rounded bg-blue-50 dark:bg-blue-950/20">
                 <span>{f.requester.display_name || f.requester.username || f.requester.unique_code}</span>
                 <div className="flex gap-2">
                   <button onClick={() => updateStatus(f.id, FriendshipStatus.ACCEPTED)} className="text-green-600 text-sm font-semibold">Accept</button>
@@ -187,12 +187,12 @@ export default function FriendsPage() {
               </li>
             ))}
           </ul>
-          <h3 className="font-semibold text-gray-600 mb-2">Outgoing</h3>
+          <h3 className="font-semibold text-slate-600 dark:text-zinc-400 mb-2">Outgoing</h3>
           <ul className="space-y-2">
             {friendships.filter(f => f.status === 'PENDING' && f.requester_id === currentUser.id).map(f => (
               <li key={f.id} className="flex justify-between items-center border p-3 rounded">
                 <span>{f.addressee.display_name || f.addressee.username || f.addressee.unique_code}</span>
-                <button onClick={() => updateStatus(f.id, FriendshipStatus.CANCELLED)} className="text-gray-500 text-sm hover:underline">Cancel</button>
+                <button onClick={() => updateStatus(f.id, FriendshipStatus.CANCELLED)} className="text-slate-500 dark:text-zinc-400 text-sm hover:underline">Cancel</button>
               </li>
             ))}
           </ul>
@@ -204,7 +204,7 @@ export default function FriendsPage() {
         <ul className="space-y-2 max-w-md">
           {blockedUsers.map(b => {
             return (
-              <li key={b.id} className="flex justify-between items-center border p-3 rounded bg-red-50">
+              <li key={b.id} className="flex justify-between items-center border p-3 rounded bg-red-50 dark:bg-red-950/20">
                 <span>{b.blocked.display_name || b.blocked.username || b.blocked.unique_code}</span>
                 <button 
                   onClick={async () => {
@@ -227,7 +227,7 @@ export default function FriendsPage() {
                     
                     loadData();
                   }} 
-                  className="text-gray-600 text-sm hover:underline"
+                  className="text-slate-600 dark:text-zinc-400 text-sm hover:underline"
                 >
                   Unblock
                 </button>
@@ -235,7 +235,7 @@ export default function FriendsPage() {
             )
           })}
           {blockedUsers.length === 0 && (
-            <p className="text-gray-500 text-sm">No blocked users.</p>
+            <p className="text-slate-500 dark:text-zinc-400 text-sm">No blocked users.</p>
           )}
         </ul>
       </div>

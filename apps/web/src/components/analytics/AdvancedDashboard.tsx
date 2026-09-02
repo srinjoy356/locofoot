@@ -191,7 +191,7 @@ export function AdvancedDashboard({ clutch, comebacks, records, trends, eventSlu
                     const heightPercent = maxGoals > 0 ? (t.total_goals / maxGoals) * 100 : 0;
                     
                     return (
-                      <div key={i} className="flex flex-col items-center flex-1 group">
+                      <div key={i} className="flex flex-col justify-end items-center flex-1 group h-full">
                         <div className="mb-2 opacity-0 group-hover:opacity-100 transition-opacity text-xs font-bold bg-zinc-800 text-white px-2 py-1 rounded">
                           {t.total_goals} Goals
                         </div>

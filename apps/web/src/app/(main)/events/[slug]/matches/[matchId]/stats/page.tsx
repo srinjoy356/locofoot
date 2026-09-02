@@ -194,6 +194,7 @@ export default async function MatchStatsPage({ params }: { params: Promise<{ slu
                 <StatRow label="Fouls" home={matchStats.home_fouls} away={matchStats.away_fouls} />
                 <StatRow label="Yellow Cards" home={matchStats.home_yellow_cards} away={matchStats.away_yellow_cards} />
                 <StatRow label="Red Cards" home={matchStats.home_red_cards} away={matchStats.away_red_cards} />
+                <StatRow label="Great First Touches" home={matchStats.home_great_first_touches} away={matchStats.away_great_first_touches} />
               </div>
             </div>
           )}
@@ -361,8 +362,8 @@ function StatRow({ label, home, away }: { label: string, home: number | string, 
       </div>
       {total > 0 && (
         <div className="flex h-1.5 rounded-full overflow-hidden bg-zinc-800 gap-1">
-          <div className="bg-white h-full transition-all duration-500" style={{ width: `${hPercent}%` }}></div>
-          <div className="bg-white/30 h-full transition-all duration-500" style={{ width: `${aPercent}%` }}></div>
+          <div className="bg-white dark:bg-zinc-900 h-full transition-all duration-500" style={{ width: `${hPercent}%` }}></div>
+          <div className="bg-white dark:bg-zinc-900/30 h-full transition-all duration-500" style={{ width: `${aPercent}%` }}></div>
         </div>
       )}
     </div>

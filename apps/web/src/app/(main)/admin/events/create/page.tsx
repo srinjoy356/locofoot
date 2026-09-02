@@ -33,7 +33,7 @@ export default function CreateEventPage() {
   }
 
   return (
-    <div className="max-w-lg mx-auto border p-6 rounded bg-white mt-10">
+    <div className="max-w-lg mx-auto border p-6 rounded bg-white dark:bg-zinc-900 mt-10">
       <h1 className="text-2xl font-bold mb-4">Create Event</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>

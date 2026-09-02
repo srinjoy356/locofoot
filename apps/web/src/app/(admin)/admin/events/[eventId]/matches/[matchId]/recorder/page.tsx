@@ -6,6 +6,7 @@ import { useMatchClock } from '../useMatchClock';
 import { useMatchPlayers, MatchPlayer } from '../useMatchPlayers';
 import { MatchAuditLog } from '@/components/MatchAuditLog';
 import { DetailedEventModal } from '@/components/DetailedEventModal';
+import { useUnresolvedPenalties } from '../useUnresolvedPenalties';
 
 const generateUUID = () => {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -21,11 +22,12 @@ export default function RecorderPage({ params }: { params: Promise<{ eventId: st
   const pitchRef = useRef<HTMLDivElement>(null);
 
   const [coordinates, setCoordinates] = useState<{ x: number, y: number } | null>(null);
-  const [pendingEvent, setPendingEvent] = useState<{ type: TimelineEventType, extra: any } | null>(null);
+  const [pendingEvent, setPendingEvent] = useState<{ type: TimelineEventType, extra: any, referee_event_id?: string } | null>(null);
   const [attackingDirection, setAttackingDirection] = useState<'home_up' | 'home_down'>('home_up');
 
   const { elapsed, formatClock, matchState, getPeriod } = useMatchClock(eventId, matchId);
   const { players, teams, loading: playersLoading } = useMatchPlayers(matchId);
+  const { penalties } = useUnresolvedPenalties(matchId);
 
   // Initialize from localStorage or fallback to defaults
   useEffect(() => {
@@ -61,9 +63,9 @@ export default function RecorderPage({ params }: { params: Promise<{ eventId: st
     setCoordinates({ x, y });
   };
 
-  const handleEventClick = (type: TimelineEventType, extraMetadata: any = {}) => {
+  const handleEventClick = (type: TimelineEventType, extraMetadata: any = {}, referee_event_id?: string) => {
     if (isMatchEnded) return;
-    setPendingEvent({ type, extra: extraMetadata });
+    setPendingEvent({ type, extra: extraMetadata, referee_event_id });
   };
 
   const confirmDetailedEvent = async (actor: MatchPlayer | null, target: MatchPlayer | null, metadata: any) => {
@@ -100,6 +102,7 @@ export default function RecorderPage({ params }: { params: Promise<{ eventId: st
         assist_player_id,
         second_assist_player_id,
         related_event_id,
+        referee_event_id: pendingEvent.referee_event_id,
         metadata: cleanMetadata
       })
     });
@@ -109,16 +112,16 @@ export default function RecorderPage({ params }: { params: Promise<{ eventId: st
   };
 
   return (
-    <div className="flex flex-col min-h-screen max-w-md mx-auto bg-slate-50 p-4">
+    <div className="flex flex-col min-h-screen max-w-md mx-auto bg-slate-50 dark:bg-zinc-900/50 p-4">
       <div className="text-center py-4 border-b flex justify-between items-center">
         <h1 className="text-xl font-bold">Event Recorder</h1>
-        <div className="text-lg font-mono font-bold text-slate-800">{formatClock()}</div>
+        <div className="text-lg font-mono font-bold text-slate-800 dark:text-zinc-200">{formatClock()}</div>
       </div>
 
       <div className="flex justify-between items-center mt-4 px-2">
-        <div className="text-[10px] font-bold text-slate-500 uppercase leading-tight">
-          <div><span className="text-slate-800">{teams.homeName}</span>: {attackingDirection === 'home_up' ? 'TOP' : 'BOTTOM'}</div>
-          <div><span className="text-slate-800">{teams.awayName}</span>: {attackingDirection === 'home_up' ? 'BOTTOM' : 'TOP'}</div>
+        <div className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase leading-tight">
+          <div><span className="text-slate-800 dark:text-zinc-200">{teams.homeName}</span>: {attackingDirection === 'home_up' ? 'TOP' : 'BOTTOM'}</div>
+          <div><span className="text-slate-800 dark:text-zinc-200">{teams.awayName}</span>: {attackingDirection === 'home_up' ? 'BOTTOM' : 'TOP'}</div>
         </div>
         <button 
           onClick={toggleDirection} 
@@ -127,6 +130,23 @@ export default function RecorderPage({ params }: { params: Promise<{ eventId: st
           Flip Sides
         </button>
       </div>
+
+      {penalties.length > 0 && (
+        <div className="mt-4 p-3 bg-red-100 dark:bg-red-900/40 border border-red-200 dark:border-red-800 rounded-lg flex flex-col gap-2">
+          <div className="text-sm font-bold text-red-800 dark:text-red-200">
+            🚨 PENALTY KICK AWARDED!
+          </div>
+          {penalties.map(p => (
+            <button
+              key={p.id}
+              onClick={() => handleEventClick('SHOT' as TimelineEventType, { situation: 'PENALTY' }, p.id)}
+              className="bg-red-600 text-white font-bold py-2 rounded text-sm w-full animate-pulse shadow hover:bg-red-700"
+            >
+              RECORD PENALTY SHOT
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Interactive Pitch */}
       <div 
@@ -146,25 +166,20 @@ export default function RecorderPage({ params }: { params: Promise<{ eventId: st
         )}
       </div>
       
-      {!coordinates && <p className="text-center text-sm text-slate-500 mt-2 font-medium">Tap the pitch first, then select an event.</p>}
+      {!coordinates && <p className="text-center text-sm text-slate-500 dark:text-zinc-400 mt-2 font-medium">Tap the pitch first, then select an event.</p>}
 
       <div className={`grid grid-cols-2 gap-2 mt-4 pb-4 ${isMatchEnded ? 'opacity-50 pointer-events-none' : ''}`}>
-        <button onClick={() => handleEventClick('SHOT' as TimelineEventType, { result: 'GOAL' })} className="bg-emerald-500 text-white py-3 rounded-lg font-bold shadow">GOAL</button>
+        <button onClick={() => handleEventClick('SHOT' as TimelineEventType, { result: 'GOAL' })} className="bg-emerald-50 dark:bg-emerald-950/200 text-white py-3 rounded-lg font-bold shadow">GOAL</button>
         <button onClick={() => handleEventClick('SHOT' as TimelineEventType)} className="bg-slate-800 text-white py-3 rounded-lg font-bold shadow">SHOT</button>
-        <button onClick={() => handleEventClick('PASS' as TimelineEventType, { result: 'COMPLETED' })} className="bg-blue-500 text-white py-3 rounded-lg font-bold shadow">PASS</button>
+        <button onClick={() => handleEventClick('PASS' as TimelineEventType, { result: 'COMPLETED' })} className="bg-blue-50 dark:bg-blue-950/200 text-white py-3 rounded-lg font-bold shadow">PASS</button>
         <button onClick={() => handleEventClick('DRIBBLE' as TimelineEventType, { result: 'SUCCESS' })} className="bg-purple-500 text-white py-3 rounded-lg font-bold shadow">DRIBBLE</button>
         <button onClick={() => handleEventClick('TACKLE' as TimelineEventType, { result: 'WON_RETAINED' })} className="bg-amber-600 text-white py-3 rounded-lg font-bold shadow">TACKLE</button>
         <button onClick={() => handleEventClick('INTERCEPTION' as TimelineEventType)} className="bg-cyan-600 text-white py-3 rounded-lg font-bold shadow">INTERCEPT</button>
         <button onClick={() => handleEventClick('CLEARANCE' as TimelineEventType)} className="bg-orange-500 text-white py-3 rounded-lg font-bold shadow">CLEAR</button>
         <button onClick={() => handleEventClick('AERIAL_DUEL' as TimelineEventType, { result: 'WON' })} className="bg-lime-600 text-white py-3 rounded-lg font-bold shadow">AERIAL WON</button>
         <button onClick={() => handleEventClick('SAVE' as TimelineEventType)} className="bg-indigo-500 text-white py-3 rounded-lg font-bold shadow">SAVE</button>
-        <button onClick={() => handleEventClick('FOUL' as TimelineEventType)} className="bg-rose-500 text-white py-3 rounded-lg font-bold shadow">FOUL</button>
-        
-        <div className="grid grid-cols-2 gap-2">
-            <button onClick={() => handleEventClick('YELLOW_CARD' as TimelineEventType)} className="bg-yellow-400 text-yellow-900 py-3 rounded-lg font-bold shadow">YEL CARD</button>
-            <button onClick={() => handleEventClick('RED_CARD' as TimelineEventType)} className="bg-red-600 text-white py-3 rounded-lg font-bold shadow">RED CARD</button>
-        </div>
         <button onClick={() => handleEventClick('BALL_RECOVERY' as TimelineEventType)} className="bg-teal-600 text-white py-3 rounded-lg font-bold shadow">RECOVERY</button>
+        <button onClick={() => handleEventClick('GREAT_FIRST_TOUCH' as TimelineEventType)} className="bg-fuchsia-600 text-white py-3 rounded-lg font-bold shadow">GREAT 1ST TOUCH</button>
         <button onClick={() => handleEventClick('CROSS' as TimelineEventType)} className="bg-sky-500 text-white py-3 rounded-lg font-bold shadow">CROSS</button>
       </div>
 

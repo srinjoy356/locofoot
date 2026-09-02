@@ -39,17 +39,17 @@ export default function AdminEventsPage() {
 
       <div className="grid gap-4">
         {events.map((e) => (
-          <div key={e.id} className="border p-4 rounded bg-white flex justify-between items-center">
+          <div key={e.id} className="border p-4 rounded bg-white dark:bg-zinc-900 flex justify-between items-center">
             <div>
               <h3 className="font-bold">{e.name}</h3>
-              <p className="text-sm text-gray-500">{e.status} • {e.format}</p>
+              <p className="text-sm text-slate-500 dark:text-zinc-400">{e.status} • {e.format}</p>
             </div>
-            <Link href={`/admin/events/${e.id}`} className="px-3 py-1 bg-gray-100 rounded text-sm hover:bg-gray-200 flex items-center gap-1">
+            <Link href={`/admin/events/${e.id}`} className="px-3 py-1 bg-slate-100 dark:bg-zinc-800 rounded text-sm hover:bg-gray-200 flex items-center gap-1">
               <Edit size={14} /> Manage
             </Link>
           </div>
         ))}
-        {events.length === 0 && <p className="text-gray-500 py-4">No events found.</p>}
+        {events.length === 0 && <p className="text-slate-500 dark:text-zinc-400 py-4">No events found.</p>}
       </div>
     </div>
   );

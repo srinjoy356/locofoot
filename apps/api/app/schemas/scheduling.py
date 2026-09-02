@@ -20,6 +20,9 @@ class AISlotGenerationResponse(BaseModel):
 class SlotFinalizeRequest(BaseModel):
     slots: List[SlotTiming]
 
+class SlotAppendRequest(BaseModel):
+    slots: List[SlotTiming]
+
 class ScheduleNextRequest(BaseModel):
     idempotency_key: UUID
 
@@ -50,3 +53,12 @@ class BroadcastStateRequest(BaseModel):
 
 class ScheduleUnassignRequest(BaseModel):
     fixture_id: UUID
+
+class ManualMatchCreateRequest(BaseModel):
+    idempotency_key: UUID
+    home_registration_id: Optional[UUID] = None
+    away_registration_id: Optional[UUID] = None
+    group_id: Optional[UUID] = None
+    bracket_id: Optional[UUID] = None
+    slot_assignment_id: UUID
+    metadata: Optional[dict] = None

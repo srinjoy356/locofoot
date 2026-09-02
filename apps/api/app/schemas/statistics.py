@@ -29,6 +29,7 @@ class TournamentStandingRow(BaseModel):
     matches_played: int
     wins: int
     draws: int
+
     losses: int
     goals_for: int
     goals_against: int

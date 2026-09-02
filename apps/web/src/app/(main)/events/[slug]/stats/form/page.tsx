@@ -109,7 +109,7 @@ export default async function TournamentFormPage({ params }: { params: Promise<{
                           <span key={i} className={`w-5 h-5 flex items-center justify-center text-[10px] font-bold rounded-sm ${
                             res === 'W' ? 'bg-locofoot-500/20 text-locofoot-400' :
                             res === 'D' ? 'bg-zinc-700/50 text-zinc-400' :
-                            'bg-red-500/20 text-red-400'
+                            'bg-red-50 dark:bg-red-950/200/20 text-red-400'
                           }`}>
                             {res}
                           </span>

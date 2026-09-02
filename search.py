@@ -1,1 +1,0 @@
-import os, glob; [print(f) for f in glob.glob('**/*', recursive=True) if os.path.isfile(f) and 'node_modules' not in f and '.venv' not in f and '.next' not in f and '.git' not in f and open(f, errors='ignore').read().find('referee@gmail.com') != -1]  

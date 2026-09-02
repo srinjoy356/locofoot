@@ -117,7 +117,7 @@ export default function RefereePage({ params }: { params: Promise<{ eventId: str
     setPendingEvent(null);
   };
 
-  const confirmFoul = async (playerCommitting: MatchPlayer | null, playerReceiving: MatchPlayer | null, team: 'home' | 'away' | null) => {
+  const confirmFoul = async (playerCommitting: MatchPlayer | null, playerReceiving: MatchPlayer | null, team: 'home' | 'away' | null, penaltyAwarded?: boolean) => {
     if (!pendingEvent) return;
     
     await fetch(`/api/v1/events/${eventId}/matches/${matchId}/referee/event`, {
@@ -137,6 +137,7 @@ export default function RefereePage({ params }: { params: Promise<{ eventId: str
           received_by_registration_id: playerReceiving ? playerReceiving.registration_id : null,
           received_by_player_name: playerReceiving ? playerReceiving.name : null,
           committed_by_player_name: playerCommitting ? playerCommitting.name : null,
+          penaltyAwarded: penaltyAwarded || undefined,
         }
       })
     });
@@ -153,17 +154,17 @@ export default function RefereePage({ params }: { params: Promise<{ eventId: str
   );
 
   return (
-    <div className="flex flex-col h-screen max-w-md mx-auto bg-slate-50 p-4">
+    <div className="flex flex-col h-screen max-w-md mx-auto bg-slate-50 dark:bg-zinc-900/50 p-4">
       <div className="text-center py-6">
         <h1 className="text-4xl font-mono font-bold">{formatClock()}</h1>
-        <p className="text-slate-500 font-semibold mt-2">{matchState}</p>
+        <p className="text-slate-500 dark:text-zinc-400 font-semibold mt-2">{matchState}</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4 mt-8">
         {matchState === 'FULL_TIME' || matchState === 'COMPLETED' ? (
           <div className="col-span-2 text-center p-6 bg-slate-200 rounded-xl">
-            <h2 className="text-2xl font-bold text-slate-800">MATCH ENDED</h2>
-            <p className="text-slate-500 mt-2">No further referee actions allowed.</p>
+            <h2 className="text-2xl font-bold text-slate-800 dark:text-zinc-200">MATCH ENDED</h2>
+            <p className="text-slate-500 dark:text-zinc-400 mt-2">No further referee actions allowed.</p>
             {matchState === 'FULL_TIME' ? (
               <button 
                 onClick={() => changeState('COMPLETED' as MatchState)}
@@ -180,7 +181,7 @@ export default function RefereePage({ params }: { params: Promise<{ eventId: str
             <button 
               onClick={() => changeState('PAUSED' as MatchState)} 
               disabled={!['LIVE', 'SECOND_HALF', 'EXTRA_TIME_1', 'EXTRA_TIME_2'].includes(matchState)} 
-              className={`py-4 rounded-xl font-bold ${['LIVE', 'SECOND_HALF', 'EXTRA_TIME_1', 'EXTRA_TIME_2'].includes(matchState) ? 'bg-amber-500 text-white hover:bg-amber-600' : 'bg-slate-300 text-slate-500 cursor-not-allowed opacity-50'}`}>
+              className={`py-4 rounded-xl font-bold ${['LIVE', 'SECOND_HALF', 'EXTRA_TIME_1', 'EXTRA_TIME_2'].includes(matchState) ? 'bg-amber-50 dark:bg-amber-950/300 text-white hover:bg-amber-600' : 'bg-slate-300 text-slate-500 dark:text-zinc-400 cursor-not-allowed opacity-50'}`}>
               PAUSE
             </button>
             
@@ -192,20 +193,20 @@ export default function RefereePage({ params }: { params: Promise<{ eventId: str
                 return changeState('LIVE' as MatchState);
               }} 
               disabled={['LIVE', 'SECOND_HALF', 'EXTRA_TIME_1', 'EXTRA_TIME_2'].includes(matchState)} 
-              className={`py-4 rounded-xl font-bold ${!['LIVE', 'SECOND_HALF', 'EXTRA_TIME_1', 'EXTRA_TIME_2'].includes(matchState) ? 'bg-emerald-600 text-white hover:bg-emerald-700' : 'bg-slate-300 text-slate-500 cursor-not-allowed opacity-50'}`}>
+              className={`py-4 rounded-xl font-bold ${!['LIVE', 'SECOND_HALF', 'EXTRA_TIME_1', 'EXTRA_TIME_2'].includes(matchState) ? 'bg-emerald-600 text-white hover:bg-emerald-700' : 'bg-slate-300 text-slate-500 dark:text-zinc-400 cursor-not-allowed opacity-50'}`}>
               {matchState === 'HALF_TIME' ? 'START 2ND HALF' : (matchState === 'SCHEDULED' ? 'START MATCH' : 'RESUME')}
             </button>
             
             <button 
               onClick={() => { if (isHalfTimeAllowed() && matchState !== 'HALF_TIME' && matchState !== 'SECOND_HALF') changeState('HALF_TIME' as MatchState); }}
-              className={`py-4 rounded-xl font-bold ${(isHalfTimeAllowed() && matchState !== 'HALF_TIME' && matchState !== 'SECOND_HALF') ? 'bg-slate-800 text-white hover:bg-slate-700' : 'bg-slate-300 text-slate-500 cursor-not-allowed opacity-50'}`}
+              className={`py-4 rounded-xl font-bold ${(isHalfTimeAllowed() && matchState !== 'HALF_TIME' && matchState !== 'SECOND_HALF') ? 'bg-slate-800 text-white hover:bg-slate-700' : 'bg-slate-300 text-slate-500 dark:text-zinc-400 cursor-not-allowed opacity-50'}`}
             >
               HALF TIME
             </button>
             
             <button 
               onClick={() => { if (isFullTimeAllowed()) changeState('FULL_TIME' as MatchState); }}
-              className={`py-4 rounded-xl font-bold ${isFullTimeAllowed() ? 'bg-slate-900 text-white hover:bg-slate-800' : 'bg-slate-300 text-slate-500 cursor-not-allowed opacity-50'}`}
+              className={`py-4 rounded-xl font-bold ${isFullTimeAllowed() ? 'bg-slate-900 text-white hover:bg-slate-800' : 'bg-slate-300 text-slate-500 dark:text-zinc-400 cursor-not-allowed opacity-50'}`}
             >
               FULL TIME
             </button>
@@ -217,8 +218,8 @@ export default function RefereePage({ params }: { params: Promise<{ eventId: str
 
       {matchState !== 'FULL_TIME' && matchState !== 'COMPLETED' && (
         <div className="grid grid-cols-3 gap-2 mt-auto pb-8">
-          <button onClick={() => handleEventClick('FOUL' as RefereeEventType)} className="bg-slate-200 text-slate-800 py-3 rounded-lg font-bold">FOUL</button>
-          <button onClick={() => handleEventClick('YELLOW_CARD' as RefereeEventType)} className="bg-yellow-400 text-slate-900 py-3 rounded-lg font-bold">YELLOW</button>
+          <button onClick={() => handleEventClick('FOUL' as RefereeEventType)} className="bg-slate-200 text-slate-800 dark:text-zinc-200 py-3 rounded-lg font-bold">FOUL</button>
+          <button onClick={() => handleEventClick('YELLOW_CARD' as RefereeEventType)} className="bg-yellow-400 text-slate-900 dark:text-zinc-100 py-3 rounded-lg font-bold">YELLOW</button>
           <button onClick={() => handleEventClick('RED_CARD' as RefereeEventType)} className="bg-red-600 text-white py-3 rounded-lg font-bold">RED</button>
           <button onClick={() => handleEventClick('SUBSTITUTION' as RefereeEventType)} className="col-span-3 bg-blue-600 text-white py-3 rounded-lg font-bold">SUBSTITUTION</button>
         </div>
@@ -240,23 +241,23 @@ export default function RefereePage({ params }: { params: Promise<{ eventId: str
         />
       ) : pendingEvent ? (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-4">
-          <div className="bg-white w-full max-w-sm rounded-xl overflow-hidden flex flex-col max-h-[80vh]">
-            <div className="p-4 border-b flex justify-between items-center bg-slate-50">
+          <div className="bg-white dark:bg-zinc-900 w-full max-w-sm rounded-xl overflow-hidden flex flex-col max-h-[80vh]">
+            <div className="p-4 border-b flex justify-between items-center bg-slate-50 dark:bg-zinc-900/50">
               <h3 className="font-bold text-lg">Select Player</h3>
-              <button onClick={() => setPendingEvent(null)} className="text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
+              <button onClick={() => setPendingEvent(null)} className="text-slate-400 hover:text-slate-600 dark:text-zinc-400 text-2xl leading-none">&times;</button>
             </div>
             
             <div className="overflow-y-auto p-4 flex-1">
               {playersLoading ? (
-                <div className="text-center py-8 text-slate-500">Loading players...</div>
+                <div className="text-center py-8 text-slate-500 dark:text-zinc-400">Loading players...</div>
               ) : (
                 <div className="space-y-6">
                   <div>
                     <h4 className="font-bold text-sm text-slate-400 mb-2 uppercase tracking-wider">Home Team</h4>
                     <div className="grid grid-cols-1 gap-2">
                       {players.home.filter(p => !['SUBBED_OUT', 'SENT_OFF'].includes(p.participationStatus || '')).map(p => (
-                        <button key={p.id} onClick={() => confirmEvent(p)} className="flex items-center text-left bg-slate-50 p-2 rounded hover:bg-slate-100 border border-slate-200">
-                          <span className="w-8 h-8 flex items-center justify-center bg-slate-200 rounded text-slate-700 font-bold mr-3">{p.jersey_number || '-'}</span>
+                        <button key={p.id} onClick={() => confirmEvent(p)} className="flex items-center text-left bg-slate-50 dark:bg-zinc-900/50 p-2 rounded hover:bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-800">
+                          <span className="w-8 h-8 flex items-center justify-center bg-slate-200 rounded text-slate-700 dark:text-zinc-300 font-bold mr-3">{p.jersey_number || '-'}</span>
                           <span className="font-medium">{p.name}</span>
                         </button>
                       ))}
@@ -268,8 +269,8 @@ export default function RefereePage({ params }: { params: Promise<{ eventId: str
                     <h4 className="font-bold text-sm text-slate-400 mb-2 uppercase tracking-wider">Away Team</h4>
                     <div className="grid grid-cols-1 gap-2">
                       {players.away.filter(p => !['SUBBED_OUT', 'SENT_OFF'].includes(p.participationStatus || '')).map(p => (
-                        <button key={p.id} onClick={() => confirmEvent(p)} className="flex items-center text-left bg-slate-50 p-2 rounded hover:bg-slate-100 border border-slate-200">
-                          <span className="w-8 h-8 flex items-center justify-center bg-slate-200 rounded text-slate-700 font-bold mr-3">{p.jersey_number || '-'}</span>
+                        <button key={p.id} onClick={() => confirmEvent(p)} className="flex items-center text-left bg-slate-50 dark:bg-zinc-900/50 p-2 rounded hover:bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-800">
+                          <span className="w-8 h-8 flex items-center justify-center bg-slate-200 rounded text-slate-700 dark:text-zinc-300 font-bold mr-3">{p.jersey_number || '-'}</span>
                           <span className="font-medium">{p.name}</span>
                         </button>
                       ))}
@@ -280,8 +281,8 @@ export default function RefereePage({ params }: { params: Promise<{ eventId: str
               )}
             </div>
             
-            <div className="p-4 border-t bg-slate-50">
-              <button onClick={() => confirmEvent(null)} className="w-full py-2 bg-slate-200 text-slate-700 font-bold rounded-lg hover:bg-slate-300">
+            <div className="p-4 border-t bg-slate-50 dark:bg-zinc-900/50">
+              <button onClick={() => confirmEvent(null)} className="w-full py-2 bg-slate-200 text-slate-700 dark:text-zinc-300 font-bold rounded-lg hover:bg-slate-300">
                 Skip / Unknown Player
               </button>
             </div>

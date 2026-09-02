@@ -67,7 +67,7 @@ export default function NotificationsPage() {
       <h1 className="text-2xl font-bold">Notifications</h1>
       <div className="grid gap-4">
         {notifications.map(n => (
-          <div key={n.id} className={`border p-4 rounded flex justify-between items-center ${n.read_at ? 'bg-gray-50 opacity-75' : 'bg-white font-semibold'}`}>
+          <div key={n.id} className={`border p-4 rounded flex justify-between items-center ${n.read_at ? 'bg-slate-50 dark:bg-zinc-900/50 opacity-75' : 'bg-white dark:bg-zinc-900 font-semibold'}`}>
             <div>
               <p>
                 {n.type === 'PLAYER_INVITED' && `🔔 Team invitation to join team`}

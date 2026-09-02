@@ -96,15 +96,15 @@ export default function DashboardPage() {
           {avatar ? (
             <Image src={avatar.secure_url} alt="Avatar" fill className="object-cover" unoptimized />
           ) : (
-            <span className="text-gray-500">No Avatar</span>
+            <span className="text-slate-500 dark:text-zinc-400">No Avatar</span>
           )}
         </div>
         <div>
           <h2 className="text-xl font-semibold">{profile?.display_name || user.email}</h2>
-          <p className="text-gray-500">{user.email}</p>
+          <p className="text-slate-500 dark:text-zinc-400">{user.email}</p>
           {profile?.unique_code && (
-            <div className="mt-2 inline-block bg-gray-100 text-gray-800 px-3 py-1 rounded-md font-mono text-sm border border-gray-200">
-              <span className="font-semibold text-gray-500 mr-2">Friend Code:</span>
+            <div className="mt-2 inline-block bg-slate-100 dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 px-3 py-1 rounded-md font-mono text-sm border border-slate-200 dark:border-zinc-800">
+              <span className="font-semibold text-slate-500 dark:text-zinc-400 mr-2">Friend Code:</span>
               {profile.unique_code}
             </div>
           )}
@@ -125,13 +125,13 @@ export default function DashboardPage() {
 
       {refereeMatches.length > 0 && (
         <div className="mb-8">
-          <h3 className="text-xl font-bold text-amber-900 mb-4 border-b pb-2">My Referee Assignments</h3>
+          <h3 className="text-xl font-bold text-amber-900 dark:text-amber-500 mb-4 border-b pb-2">My Referee Assignments</h3>
           <div className="grid gap-4">
             {refereeMatches.map((rm) => (
-              <div key={rm.id} className="border border-amber-200 bg-amber-50 rounded-lg p-4 flex justify-between items-center">
+              <div key={rm.id} className="border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/30 rounded-lg p-4 flex justify-between items-center">
                 <div>
                   <h4 className="font-bold">{rm.matches.events.name}</h4>
-                  <p className="text-sm text-gray-600">Match ID: {rm.matches.id.substring(0, 8)}... | Status: {rm.matches.match_state}</p>
+                  <p className="text-sm text-slate-600 dark:text-zinc-400">Match ID: {rm.matches.id.substring(0, 8)}... | Status: {rm.matches.match_state}</p>
                 </div>
                 <button 
                   onClick={() => router.push(`/admin/events/${rm.matches.events.id}/matches/${rm.matches.id}/referee`)}

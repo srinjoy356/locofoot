@@ -111,18 +111,18 @@ export default function PublicEventPage({ params }: { params: Promise<{ slug: st
 
   return (
     <div className="space-y-6">
-      <div className="bg-gray-100 p-8 rounded text-center relative">
+      <div className="bg-gray-100 dark:bg-zinc-900/50 p-8 rounded text-center relative border border-transparent dark:border-zinc-800">
         <div className="absolute top-4 right-4">
           <ShareButton url={eventUrl} title="Share Event" />
         </div>
-        <h1 className="text-3xl font-bold">{event.name}</h1>
-        <p className="text-gray-600 mt-2">{event.description}</p>
+        <h1 className="text-3xl font-bold dark:text-zinc-100">{event.name}</h1>
+        <p className="text-gray-600 dark:text-zinc-400 mt-2">{event.description}</p>
         <div className="mt-4 flex justify-center gap-4">
-          <div className="inline-block bg-white px-4 py-2 rounded shadow-sm text-sm font-semibold">
+          <div className="inline-block bg-white dark:bg-zinc-800 px-4 py-2 rounded shadow-sm text-sm font-semibold dark:text-zinc-200">
             Status: {event.status}
           </div>
           {scheduleTimeframe.start && scheduleTimeframe.end && (
-            <div className="inline-block bg-white px-4 py-2 rounded shadow-sm text-sm font-semibold text-indigo-700">
+            <div className="inline-block bg-white dark:bg-zinc-800 px-4 py-2 rounded shadow-sm text-sm font-semibold text-indigo-700 dark:text-indigo-400">
               Matches Scheduled: {scheduleTimeframe.start} to {scheduleTimeframe.end}
             </div>
           )}
@@ -131,7 +131,7 @@ export default function PublicEventPage({ params }: { params: Promise<{ slug: st
         {event.status === 'LIVE' && (
           <div className="mt-6 text-center">
             <Link href={`/events/${event.slug || event.id}/schedule`} className="inline-block bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg animate-pulse hover:animate-none flex items-center gap-2 justify-center mx-auto w-max">
-              <span className="h-3 w-3 bg-white rounded-full block animate-ping mr-1"></span>
+              <span className="h-3 w-3 bg-white dark:bg-zinc-900 rounded-full block animate-ping mr-1"></span>
               Tournament is Live - Watch Matches
             </Link>
           </div>
@@ -140,7 +140,7 @@ export default function PublicEventPage({ params }: { params: Promise<{ slug: st
         {event.status !== 'LIVE' && event.scheduling_state === 'LIVE' && (
           <div className="mt-6">
             <Link href={`/events/${event.slug || event.id}/schedule`} className="inline-block bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg animate-pulse hover:animate-none flex items-center gap-2 justify-center mx-auto w-max">
-              <span className="h-3 w-3 bg-white rounded-full block animate-ping mr-1"></span>
+              <span className="h-3 w-3 bg-white dark:bg-zinc-900 rounded-full block animate-ping mr-1"></span>
               View Live Scheduling Broadcast
             </Link>
           </div>
@@ -156,30 +156,30 @@ export default function PublicEventPage({ params }: { params: Promise<{ slug: st
       </div>
 
       {isAdmin && (
-        <div className="bg-yellow-50 p-4 border border-yellow-200 rounded flex justify-between items-center">
-          <p className="text-yellow-800 text-sm">You are an admin for this event.</p>
-          <Link href={`/admin/events/${event.id}`} className="bg-yellow-100 text-yellow-800 px-4 py-2 rounded text-sm font-bold border border-yellow-300">
+        <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 border border-yellow-200 dark:border-yellow-700/50 rounded flex justify-between items-center">
+          <p className="text-yellow-800 dark:text-yellow-500 text-sm">You are an admin for this event.</p>
+          <Link href={`/admin/events/${event.id}`} className="bg-yellow-100 dark:bg-yellow-800/50 text-yellow-800 dark:text-yellow-500 px-4 py-2 rounded text-sm font-bold border border-yellow-300 dark:border-yellow-700/50">
             Go to Admin Dashboard
           </Link>
         </div>
       )}
 
-      <div className="flex flex-col gap-4 bg-white p-4 border rounded">
-        <h2 className="text-xl font-bold">Your Registrations</h2>
+      <div className="flex flex-col gap-4 bg-white dark:bg-zinc-900 p-4 border dark:border-zinc-800 rounded">
+        <h2 className="text-xl font-bold dark:text-zinc-100">Your Registrations</h2>
         
         {myRegistrations.length > 0 ? (
           <ul className="space-y-2">
             {myRegistrations.map((reg: any) => (
-              <li key={reg.event_registration_id} className="flex justify-between items-center border p-3 rounded">
+              <li key={reg.event_registration_id} className="flex justify-between items-center border dark:border-zinc-800 p-3 rounded">
                 <div>
-                  <div className="font-bold">{reg.event_team_registrations.team_name}</div>
-                  <div className="text-xs text-gray-500">
+                  <div className="font-bold dark:text-zinc-200">{reg.event_team_registrations.team_name}</div>
+                  <div className="text-xs text-gray-500 dark:text-zinc-400">
                     Team Status: {reg.event_team_registrations.status} | Your Role: {reg.is_captain_for_event ? 'Captain' : 'Player'}
                   </div>
                 </div>
                 <Link 
                   href={`/events/${event.slug || event.id}/registrations/${reg.event_registration_id}`}
-                  className="bg-gray-100 text-black px-4 py-2 rounded text-sm font-medium hover:bg-gray-200"
+                  className="bg-gray-100 dark:bg-zinc-800 text-black dark:text-white px-4 py-2 rounded text-sm font-medium hover:bg-gray-200 dark:hover:bg-zinc-700"
                 >
                   View Team
                 </Link>
@@ -187,35 +187,35 @@ export default function PublicEventPage({ params }: { params: Promise<{ slug: st
             ))}
           </ul>
         ) : (
-          <p className="text-gray-500 text-sm">You are not part of any team for this event yet.</p>
+          <p className="text-gray-500 dark:text-zinc-400 text-sm">You are not part of any team for this event yet.</p>
         )}
 
         {event.status === 'REGISTRATION_OPEN' ? (
-          <div className="mt-4 pt-4 border-t">
+          <div className="mt-4 pt-4 border-t dark:border-zinc-800">
             <Link 
               href={`/events/${event.slug || event.id}/register`}
-              className="bg-black text-white px-6 py-2 rounded inline-block"
+              className="bg-black dark:bg-white text-white dark:text-black px-6 py-2 rounded inline-block font-medium"
             >
               Register a New Team
             </Link>
           </div>
         ) : (
-          <p className="text-gray-500 mt-4 pt-4 border-t">Registration is closed or not yet open.</p>
+          <p className="text-gray-500 dark:text-zinc-400 mt-4 pt-4 border-t dark:border-zinc-800">Registration is closed or not yet open.</p>
         )}
       </div>
 
       
-      <div className="flex flex-col gap-4 bg-white p-4 border rounded mt-8">
-        <h2 className="text-xl font-bold">Matches</h2>
+      <div className="flex flex-col gap-4 bg-white dark:bg-zinc-900 p-4 border dark:border-zinc-800 rounded mt-8">
+        <h2 className="text-xl font-bold dark:text-zinc-100">Matches</h2>
         {matches.length > 0 ? (
           <ul className="space-y-2">
             {matches.map((m: any) => (
-              <li key={m.id} className="flex justify-between items-center border p-3 rounded hover:bg-gray-50 transition">
+              <li key={m.id} className="flex justify-between items-center border dark:border-zinc-800 p-3 rounded hover:bg-slate-50 dark:bg-zinc-900/50 dark:hover:bg-zinc-800/50 transition">
                 <div>
-                  <div className="font-bold">
+                  <div className="font-bold dark:text-zinc-200">
                     {m.home_team?.team_name || 'TBD'} vs {m.away_team?.team_name || 'TBD'}
                   </div>
-                  <div className="text-xs text-gray-500 font-semibold">
+                  <div className="text-xs text-gray-500 dark:text-zinc-400 font-semibold">
                     State: {m.match_state}
                   </div>
                 </div>
@@ -229,7 +229,7 @@ export default function PublicEventPage({ params }: { params: Promise<{ slug: st
             ))}
           </ul>
         ) : (
-          <p className="text-gray-500 text-sm">No matches found for this event yet.</p>
+          <p className="text-gray-500 dark:text-zinc-400 text-sm">No matches found for this event yet.</p>
         )}
       </div>
 

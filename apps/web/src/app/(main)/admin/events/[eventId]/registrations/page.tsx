@@ -57,21 +57,21 @@ export default function AdminEventRegistrationsPage({ params }: { params: Promis
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4 mb-6">
-        <Link href={`/admin/events/${eventId}`} className="text-gray-500 hover:text-black">← Back to Event</Link>
+        <Link href={`/admin/events/${eventId}`} className="text-slate-500 dark:text-zinc-400 hover:text-black">← Back to Event</Link>
         <h1 className="text-2xl font-bold">Team Registrations</h1>
       </div>
 
       <div className="grid gap-6">
         {registrations.map(reg => (
-          <div key={reg.id} className="border p-4 rounded bg-white space-y-4">
+          <div key={reg.id} className="border p-4 rounded bg-white dark:bg-zinc-900 space-y-4">
             <div className="flex justify-between items-center">
               <div>
                 <h3 className="font-bold text-lg">{reg.team_name}</h3>
-                <p className="text-sm text-gray-500">Status: {reg.status} {reg.roster_locked && '🔒 (Locked)'}</p>
+                <p className="text-sm text-slate-500 dark:text-zinc-400">Status: {reg.status} {reg.roster_locked && '🔒 (Locked)'}</p>
               </div>
               <div className="flex gap-2">
                 {(reg.status === 'PENDING_APPROVAL' || reg.status === 'APPROVED') && (
-                  <button onClick={() => changeStatus(reg.id, 'DRAFT')} className="bg-gray-200 text-gray-800 px-3 py-1 rounded text-sm hover:bg-gray-300">Revert to Draft</button>
+                  <button onClick={() => changeStatus(reg.id, 'DRAFT')} className="bg-gray-200 text-slate-800 dark:text-zinc-200 px-3 py-1 rounded text-sm hover:bg-gray-300">Revert to Draft</button>
                 )}
                 {reg.status === 'PENDING_APPROVAL' && (
                   <button onClick={() => changeStatus(reg.id, 'APPROVED')} className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">Approve</button>
@@ -85,7 +85,7 @@ export default function AdminEventRegistrationsPage({ params }: { params: Promis
               </div>
             </div>
 
-            <div className="bg-gray-50 rounded p-3 text-sm">
+            <div className="bg-slate-50 dark:bg-zinc-900/50 rounded p-3 text-sm">
               <h4 className="font-semibold mb-2">Roster ({reg.players?.length || 0} players)</h4>
               <ul className="grid grid-cols-2 gap-2">
                 {reg.players?.map((p: any) => (
@@ -93,14 +93,14 @@ export default function AdminEventRegistrationsPage({ params }: { params: Promis
                     <span className="w-8 text-center bg-gray-200 rounded">{p.jersey_number || '-'}</span>
                     <span className="font-medium">{p.user?.display_name || p.user?.email}</span>
                     {p.is_captain && <span className="text-xs bg-yellow-100 text-yellow-800 px-1 rounded">C</span>}
-                    {p.is_vice_captain && <span className="text-xs bg-blue-100 text-blue-800 px-1 rounded">VC</span>}
+                    {p.is_vice_captain && <span className="text-xs bg-blue-100 text-blue-800 dark:text-blue-400 px-1 rounded">VC</span>}
                   </li>
                 ))}
               </ul>
             </div>
           </div>
         ))}
-        {registrations.length === 0 && <p className="text-gray-500">No registrations found.</p>}
+        {registrations.length === 0 && <p className="text-slate-500 dark:text-zinc-400">No registrations found.</p>}
       </div>
     </div>
   );

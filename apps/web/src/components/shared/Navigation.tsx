@@ -57,20 +57,20 @@ export function Navigation() {
   if (!userId) return null;
 
   return (
-    <nav className="bg-white border-b sticky top-0 z-10">
+    <nav className="bg-white dark:bg-zinc-900 border-b sticky top-0 z-10">
       <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between text-sm">
         <div className="flex gap-4 items-center">
-          <Link href="/dashboard" className="font-bold text-gray-900 text-base">LocoFoot</Link>
-          <Link href="/events" className="text-gray-600 hover:text-black font-medium">Events</Link>
-          <Link href="/friends" className="text-gray-600 hover:text-black font-medium">Friends</Link>
-          <Link href="/admin/events" className="text-gray-600 hover:text-black font-medium">Organizer</Link>
+          <Link href="/dashboard" className="font-bold text-slate-900 dark:text-zinc-100 text-base">LocoFoot</Link>
+          <Link href="/events" className="text-slate-600 dark:text-zinc-400 hover:text-black font-medium">Events</Link>
+          <Link href="/friends" className="text-slate-600 dark:text-zinc-400 hover:text-black font-medium">Friends</Link>
+          <Link href="/admin/events" className="text-slate-600 dark:text-zinc-400 hover:text-black font-medium">Organizer</Link>
         </div>
         <div className="flex gap-4 items-center">
-          {uniqueCode && <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded font-mono text-xs select-all border border-gray-200">Code: {uniqueCode}</span>}
-          <Link href="/notifications" className="relative text-gray-600 hover:text-black font-medium">
+          {uniqueCode && <span className="bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 px-2 py-1 rounded font-mono text-xs select-all border border-slate-200 dark:border-zinc-800">Code: {uniqueCode}</span>}
+          <Link href="/notifications" className="relative text-slate-600 dark:text-zinc-400 hover:text-black font-medium">
             Notifs
             {unreadCount > 0 && (
-              <span className="absolute -top-2 -right-3 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+              <span className="absolute -top-2 -right-3 bg-red-50 dark:bg-red-950/200 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
                 {unreadCount}
               </span>
             )}

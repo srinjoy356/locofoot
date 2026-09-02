@@ -53,10 +53,10 @@ export function ShotMap({ shots }: ShotMapProps) {
       {/* Legend */}
       <div className="flex flex-wrap justify-center gap-4 mb-6 text-sm font-semibold text-zinc-300">
         <div className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-orange-500"></span> Goal</div>
-        <div className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-blue-500"></span> Saved</div>
+        <div className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-blue-50 dark:bg-blue-950/200"></span> Saved</div>
         <div className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-yellow-500"></span> Woodwork</div>
-        <div className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-red-500"></span> Off Target</div>
-        <div className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-gray-500"></span> Blocked</div>
+        <div className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-red-50 dark:bg-red-950/200"></span> Off Target</div>
+        <div className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-slate-50 dark:bg-zinc-900/500"></span> Blocked</div>
       </div>
 
       <div className="relative w-full aspect-[100/68] bg-emerald-700 border-4 border-white rounded-sm overflow-hidden shadow-2xl">

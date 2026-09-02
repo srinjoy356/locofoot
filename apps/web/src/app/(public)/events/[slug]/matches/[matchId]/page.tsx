@@ -30,6 +30,8 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
           id,
           event_id,
           match_state,
+          home_score,
+          away_score,
           home_team:event_team_registrations!home_registration_id(id, team_name, logo_media_id),
           away_team:event_team_registrations!away_registration_id(id, team_name, logo_media_id)
         `)
@@ -84,7 +86,12 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
 
     const stateChannel = supabase.channel(`match:${matchId}:state`)
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'matches', filter: `id=eq.${matchId}` }, (payload) => {
-        setMatchData((prev: any) => ({ ...prev, match_state: payload.new.match_state }));
+        setMatchData((prev: any) => ({ 
+          ...prev, 
+          match_state: payload.new.match_state,
+          home_score: payload.new.home_score,
+          away_score: payload.new.away_score 
+        }));
       })
       .subscribe();
 
@@ -109,8 +116,8 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
   if (isLoading) return <div className="text-center p-12">Loading Match Center...</div>;
   if (!matchData) return <div className="text-center p-12">Match not found.</div>;
 
-  const homeGoals = timelineEvents.filter(ev => ev.metadata?.result === 'GOAL' && ev.actor_registration_id === matchData.home_team.id).length;
-  const awayGoals = timelineEvents.filter(ev => ev.metadata?.result === 'GOAL' && ev.actor_registration_id === matchData.away_team.id).length;
+  const homeGoals = matchData.home_score || 0;
+  const awayGoals = matchData.away_score || 0;
   
   const allEvents = [...timelineEvents, ...refereeEvents]
     .filter(ev => !ev.metadata?.deleted)
@@ -125,7 +132,7 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
           <ShieldAlert className="w-4 h-4" /> Open Referee Dashboard
         </Link>
         {isAdmin && (
-          <Link href={`/admin/events/${matchData.event_id || slug}/matches/${matchId}/recorder`} className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded font-bold flex items-center gap-2 text-sm shadow-sm">
+          <Link href={`/admin/events/${matchData.event_id || slug}/matches/${matchId}/recorder`} className="bg-emerald-50 dark:bg-emerald-950/200 hover:bg-emerald-600 text-white px-4 py-2 rounded font-bold flex items-center gap-2 text-sm shadow-sm">
             Open Event Recorder
           </Link>
         )}
@@ -136,7 +143,7 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
       <div className="bg-gradient-to-br from-slate-900 to-indigo-950 text-white rounded-3xl p-6 text-center shadow-2xl relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-purple-500"></div>
         <div className="text-sm font-bold text-indigo-300 tracking-widest uppercase mb-6 flex items-center justify-center gap-2">
-          {matchData.match_state === 'LIVE' && <span className="relative flex h-3 w-3"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span></span>}
+          {matchData.match_state === 'LIVE' && <span className="relative flex h-3 w-3"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span className="relative inline-flex rounded-full h-3 w-3 bg-red-50 dark:bg-red-950/200"></span></span>}
           {matchData.match_state.replace('_', ' ')}
         </div>
         
@@ -179,9 +186,9 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
 
       {/* Timeline Feed */}
       <div className="mt-12 space-y-4">
-        <h2 className="font-black text-2xl mb-6 text-slate-800 flex items-center gap-2">
+        <h2 className="font-black text-2xl mb-6 text-slate-800 dark:text-slate-200 flex items-center gap-2">
           Match Timeline
-          <div className="h-px bg-slate-200 flex-1 ml-4"></div>
+          <div className="h-px bg-slate-200 dark:bg-slate-700 flex-1 ml-4"></div>
         </h2>
         {allEvents.map((ev, i) => {
           const isGoal = ev.metadata?.result === 'GOAL';
@@ -190,37 +197,37 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
           const isSub = ev.event_type === 'SUBSTITUTION';
           
           return (
-            <div key={ev.id || i} className={`bg-white border rounded-2xl p-5 shadow-sm flex items-center gap-5 transition hover:shadow-md ${isGoal ? 'border-emerald-200 bg-emerald-50/30' : ''} ${isCard ? 'border-amber-200 bg-amber-50/30' : ''}`}>
-              <div className="font-mono font-black text-slate-400 w-16 text-lg shrink-0 text-center">
+            <div key={ev.id || i} className={`bg-white dark:bg-slate-900 border dark:border-slate-800 rounded-2xl p-5 shadow-sm flex items-center gap-5 transition hover:shadow-md ${isGoal ? 'border-emerald-200 dark:border-emerald-900/50 bg-emerald-50 dark:bg-emerald-950/20/30 dark:bg-emerald-900/20' : ''} ${isCard ? 'border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/30/30 dark:bg-amber-900/20' : ''}`}>
+              <div className="font-mono font-black text-slate-400 dark:text-slate-500 w-16 text-lg shrink-0 text-center">
                 {ev.display_minute}<span>&apos;</span>
               </div>
               <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-slate-800 uppercase tracking-wide text-sm">{ev.event_type.replace('_', ' ')}</span>
-                    {isGoal && <span className="bg-emerald-500 text-white text-xs font-bold px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse">GOAL!</span>}
+                    <span className="font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wide text-sm">{ev.event_type.replace('_', ' ')}</span>
+                    {isGoal && <span className="bg-emerald-50 dark:bg-emerald-950/200 text-white text-xs font-bold px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse">GOAL!</span>}
                     {ev.event_type === 'YELLOW_CARD' && <span className="bg-amber-400 w-3 h-4 rounded-sm inline-block shadow-sm"></span>}
                     {ev.event_type === 'RED_CARD' && <span className="bg-red-600 w-3 h-4 rounded-sm inline-block shadow-sm"></span>}
                   </div>
                   
                   {isSub ? (
                     <div className="text-sm font-medium mt-2 flex flex-col gap-1">
-                      <div className="flex gap-2 items-center text-red-600">
-                        <span className="font-bold uppercase text-[10px] tracking-wider bg-red-100 px-1.5 py-0.5 rounded">OUT</span> 
-                        <span>{ev.metadata?.player_out_name || 'Unknown Player'}</span>
+                      <div className="flex gap-2 items-center text-red-600 dark:text-red-400">
+                        <span className="font-bold uppercase text-[10px] tracking-wider bg-red-100 dark:bg-red-900/30 px-1.5 py-0.5 rounded">OUT</span> 
+                        <span className="dark:text-slate-300">{ev.metadata?.player_out_name || 'Unknown Player'}</span>
                       </div>
-                      <div className="flex gap-2 items-center text-emerald-600">
-                        <span className="font-bold uppercase text-[10px] tracking-wider bg-emerald-100 px-1.5 py-0.5 rounded">IN</span> 
-                        <span>{ev.metadata?.player_in_name || 'Unknown Player'}</span>
+                      <div className="flex gap-2 items-center text-emerald-600 dark:text-emerald-400">
+                        <span className="font-bold uppercase text-[10px] tracking-wider bg-emerald-100 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded">IN</span> 
+                        <span className="dark:text-slate-300">{ev.metadata?.player_in_name || 'Unknown Player'}</span>
                       </div>
                     </div>
                   ) : ev.metadata && Object.keys(ev.metadata).length > 0 && (
-                    <div className="text-sm text-slate-500 font-medium mt-1.5 flex flex-wrap gap-x-4 gap-y-1">
+                    <div className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-1.5 flex flex-wrap gap-x-4 gap-y-1">
                       {Object.entries(ev.metadata).map(([k, v]) => {
                         if (k === 'result' && v === 'GOAL') return null; // already shown
                         return (
                           <span key={k} className="capitalize flex gap-1">
-                            <span className="text-slate-400">{k.replace(/_/g, ' ')}:</span> 
-                            <span className="text-slate-700">{String(v)}</span>
+                            <span className="text-slate-400 dark:text-slate-500">{k.replace(/_/g, ' ')}:</span> 
+                            <span className="text-slate-700 dark:text-slate-300">{String(v)}</span>
                           </span>
                         );
                       })}
@@ -231,7 +238,7 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
           );
         })}
         {allEvents.length === 0 && (
-          <div className="text-slate-500 text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200 font-medium">Waiting for match events...</div>
+          <div className="text-slate-500 dark:text-slate-400 text-center py-12 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 font-medium">Waiting for match events...</div>
         )}
       </div>
     </div>

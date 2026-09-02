@@ -1,1 +1,0 @@
-import os; from dotenv import load_dotenv; load_dotenv('apps/api/.env'); from supabase import create_client; supabase = create_client(os.environ['SUPABASE_URL'], os.environ['SUPABASE_SERVICE_ROLE_KEY']); supabase.auth.admin.update_user_by_id('bf888ce0-4456-4bce-ad1e-871160c8e1c1', {'password': 'password123'})  

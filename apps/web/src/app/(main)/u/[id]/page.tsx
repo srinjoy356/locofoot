@@ -20,7 +20,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
     .single();
 
   if (!pData) {
-    return <div className="p-10 text-center text-gray-500">Profile not found.</div>;
+    return <div className="p-10 text-center text-slate-500 dark:text-zinc-400">Profile not found.</div>;
   }
 
   const profile = pData as unknown as User;
@@ -32,9 +32,9 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
   const currentUser = session?.user || null;
 
   return (
-    <div className="max-w-xl mx-auto mt-10 p-8 border rounded-lg bg-white shadow-sm text-center">
+    <div className="max-w-xl mx-auto mt-10 p-8 border rounded-lg bg-white dark:bg-zinc-900 shadow-sm text-center">
       <div className="flex flex-col items-center gap-4">
-        <div className="w-32 h-32 rounded-full bg-gray-100 overflow-hidden flex items-center justify-center relative border-4 border-gray-50 shadow-sm">
+        <div className="w-32 h-32 rounded-full bg-slate-100 dark:bg-zinc-800 overflow-hidden flex items-center justify-center relative border-4 border-gray-50 shadow-sm">
           {avatar ? (
             <Image src={avatar.secure_url} alt="Avatar" fill className="object-cover" unoptimized />
           ) : (
@@ -44,10 +44,10 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
           )}
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{profile.display_name || 'Unnamed Player'}</h1>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-zinc-100">{profile.display_name || 'Unnamed Player'}</h1>
           
           {profile.unique_code && (
-            <div className="mt-4 inline-block bg-blue-50 text-blue-800 px-4 py-2 rounded-md font-mono text-sm border border-blue-100">
+            <div className="mt-4 inline-block bg-blue-50 dark:bg-blue-950/20 text-blue-800 dark:text-blue-400 px-4 py-2 rounded-md font-mono text-sm border border-blue-100">
               <span className="font-semibold mr-2 opacity-75">Friend Code:</span>
               <span className="font-bold">{profile.unique_code}</span>
             </div>
@@ -71,9 +71,9 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
             Log in to Add Friend
           </Link>
         ) : currentUser && currentUser.id === profile.id ? (
-          <div className="text-gray-500 text-sm italic">This is your public profile</div>
+          <div className="text-slate-500 dark:text-zinc-400 text-sm italic">This is your public profile</div>
         ) : (
-          <div className="text-gray-500 text-sm italic">This user cannot be added as a friend</div>
+          <div className="text-slate-500 dark:text-zinc-400 text-sm italic">This user cannot be added as a friend</div>
         )}
       </div>
     </div>

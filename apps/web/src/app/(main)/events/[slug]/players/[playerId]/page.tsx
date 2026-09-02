@@ -91,6 +91,10 @@ async function PlayerStatsContent({ slug, playerId }: { slug: string, playerId: 
             <span className="text-zinc-400">Successful Dribbles</span>
             <span className="font-mono text-white">{stats.successful_dribbles} / {stats.dribbles_attempted}</span>
           </div>
+          <div className="flex justify-between border-b border-zinc-800 pb-2">
+            <span className="text-zinc-400">Great First Touches</span>
+            <span className="font-mono text-white">{stats.great_first_touches}</span>
+          </div>
         </div>
 
         <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-xl space-y-4">

@@ -27,7 +27,7 @@ export function ShareButton({ url, title = "Share", className = "" }: Props) {
   return (
     <button
       onClick={handleShare}
-      className={`flex items-center gap-2 px-3 py-1.5 rounded bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium transition-colors ${className}`}
+      className={`flex items-center gap-2 px-3 py-1.5 rounded bg-slate-100 dark:bg-zinc-800 hover:bg-gray-200 text-slate-700 dark:text-zinc-300 font-medium transition-colors ${className}`}
       title={title}
     >
       {copied ? <Check size={16} className="text-green-600" /> : <Share2 size={16} />}

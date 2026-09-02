@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import HTTPException
 import httpx
 from app.config import settings
-from app.schemas.scheduling import AISlotGenerationRequest, AISlotGenerationResponse, SlotFinalizeRequest
+from app.schemas.scheduling import AISlotGenerationRequest, AISlotGenerationResponse, SlotFinalizeRequest, SlotAppendRequest
 from app.core.supabase_client import get_service_supabase
 
 class SlotService:
@@ -149,5 +149,43 @@ class SlotService:
         # (Audit trail to be implemented)
 
         return {"success": True, "message": "Slots finalized successfully"}
+
+    async def append_slots(self, event_id: UUID, payload: SlotAppendRequest) -> dict:
+        supabase = get_service_supabase()
+        
+        event_res = supabase.table("events").select("slot_structure_state, scheduling_state, venue_id").eq("id", str(event_id)).execute()
+        if not event_res.data:
+            raise HTTPException(status_code=404, detail="Event not found")
+            
+        event = event_res.data[0]
+        
+        slots_to_insert = [
+            {
+                "event_id": str(event_id),
+                "sequence_number": slot.sequence,
+                "scheduled_start": slot.start.isoformat(),
+                "scheduled_end": slot.end.isoformat(),
+                "status": "EMPTY"
+            } for slot in payload.slots
+        ]
+
+        if slots_to_insert:
+            inserted = supabase.table("schedule_slots").insert(slots_to_insert).execute()
+            
+            venue_id = event.get("venue_id")
+            if venue_id:
+                fields_res = supabase.table("venue_fields").select("id").eq("venue_id", venue_id).execute()
+                if fields_res.data:
+                    assignments = []
+                    for slot in inserted.data:
+                        for field in fields_res.data:
+                            assignments.append({
+                                "schedule_slot_id": slot["id"],
+                                "venue_field_id": field["id"]
+                            })
+                    if assignments:
+                        supabase.table("slot_field_assignments").insert(assignments).execute()
+        
+        return {"success": True, "message": "Slots appended successfully"}
 
 slot_service = SlotService()

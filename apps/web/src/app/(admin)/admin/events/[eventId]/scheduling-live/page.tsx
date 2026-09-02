@@ -273,19 +273,19 @@ export default function SchedulingLivePage() {
           <p className="text-muted-foreground mt-2 text-lg font-medium">Assign fixtures dynamically into available slots while broadcasting live.</p>
         </div>
         
-        <div className="flex items-center gap-4 bg-white p-2 pr-4 rounded-full shadow-sm border border-slate-200">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100">
-            <Trophy className="h-5 w-5 text-slate-600" />
+        <div className="flex items-center gap-4 bg-white dark:bg-zinc-900 p-2 pr-4 rounded-full shadow-sm border border-slate-200 dark:border-zinc-800">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 dark:bg-zinc-800">
+            <Trophy className="h-5 w-5 text-slate-600 dark:text-zinc-400" />
           </div>
           <div className="flex flex-col">
             <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Unassigned</span>
-            <span className="text-lg font-black text-slate-800 leading-none">{unassignedFixtures.length}</span>
+            <span className="text-lg font-black text-slate-800 dark:text-zinc-200 leading-none">{unassignedFixtures.length}</span>
           </div>
         </div>
       </div>
 
       {error && (
-        <Alert variant="destructive" className="border-red-500/50 bg-red-500/10 text-red-600 shadow-sm">
+        <Alert variant="destructive" className="border-red-500/50 bg-red-50 dark:bg-red-950/200/10 text-red-600 shadow-sm">
           <AlertCircle className="h-5 w-5" />
           <AlertTitle className="font-bold text-base">Scheduling Blocked</AlertTitle>
           <AlertDescription className="text-sm font-medium">{error}</AlertDescription>
@@ -295,7 +295,7 @@ export default function SchedulingLivePage() {
       <div className="grid gap-8 grid-cols-1 xl:grid-cols-3">
         {/* Actions & Stats */}
         <div className="xl:col-span-1 space-y-6">
-          <Card className="border-slate-200/60 shadow-lg shadow-emerald-100/50 backdrop-blur-xl bg-white/70 overflow-hidden">
+          <Card className="border-slate-200 dark:border-zinc-800/60 shadow-lg shadow-emerald-100/50 backdrop-blur-xl bg-white dark:bg-zinc-900/70 overflow-hidden">
             <div className="h-2 w-full bg-gradient-to-r from-emerald-400 to-teal-500" />
             <CardHeader>
               <CardTitle>Schedule Engine</CardTitle>
@@ -320,15 +320,23 @@ export default function SchedulingLivePage() {
                   onClick={handleGenerateFixtures} 
                   disabled={loading} 
                   variant="outline"
-                  className="w-full mt-4 border-emerald-200 text-emerald-700 hover:bg-emerald-50 h-12 text-md font-semibold rounded-xl flex items-center justify-center gap-2"
+                  className="w-full mt-4 border-emerald-200 text-emerald-700 hover:bg-emerald-50 dark:bg-emerald-950/20 h-12 text-md font-semibold rounded-xl flex items-center justify-center gap-2"
                 >
                   {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Zap className="h-5 w-5" />}
                   Generate Fixtures
                 </Button>
               )}
 
-              <div className="mt-8 pt-6 border-t border-slate-200">
-                <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Broadcasting</h3>
+              <Button
+                onClick={() => window.open(`/admin/events/${eventId}/matches/create`, '_blank')}
+                variant="outline"
+                className="w-full mt-4 border-slate-200 text-slate-700 hover:bg-slate-50 h-12 text-md font-semibold rounded-xl flex items-center justify-center gap-2"
+              >
+                + Add Manual Match
+              </Button>
+
+              <div className="mt-8 pt-6 border-t border-slate-200 dark:border-zinc-800">
+                <h3 className="text-sm font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider mb-4">Broadcasting</h3>
                 {event?.scheduling_state !== 'LIVE' ? (
                   <Button 
                     onClick={() => handleToggleBroadcast('LIVE')} 
@@ -342,7 +350,7 @@ export default function SchedulingLivePage() {
                     onClick={() => handleToggleBroadcast('COMPLETED')} 
                     disabled={loading} 
                     variant="outline"
-                    className="w-full border-red-200 text-red-600 hover:bg-red-50 h-12 text-md font-bold rounded-xl flex items-center justify-center gap-2"
+                    className="w-full border-red-200 text-red-600 hover:bg-red-50 dark:bg-red-950/20 h-12 text-md font-bold rounded-xl flex items-center justify-center gap-2"
                   >
                     End Scheduling Broadcast
                   </Button>
@@ -354,17 +362,17 @@ export default function SchedulingLivePage() {
 
         {/* Live Grid */}
         <div className="xl:col-span-2">
-          <Card className="border-slate-200/60 shadow-lg shadow-slate-100/50 backdrop-blur-xl bg-white/70 overflow-hidden h-full">
-            <CardHeader className="border-b bg-slate-50/50 pb-4">
+          <Card className="border-slate-200 dark:border-zinc-800/60 shadow-lg shadow-slate-100/50 backdrop-blur-xl bg-white dark:bg-zinc-900/70 overflow-hidden h-full">
+            <CardHeader className="border-b bg-slate-50 dark:bg-zinc-900/50/50 pb-4">
               <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-slate-500" />
+                <Calendar className="h-5 w-5 text-slate-500 dark:text-zinc-400" />
                 Live Assignment Grid
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm text-left">
-                  <thead className="bg-slate-100/50 text-slate-500 font-semibold sticky top-0">
+                  <thead className="bg-slate-100 dark:bg-zinc-800/50 text-slate-500 dark:text-zinc-400 font-semibold sticky top-0">
                     <tr>
                       <th className="px-6 py-4 border-b">Slot</th>
                       <th className="px-6 py-4 border-b">Time</th>
@@ -376,13 +384,13 @@ export default function SchedulingLivePage() {
                     {slots.map((slot) => {
                       const slotAssignments = assignments.filter(a => a.schedule_slot_id === slot.id);
                       return slotAssignments.map((assignment, i) => (
-                        <tr key={assignment.id} className="hover:bg-slate-50/50 transition-colors group">
+                        <tr key={assignment.id} className="hover:bg-slate-50 dark:bg-zinc-900/50/50 transition-colors group">
                           {i === 0 && (
                             <>
-                              <td rowSpan={slotAssignments.length} className="px-6 py-4 font-black text-slate-800 text-lg align-top bg-white/50">
+                              <td rowSpan={slotAssignments.length} className="px-6 py-4 font-black text-slate-800 dark:text-zinc-200 text-lg align-top bg-white dark:bg-zinc-900/50">
                                 #{slot.sequence_number}
                               </td>
-                              <td rowSpan={slotAssignments.length} className="px-6 py-4 text-slate-500 font-medium align-top bg-white/50 whitespace-nowrap">
+                              <td rowSpan={slotAssignments.length} className="px-6 py-4 text-slate-500 dark:text-zinc-400 font-medium align-top bg-white dark:bg-zinc-900/50 whitespace-nowrap">
                                 <div className="flex items-center gap-1.5">
                                   <Clock className="h-4 w-4" />
                                   {new Date(slot.scheduled_start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -390,13 +398,13 @@ export default function SchedulingLivePage() {
                               </td>
                             </>
                           )}
-                          <td className="px-6 py-4 font-medium text-slate-600">
+                          <td className="px-6 py-4 font-medium text-slate-600 dark:text-zinc-400">
                             {fields.find(f => f.id === assignment.venue_field_id)?.name || 'Unknown Field'}
                           </td>
                           <td className="px-6 py-4">
                             {assignment.fixture_id ? (
                               <div className="flex items-center gap-3">
-                                <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-emerald-50 text-emerald-700 font-semibold border border-emerald-200">
+                                <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 font-semibold border border-emerald-200">
                                   <CheckCircle2 className="h-4 w-4" />
                                   Match Assigned ({assignment.fixture_id.substring(0, 8)})
                                 </span>
@@ -404,7 +412,7 @@ export default function SchedulingLivePage() {
                                   variant="outline" 
                                   size="sm"
                                   onClick={() => window.open(`/events/${event?.slug || eventId}/matches/${assignment.fixture_id}`, '_blank')}
-                                  className="h-8 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                                  className="h-8 border-emerald-200 text-emerald-700 hover:bg-emerald-50 dark:bg-emerald-950/20"
                                 >
                                   Open Match Center
                                 </Button>
@@ -413,7 +421,7 @@ export default function SchedulingLivePage() {
                                   size="sm"
                                   disabled={loading}
                                   onClick={() => handleUnassignFixture(assignment.fixture_id)}
-                                  className="text-slate-400 hover:text-red-600 hover:bg-red-50"
+                                  className="text-slate-400 hover:text-red-600 hover:bg-red-50 dark:bg-red-950/20"
                                 >
                                   <XCircle className="h-4 w-4" />
                                 </Button>
@@ -427,7 +435,7 @@ export default function SchedulingLivePage() {
                                   )}
                                   
                                   <select
-                                    className="border border-yellow-200 rounded text-xs px-2 py-1 h-7 bg-white text-yellow-800 outline-none w-32"
+                                    className="border border-yellow-200 rounded text-xs px-2 py-1 h-7 bg-white dark:bg-zinc-900 text-yellow-800 outline-none w-32"
                                     value={''}
                                     onChange={(e) => {
                                       if (e.target.value) handleInviteReferee(assignment.fixture_id, e.target.value);
@@ -448,7 +456,7 @@ export default function SchedulingLivePage() {
                                 </div>
                               </div>
                             ) : (
-                              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-slate-100 text-slate-500 font-medium border border-slate-200">
+                              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-slate-100 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400 font-medium border border-slate-200 dark:border-zinc-800">
                                 Empty
                               </span>
                             )}

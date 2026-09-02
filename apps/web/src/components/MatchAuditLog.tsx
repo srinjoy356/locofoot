@@ -55,16 +55,16 @@ export function MatchAuditLog({ matchId, eventId, eventType }: { matchId: string
   };
 
   return (
-    <div className="mt-8 border-t border-slate-200 pt-4">
-      <h3 className="font-bold text-slate-700 mb-4">Recent Audit Log</h3>
+    <div className="mt-8 border-t border-slate-200 dark:border-zinc-800 pt-4">
+      <h3 className="font-bold text-slate-700 dark:text-zinc-300 mb-4">Recent Audit Log</h3>
       <div className="space-y-2 max-h-64 overflow-y-auto">
         {logs.map(log => (
-          <div key={log.id} className={`p-3 rounded text-sm flex justify-between items-center ${log.metadata?.deleted ? 'bg-red-50 text-red-500 line-through' : 'bg-white border border-slate-200'}`}>
+          <div key={log.id} className={`p-3 rounded text-sm flex justify-between items-center ${log.metadata?.deleted ? 'bg-red-50 dark:bg-red-950/20 text-red-500 line-through' : 'bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800'}`}>
             <div>
-              <span className="font-mono text-slate-500 mr-2">{log.display_minute}':{log.display_second.toString().padStart(2, '0')}</span>
+              <span className="font-mono text-slate-500 dark:text-zinc-400 mr-2">{log.display_minute}':{log.display_second.toString().padStart(2, '0')}</span>
               <span className="font-bold">{log.event_type}</span>
               {log.event_type === 'SUBSTITUTION' && log.metadata?.player_in_name && log.metadata?.player_out_name && (
-                <span className="ml-2 text-slate-600 text-xs">({log.metadata.player_out_name} &rarr; {log.metadata.player_in_name})</span>
+                <span className="ml-2 text-slate-600 dark:text-zinc-400 text-xs">({log.metadata.player_out_name} &rarr; {log.metadata.player_in_name})</span>
               )}
             </div>
             {!log.metadata?.deleted && (
@@ -72,7 +72,7 @@ export function MatchAuditLog({ matchId, eventId, eventType }: { matchId: string
             )}
           </div>
         ))}
-        {logs.length === 0 && <p className="text-sm text-slate-500 text-center">No events recorded yet.</p>}
+        {logs.length === 0 && <p className="text-sm text-slate-500 dark:text-zinc-400 text-center">No events recorded yet.</p>}
       </div>
     </div>
   );
