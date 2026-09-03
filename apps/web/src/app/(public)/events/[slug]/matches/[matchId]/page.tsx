@@ -12,8 +12,10 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
   const [matchData, setMatchData] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isReferee, setIsReferee] = useState(false);
+  const [isCaptain, setIsCaptain] = useState(false);
   const [timelineEvents, setTimelineEvents] = useState<any[]>([]);
   const [refereeEvents, setRefereeEvents] = useState<any[]>([]);
+  const [playerMap, setPlayerMap] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
   const supabase = createClient();
   
@@ -32,6 +34,8 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
           match_state,
           home_score,
           away_score,
+          home_registration_id,
+          away_registration_id,
           home_team:event_team_registrations!home_registration_id(id, team_name, logo_media_id),
           away_team:event_team_registrations!away_registration_id(id, team_name, logo_media_id)
         `)
@@ -75,6 +79,43 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
           }
           if (isRef) {
             setIsReferee(true);
+          }
+        }
+
+        if (match.home_registration_id && match.away_registration_id) {
+          const { data: captainStatus } = await supabase.from('event_team_players')
+            .select('is_captain_for_event')
+            .eq('user_id', session.user.id)
+            .in('event_registration_id', [match.home_registration_id, match.away_registration_id])
+            .eq('is_captain_for_event', true);
+            
+          if (captainStatus && captainStatus.length > 0) {
+            setIsCaptain(true);
+          }
+
+          // Fetch all players for these teams to get their names
+          const { data: playersData } = await supabase
+            .from('event_team_players')
+            .select('id, user_id')
+            .in('event_registration_id', [match.home_registration_id, match.away_registration_id]);
+
+          if (playersData && playersData.length > 0) {
+            const userIds = playersData.map(p => p.user_id).filter(Boolean);
+            if (userIds.length > 0) {
+              const { data: usersData } = await supabase
+                .from('users')
+                .select('id, display_name')
+                .in('id', userIds);
+                
+              const tempMap: Record<string, string> = {};
+              playersData.forEach(p => {
+                const user = usersData?.find(u => u.id === p.user_id);
+                if (user?.display_name) {
+                  tempMap[p.id] = user.display_name;
+                }
+              });
+              setPlayerMap(tempMap);
+            }
           }
         }
       }
@@ -138,6 +179,17 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
         )}
       </div>
       )}
+
+      {(isAdmin || isCaptain) && matchData.match_state === 'SCHEDULED' && (
+        <div className="mb-6 flex justify-center">
+          <Link 
+            href={`/events/${matchData.event_id || slug}/matches/${matchId}/lineup`}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg transition"
+          >
+            Manage Starting Lineup
+          </Link>
+        </div>
+      )}
       
       {/* Scoreboard */}
       <div className="bg-gradient-to-br from-slate-900 to-indigo-950 text-white rounded-3xl p-6 text-center shadow-2xl relative overflow-hidden">
@@ -196,6 +248,9 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
           const isFoul = ev.event_type === 'FOUL';
           const isSub = ev.event_type === 'SUBSTITUTION';
           
+          let actorName = (ev.actor_player_id || ev.player_id || ev.event_player_id) ? playerMap[ev.actor_player_id || ev.player_id || ev.event_player_id] : (ev.metadata?.committed_by_player_name || ev.metadata?.player_out_name || null);
+          let targetName = ev.target_player_id ? playerMap[ev.target_player_id] : (ev.metadata?.received_by_player_name || ev.metadata?.player_in_name || null);
+          
           return (
             <div key={ev.id || i} className={`bg-white dark:bg-slate-900 border dark:border-slate-800 rounded-2xl p-5 shadow-sm flex items-center gap-5 transition hover:shadow-md ${isGoal ? 'border-emerald-200 dark:border-emerald-900/50 bg-emerald-50 dark:bg-emerald-950/20/30 dark:bg-emerald-900/20' : ''} ${isCard ? 'border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/30/30 dark:bg-amber-900/20' : ''}`}>
               <div className="font-mono font-black text-slate-400 dark:text-slate-500 w-16 text-lg shrink-0 text-center">
@@ -203,7 +258,7 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
               </div>
               <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wide text-sm">{ev.event_type.replace('_', ' ')}</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wide text-sm">{ev.event_type.replace(/_/g, ' ')}</span>
                     {isGoal && <span className="bg-emerald-50 dark:bg-emerald-950/200 text-white text-xs font-bold px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse">GOAL!</span>}
                     {ev.event_type === 'YELLOW_CARD' && <span className="bg-amber-400 w-3 h-4 rounded-sm inline-block shadow-sm"></span>}
                     {ev.event_type === 'RED_CARD' && <span className="bg-red-600 w-3 h-4 rounded-sm inline-block shadow-sm"></span>}
@@ -213,25 +268,43 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
                     <div className="text-sm font-medium mt-2 flex flex-col gap-1">
                       <div className="flex gap-2 items-center text-red-600 dark:text-red-400">
                         <span className="font-bold uppercase text-[10px] tracking-wider bg-red-100 dark:bg-red-900/30 px-1.5 py-0.5 rounded">OUT</span> 
-                        <span className="dark:text-slate-300">{ev.metadata?.player_out_name || 'Unknown Player'}</span>
+                        <span className="dark:text-slate-300">{actorName || 'Unknown Player'}</span>
                       </div>
                       <div className="flex gap-2 items-center text-emerald-600 dark:text-emerald-400">
                         <span className="font-bold uppercase text-[10px] tracking-wider bg-emerald-100 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded">IN</span> 
-                        <span className="dark:text-slate-300">{ev.metadata?.player_in_name || 'Unknown Player'}</span>
+                        <span className="dark:text-slate-300">{targetName || 'Unknown Player'}</span>
                       </div>
                     </div>
-                  ) : ev.metadata && Object.keys(ev.metadata).length > 0 && (
-                    <div className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-1.5 flex flex-wrap gap-x-4 gap-y-1">
-                      {Object.entries(ev.metadata).map(([k, v]) => {
-                        if (k === 'result' && v === 'GOAL') return null; // already shown
-                        return (
-                          <span key={k} className="capitalize flex gap-1">
-                            <span className="text-slate-400 dark:text-slate-500">{k.replace(/_/g, ' ')}:</span> 
-                            <span className="text-slate-700 dark:text-slate-300">{String(v)}</span>
-                          </span>
-                        );
-                      })}
-                    </div>
+                  ) : (
+                    <>
+                      {actorName && (
+                        <div className="text-sm font-semibold text-slate-700 dark:text-slate-300 mt-1 mb-1 flex items-center gap-2 flex-wrap">
+                          <span className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-800 dark:text-slate-200">{actorName}</span>
+                          {targetName && (
+                            <>
+                              <span className="text-slate-400 text-xs">&rarr;</span>
+                              <span className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-800 dark:text-slate-200">{targetName}</span>
+                            </>
+                          )}
+                        </div>
+                      )}
+                      
+                      {ev.metadata && Object.keys(ev.metadata).length > 0 && (
+                        <div className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-1.5 flex flex-wrap gap-x-4 gap-y-1">
+                          {Object.entries(ev.metadata).map(([k, v]) => {
+                            if (k === 'result' && v === 'GOAL') return null;
+                            if (k.includes('_id') || k.includes('_name')) return null; // hide raw internal keys
+                            
+                            return (
+                              <span key={k} className="capitalize flex gap-1">
+                                <span className="text-slate-400 dark:text-slate-500">{k.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ').trim()}:</span> 
+                                <span className="text-slate-700 dark:text-slate-300">{String(v).replace(/_/g, ' ')}</span>
+                              </span>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </>
                   )}
               </div>
             </div>

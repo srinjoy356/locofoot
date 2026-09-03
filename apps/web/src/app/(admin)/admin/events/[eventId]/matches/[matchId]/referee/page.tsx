@@ -7,6 +7,7 @@ import { useMatchPlayers, MatchPlayer } from '../useMatchPlayers';
 import { MatchAuditLog } from '@/components/MatchAuditLog';
 import { SubstitutionModal } from '@/components/SubstitutionModal';
 import { FoulModal } from '@/components/FoulModal';
+import { RefereeLineupManager } from '@/components/RefereeLineupManager';
 
 const generateUUID = () => {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -178,6 +179,12 @@ export default function RefereePage({ params }: { params: Promise<{ eventId: str
           </div>
         ) : (
           <>
+            {matchState === 'SCHEDULED' && (
+              <div className="col-span-2 mb-2">
+                <RefereeLineupManager eventId={eventId} matchId={matchId} />
+              </div>
+            )}
+            
             <button 
               onClick={() => changeState('PAUSED' as MatchState)} 
               disabled={!['LIVE', 'SECOND_HALF', 'EXTRA_TIME_1', 'EXTRA_TIME_2'].includes(matchState)} 
@@ -254,27 +261,35 @@ export default function RefereePage({ params }: { params: Promise<{ eventId: str
                 <div className="space-y-6">
                   <div>
                     <h4 className="font-bold text-sm text-slate-400 mb-2 uppercase tracking-wider">Home Team</h4>
-                    <div className="grid grid-cols-1 gap-2">
-                      {players.home.filter(p => !['SUBBED_OUT', 'SENT_OFF'].includes(p.participationStatus || '')).map(p => (
-                        <button key={p.id} onClick={() => confirmEvent(p)} className="flex items-center text-left bg-slate-50 dark:bg-zinc-900/50 p-2 rounded hover:bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-800">
-                          <span className="w-8 h-8 flex items-center justify-center bg-slate-200 rounded text-slate-700 dark:text-zinc-300 font-bold mr-3">{p.jersey_number || '-'}</span>
-                          <span className="font-medium">{p.name}</span>
-                        </button>
-                      ))}
-                      {players.home.filter(p => !['SUBBED_OUT', 'SENT_OFF'].includes(p.participationStatus || '')).length === 0 && <p className="text-sm text-slate-400">No active players found</p>}
+                    <div className="grid grid-cols-4 gap-2">
+                      {(() => {
+                        const hasLineup = players.home.some(p => p.participationStatus !== null);
+                        const filtered = players.home.filter(p => hasLineup ? ['STARTER', 'SUBBED_IN'].includes(p.participationStatus as any) : !['SUBBED_OUT', 'SENT_OFF'].includes(p.participationStatus as any));
+                        if (filtered.length === 0) return <p className="text-sm text-slate-400">No active players found</p>;
+                        return filtered.map(p => (
+                          <button key={p.id} onClick={() => confirmEvent(p)} className="flex flex-col items-center bg-slate-100 dark:bg-zinc-800 p-2 rounded hover:bg-slate-200 border border-slate-200 dark:border-zinc-800">
+                            <span className="w-8 h-8 flex items-center justify-center bg-slate-200 rounded text-slate-700 dark:text-zinc-300 font-bold mb-1">{p.jersey_number || '-'}</span>
+                            <span className="text-[10px] text-center font-medium truncate w-full">{p.name}</span>
+                          </button>
+                        ));
+                      })()}
                     </div>
                   </div>
                   
                   <div>
                     <h4 className="font-bold text-sm text-slate-400 mb-2 uppercase tracking-wider">Away Team</h4>
-                    <div className="grid grid-cols-1 gap-2">
-                      {players.away.filter(p => !['SUBBED_OUT', 'SENT_OFF'].includes(p.participationStatus || '')).map(p => (
-                        <button key={p.id} onClick={() => confirmEvent(p)} className="flex items-center text-left bg-slate-50 dark:bg-zinc-900/50 p-2 rounded hover:bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-800">
-                          <span className="w-8 h-8 flex items-center justify-center bg-slate-200 rounded text-slate-700 dark:text-zinc-300 font-bold mr-3">{p.jersey_number || '-'}</span>
-                          <span className="font-medium">{p.name}</span>
-                        </button>
-                      ))}
-                      {players.away.filter(p => !['SUBBED_OUT', 'SENT_OFF'].includes(p.participationStatus || '')).length === 0 && <p className="text-sm text-slate-400">No active players found</p>}
+                    <div className="grid grid-cols-4 gap-2">
+                      {(() => {
+                        const hasLineup = players.away.some(p => p.participationStatus !== null);
+                        const filtered = players.away.filter(p => hasLineup ? ['STARTER', 'SUBBED_IN'].includes(p.participationStatus as any) : !['SUBBED_OUT', 'SENT_OFF'].includes(p.participationStatus as any));
+                        if (filtered.length === 0) return <p className="text-sm text-slate-400">No active players found</p>;
+                        return filtered.map(p => (
+                          <button key={p.id} onClick={() => confirmEvent(p)} className="flex flex-col items-center bg-slate-100 dark:bg-zinc-800 p-2 rounded hover:bg-slate-200 border border-slate-200 dark:border-zinc-800">
+                            <span className="w-8 h-8 flex items-center justify-center bg-slate-200 rounded text-slate-700 dark:text-zinc-300 font-bold mb-1">{p.jersey_number || '-'}</span>
+                            <span className="text-[10px] text-center font-medium truncate w-full">{p.name}</span>
+                          </button>
+                        ));
+                      })()}
                     </div>
                   </div>
                 </div>

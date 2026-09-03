@@ -7,6 +7,7 @@ interface DetailedEventModalProps {
   eventType: TimelineEventType;
   players: { home: MatchPlayer[]; away: MatchPlayer[] };
   playersLoading: boolean;
+  initialMetadata?: Record<string, string>;
   onClose: () => void;
   onConfirm: (actor: MatchPlayer | null, target: MatchPlayer | null, metadata: any) => void;
 }
@@ -19,7 +20,7 @@ const PlayerList = ({ onSelect, label, players }: { onSelect: (p: MatchPlayer | 
         {players.home.map(p => (
           <button key={p.id} onClick={() => onSelect(p)} className="snap-start flex-none flex flex-col items-center bg-slate-100 dark:bg-zinc-800 p-2 rounded w-16 hover:bg-slate-200 border border-slate-200 dark:border-zinc-800">
             <span className="w-8 h-8 flex items-center justify-center bg-white dark:bg-zinc-900 rounded text-slate-700 dark:text-zinc-300 font-bold mb-1 shadow-sm text-sm">{p.jersey_number || '-'}</span>
-            <span className="text-[10px] font-medium text-center leading-tight line-clamp-2">{p.name}</span>
+            <span className="w-full text-[10px] font-medium text-center leading-tight line-clamp-2 break-all">{p.name}</span>
           </button>
         ))}
       </div>
@@ -30,7 +31,7 @@ const PlayerList = ({ onSelect, label, players }: { onSelect: (p: MatchPlayer | 
         {players.away.map(p => (
           <button key={p.id} onClick={() => onSelect(p)} className="snap-start flex-none flex flex-col items-center bg-slate-100 dark:bg-zinc-800 p-2 rounded w-16 hover:bg-slate-200 border border-slate-200 dark:border-zinc-800">
             <span className="w-8 h-8 flex items-center justify-center bg-white dark:bg-zinc-900 rounded text-slate-700 dark:text-zinc-300 font-bold mb-1 shadow-sm text-sm">{p.jersey_number || '-'}</span>
-            <span className="text-[10px] font-medium text-center leading-tight line-clamp-2">{p.name}</span>
+            <span className="w-full text-[10px] font-medium text-center leading-tight line-clamp-2 break-all">{p.name}</span>
           </button>
         ))}
       </div>
@@ -38,25 +39,44 @@ const PlayerList = ({ onSelect, label, players }: { onSelect: (p: MatchPlayer | 
   </div>
 );
 
-export function DetailedEventModal({ eventType, players, playersLoading, onClose, onConfirm }: DetailedEventModalProps) {
+export function DetailedEventModal({ eventType, players, playersLoading, initialMetadata, onClose, onConfirm }: DetailedEventModalProps) {
   const taxonomy: EventTaxonomy | undefined = eventTaxonomies[eventType];
   
   const [actor, setActor] = useState<MatchPlayer | null>(null);
   const [target, setTarget] = useState<MatchPlayer | null>(null);
-  const [metadata, setMetadata] = useState<Record<string, string>>({});
+  const [metadata, setMetadata] = useState<Record<string, string>>(initialMetadata || {});
   const [step, setStep] = useState<'ACTOR' | 'TARGET' | 'ATTRIBUTES'>(taxonomy ? 'ATTRIBUTES' : 'ACTOR');
 
-  let targetPlayers = { home: players.home, away: players.away };
+  const isGoal = eventType === 'SHOT' && initialMetadata?.result === 'GOAL';
+  const modalTitle = isGoal ? 'GOAL DETAILS' : `${eventType.replace(/_/g, ' ')} DETAILS`;
+
+  const homeHasLineup = players.home.some(p => p.participationStatus !== null);
+  const awayHasLineup = players.away.some(p => p.participationStatus !== null);
+
+  const isHomeOnPitch = (p: MatchPlayer) => homeHasLineup 
+    ? ['STARTER', 'SUBBED_IN'].includes(p.participationStatus as any)
+    : !['SUBBED_OUT', 'SENT_OFF'].includes(p.participationStatus as any);
+
+  const isAwayOnPitch = (p: MatchPlayer) => awayHasLineup
+    ? ['STARTER', 'SUBBED_IN'].includes(p.participationStatus as any)
+    : !['SUBBED_OUT', 'SENT_OFF'].includes(p.participationStatus as any);
+
+  const filteredPlayers = {
+    home: players.home.filter(isHomeOnPitch),
+    away: players.away.filter(isAwayOnPitch)
+  };
+
+  let targetPlayers = { home: filteredPlayers.home, away: filteredPlayers.away };
   if (actor) {
-    const isHomeActor = players.home.some(p => p.id === actor.id);
+    const isHomeActor = filteredPlayers.home.some(p => p.id === actor.id);
     if (['PASS', 'CROSS'].includes(eventType)) {
       targetPlayers = isHomeActor 
-        ? { home: players.home.filter(p => p.id !== actor.id), away: [] }
-        : { home: [], away: players.away.filter(p => p.id !== actor.id) };
+        ? { home: filteredPlayers.home.filter(p => p.id !== actor.id), away: [] }
+        : { home: [], away: filteredPlayers.away.filter(p => p.id !== actor.id) };
     } else {
       targetPlayers = isHomeActor
-        ? { home: [], away: players.away }
-        : { home: players.home, away: [] };
+        ? { home: [], away: filteredPlayers.away }
+        : { home: filteredPlayers.home, away: [] };
     }
   }
 
@@ -73,8 +93,8 @@ export function DetailedEventModal({ eventType, players, playersLoading, onClose
         {/* Header */}
         <div className="p-3 border-b flex justify-between items-center bg-slate-50 dark:bg-zinc-900/50 shrink-0">
           <div className="flex items-center gap-2">
-            <span className="bg-indigo-600 text-white text-xs font-bold px-2 py-1 rounded">{eventType}</span>
-            <h3 className="font-bold text-sm">Event Details</h3>
+            <span className="bg-indigo-600 text-white text-xs font-bold px-2 py-1 rounded">{isGoal ? 'GOAL' : eventType}</span>
+            <h3 className="font-bold text-sm uppercase">{modalTitle}</h3>
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:text-zinc-400 text-2xl leading-none px-2">&times;</button>
         </div>
@@ -88,7 +108,7 @@ export function DetailedEventModal({ eventType, players, playersLoading, onClose
               {actor && <span className="text-xs bg-emerald-100 text-emerald-700 font-bold px-2 py-0.5 rounded">{actor.name}</span>}
             </div>
             {!actor ? (
-              playersLoading ? <div className="text-xs text-slate-400">Loading...</div> : <PlayerList onSelect={setActor} label="Actor" players={players} />
+              playersLoading ? <div className="text-xs text-slate-400">Loading...</div> : <PlayerList onSelect={setActor} label="Actor" players={filteredPlayers} />
             ) : (
               <button onClick={() => setActor(null)} className="text-xs text-blue-600 font-semibold underline">Change Player</button>
             )}
@@ -122,7 +142,7 @@ export function DetailedEventModal({ eventType, players, playersLoading, onClose
               </div>
               
               <div className="grid grid-cols-2 gap-x-4 gap-y-4">
-                {taxonomy.fields.map(field => (
+                {taxonomy.fields.filter(f => !(isGoal && f.name === 'result')).map(field => (
                   <div key={field.name} className={field.type === 'radio' ? "col-span-2" : "col-span-1"}>
                     <label className="block text-xs font-bold text-slate-500 dark:text-zinc-400 mb-1">{field.label}</label>
                     

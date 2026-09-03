@@ -29,6 +29,16 @@ export function SubstitutionModal({ players, playersLoading, onClose, onConfirm 
   };
 
   const activePlayers = team === 'home' ? players.home : players.away;
+  const activeTeamHasLineup = activePlayers.some(p => p.participationStatus !== null);
+
+  const canComeOut = (p: MatchPlayer) => activeTeamHasLineup
+    ? ['STARTER', 'SUBBED_IN'].includes(p.participationStatus as any)
+    : !['SUBBED_OUT', 'SENT_OFF'].includes(p.participationStatus as any);
+
+  const canComeIn = (p: MatchPlayer) => ['SUBSTITUTE', null].includes(p.participationStatus as any);
+
+  const filteredOutPlayers = activePlayers.filter(canComeOut);
+  const filteredInPlayers = activePlayers.filter(p => (!playerOut || p.id !== playerOut.id) && canComeIn(p));
 
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center sm:p-4">
@@ -74,13 +84,13 @@ export function SubstitutionModal({ players, playersLoading, onClose, onConfirm 
               {!playerOut && (
                 playersLoading ? <div className="text-xs text-slate-400">Loading...</div> : (
                   <div className="flex overflow-x-auto pb-2 gap-2 snap-x">
-                    {activePlayers.filter(p => !['SUBBED_OUT', 'SENT_OFF'].includes(p.participationStatus || '')).map(p => (
+                    {filteredOutPlayers.map(p => (
                       <button key={p.id} onClick={() => handleSelectOut(p)} className="snap-start flex-none flex flex-col items-center bg-white dark:bg-zinc-900 p-2 rounded w-16 hover:bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-800">
                         <span className="w-8 h-8 flex items-center justify-center bg-slate-100 dark:bg-zinc-800 rounded text-slate-700 dark:text-zinc-300 font-bold mb-1 shadow-sm text-sm">{p.jersey_number || '-'}</span>
-                        <span className="text-[10px] font-medium text-center leading-tight line-clamp-2">{p.name}</span>
+                        <span className="w-full text-[10px] font-medium text-center leading-tight line-clamp-2 break-all">{p.name}</span>
                       </button>
                     ))}
-                    {activePlayers.filter(p => !['SUBBED_OUT', 'SENT_OFF'].includes(p.participationStatus || '')).length === 0 && <p className="text-xs text-slate-400">No active players</p>}
+                    {filteredOutPlayers.length === 0 && <p className="text-xs text-slate-400">No active players</p>}
                   </div>
                 )
               )}
@@ -100,13 +110,13 @@ export function SubstitutionModal({ players, playersLoading, onClose, onConfirm 
               {!playerIn && (
                 playersLoading ? <div className="text-xs text-slate-400">Loading...</div> : (
                   <div className="flex overflow-x-auto pb-2 gap-2 snap-x">
-                    {activePlayers.filter(p => p.id !== playerOut.id && ['SUBSTITUTE', null].includes(p.participationStatus as any)).map(p => (
+                    {filteredInPlayers.map(p => (
                       <button key={p.id} onClick={() => handleSelectIn(p)} className="snap-start flex-none flex flex-col items-center bg-white dark:bg-zinc-900 p-2 rounded w-16 hover:bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-800">
                         <span className="w-8 h-8 flex items-center justify-center bg-slate-100 dark:bg-zinc-800 rounded text-slate-700 dark:text-zinc-300 font-bold mb-1 shadow-sm text-sm">{p.jersey_number || '-'}</span>
-                        <span className="text-[10px] font-medium text-center leading-tight line-clamp-2">{p.name}</span>
+                        <span className="w-full text-[10px] font-medium text-center leading-tight line-clamp-2 break-all">{p.name}</span>
                       </button>
                     ))}
-                    {activePlayers.filter(p => p.id !== playerOut.id && ['SUBSTITUTE', null].includes(p.participationStatus as any)).length === 0 && <p className="text-xs text-slate-400">No available substitutes</p>}
+                    {filteredInPlayers.length === 0 && <p className="text-xs text-slate-400">No available substitutes</p>}
                   </div>
                 )
               )}

@@ -139,10 +139,10 @@ export default function RecorderPage({ params }: { params: Promise<{ eventId: st
           {penalties.map(p => (
             <button
               key={p.id}
-              onClick={() => handleEventClick('SHOT' as TimelineEventType, { situation: 'PENALTY' }, p.id)}
+              onClick={() => handleEventClick('SHOT' as TimelineEventType, { result: 'GOAL', situation: 'PENALTY' }, p.id)}
               className="bg-red-600 text-white font-bold py-2 rounded text-sm w-full animate-pulse shadow hover:bg-red-700"
             >
-              RECORD PENALTY SHOT
+              RECORD PENALTY GOAL
             </button>
           ))}
         </div>
@@ -188,6 +188,7 @@ export default function RecorderPage({ params }: { params: Promise<{ eventId: st
           eventType={pendingEvent.type}
           players={players}
           playersLoading={playersLoading}
+          initialMetadata={pendingEvent.extra}
           onClose={() => setPendingEvent(null)}
           onConfirm={confirmDetailedEvent}
         />
