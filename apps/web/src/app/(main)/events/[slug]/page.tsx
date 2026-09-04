@@ -12,6 +12,7 @@ export default function PublicEventPage({ params }: { params: Promise<{ slug: st
   const [isAdmin, setIsAdmin] = useState(false);
   const [myRegistrations, setMyRegistrations] = useState<any[]>([]);
   const [matches, setMatches] = useState<any[]>([]);
+  const [announcement, setAnnouncement] = useState<any>(null);
   const [eventUrl, setEventUrl] = useState("");
   const [scheduleTimeframe, setScheduleTimeframe] = useState<{ start: string | null, end: string | null }>({ start: null, end: null });
   const supabase = createClient();
@@ -57,6 +58,16 @@ export default function PublicEventPage({ params }: { params: Promise<{ slug: st
           }
         }
 
+        // Fetch latest announcement (emergency or not)
+        const { data: annData } = await supabase
+          .from('event_announcements')
+          .select('*')
+          .eq('event_id', ev.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (annData) setAnnouncement(annData);
+
         if (session) {
         // Load admin status
         const { data: roleData } = await supabase.from('event_roles')
@@ -100,6 +111,9 @@ export default function PublicEventPage({ params }: { params: Promise<{ slug: st
           return prev;
         });
       })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'event_announcements' }, payload => {
+        setAnnouncement(payload.new);
+      })
       .subscribe();
 
     return () => {
@@ -111,6 +125,19 @@ export default function PublicEventPage({ params }: { params: Promise<{ slug: st
 
   return (
     <div className="space-y-6">
+      {announcement && (
+        <div className={`${announcement.is_emergency ? 'bg-red-600' : 'bg-blue-600'} text-white p-4 rounded-xl shadow-xl flex items-center gap-4 animate-in fade-in slide-in-from-top-4`}>
+          <div className={`${announcement.is_emergency ? 'bg-red-800' : 'bg-blue-800'} p-2 rounded-full animate-pulse flex-shrink-0`}>
+            <span className="text-xl">{announcement.is_emergency ? '🚨' : 'ℹ️'}</span>
+          </div>
+          <div className="flex-1">
+            <h3 className="font-bold text-lg">{announcement.is_emergency ? 'EMERGENCY ANNOUNCEMENT' : 'ANNOUNCEMENT'}</h3>
+            <p className={`${announcement.is_emergency ? 'text-red-100' : 'text-blue-100'}`}>{announcement.message}</p>
+          </div>
+          <button onClick={() => setAnnouncement(null)} className={`${announcement.is_emergency ? 'text-red-200' : 'text-blue-200'} hover:text-white font-bold text-2xl leading-none`}>&times;</button>
+        </div>
+      )}
+
       <div className="bg-gray-100 dark:bg-zinc-900/50 p-8 rounded text-center relative border border-transparent dark:border-zinc-800">
         <div className="absolute top-4 right-4">
           <ShareButton url={eventUrl} title="Share Event" />

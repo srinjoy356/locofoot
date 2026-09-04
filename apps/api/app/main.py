@@ -16,12 +16,15 @@ app.add_middleware(
 app.include_router(health.router)
 app.include_router(media.router)
 
-from app.routers import events, venues, scheduling, match_engine, statistics
+from app.routers import events, venues, scheduling, match_engine, statistics, disputes, reports, announcements
 app.include_router(events.router)
 app.include_router(venues.router)
 app.include_router(scheduling.router)
 app.include_router(match_engine.router)
 app.include_router(statistics.router)
+app.include_router(disputes.router)
+app.include_router(reports.router)
+app.include_router(announcements.router)
 
 import postgrest
 from fastapi.responses import JSONResponse

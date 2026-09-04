@@ -17,6 +17,11 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
   const [refereeEvents, setRefereeEvents] = useState<any[]>([]);
   const [playerMap, setPlayerMap] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
+  const [showDisputeModal, setShowDisputeModal] = useState(false);
+  const [disputeReason, setDisputeReason] = useState('');
+  const [disputeDescription, setDisputeDescription] = useState('');
+  const [isSubmittingDispute, setIsSubmittingDispute] = useState(false);
+  const [announcement, setAnnouncement] = useState<any>(null);
   const supabase = createClient();
   
   // We use the event_id from matchData to power the clock, falling back to slug if it's a UUID
@@ -119,7 +124,6 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
           }
         }
       }
-      
       setIsLoading(false);
     }
     
@@ -164,8 +168,39 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
     .filter(ev => !ev.metadata?.deleted)
     .sort((a, b) => b.elapsed_seconds - a.elapsed_seconds);
 
+  const handleDisputeSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!disputeReason || !disputeDescription) return;
+    
+    setIsSubmittingDispute(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(`/api/v1/events/${matchData.event_id || slug}/disputes`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token}` },
+        body: JSON.stringify({
+          target_type: "MATCH",
+          match_id: matchId,
+          reason: disputeReason,
+          description: disputeDescription
+        })
+      });
+      if (res.ok) {
+        alert("Dispute submitted successfully. The event organizer will review it.");
+        setShowDisputeModal(false);
+      } else {
+        alert("Failed to submit dispute: " + await res.text());
+      }
+    } catch (err: any) {
+      alert("Error: " + err.message);
+    } finally {
+      setIsSubmittingDispute(false);
+    }
+  };
+
   return (
     <div className="max-w-3xl mx-auto p-4 md:p-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      
       {/* Admin Quick Actions */}
       {(isAdmin || isReferee) && (
       <div className="mb-6 flex gap-4 justify-center">
@@ -227,7 +262,7 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
       </div>
 
       {/* Match Statistics Button */}
-      <div className="mt-8 flex justify-center">
+      <div className="mt-8 flex justify-center gap-4">
         <Link 
           href={`/events/${matchData.event_id || slug}/matches/${matchId}/stats`} 
           className="bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-700 px-8 py-4 rounded-xl font-black uppercase tracking-widest shadow-lg hover:shadow-xl transition flex items-center gap-3 text-lg"
@@ -235,6 +270,63 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
           <span>📊</span> View Full Match Statistics
         </Link>
       </div>
+
+      {['COMPLETED', 'FULL_TIME', 'ABANDONED'].includes(matchData.match_state) && (isAdmin || isCaptain) && (
+        <div className="mt-4 flex justify-center">
+          <button 
+            onClick={() => setShowDisputeModal(true)}
+            className="text-red-500 hover:text-red-600 font-bold flex items-center gap-2 px-4 py-2 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition"
+          >
+            <ShieldAlert className="w-5 h-5" /> File a Dispute
+          </button>
+        </div>
+      )}
+
+      {/* Dispute Modal */}
+      {showDisputeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
+          <div className="bg-white dark:bg-zinc-900 border dark:border-zinc-800 p-6 rounded-2xl w-full max-w-md shadow-2xl">
+            <h2 className="text-xl font-black text-slate-800 dark:text-zinc-100 mb-4 flex items-center gap-2">
+              <ShieldAlert className="text-red-500" /> Dispute Match Result
+            </h2>
+            <form onSubmit={handleDisputeSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-bold text-slate-700 dark:text-zinc-300 mb-1">Reason</label>
+                <select 
+                  className="w-full border border-slate-300 dark:border-zinc-700 p-3 rounded-lg dark:bg-zinc-800 dark:text-white"
+                  value={disputeReason}
+                  onChange={e => setDisputeReason(e.target.value)}
+                  required
+                >
+                  <option value="">Select a reason...</option>
+                  <option value="Incorrect Score">Incorrect Score</option>
+                  <option value="Missing Event/Goal">Missing Event/Goal</option>
+                  <option value="Wrong Goalscorer/Assist">Wrong Goalscorer/Assist</option>
+                  <option value="Unregistered Player Fielded">Unregistered Player Fielded</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-slate-700 dark:text-zinc-300 mb-1">Details</label>
+                <textarea 
+                  className="w-full border border-slate-300 dark:border-zinc-700 p-3 rounded-lg dark:bg-zinc-800 dark:text-white"
+                  rows={4}
+                  placeholder="Provide details and evidence for the dispute..."
+                  value={disputeDescription}
+                  onChange={e => setDisputeDescription(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <button type="button" onClick={() => setShowDisputeModal(false)} className="px-4 py-2 text-slate-600 dark:text-zinc-400 font-bold hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-lg">Cancel</button>
+                <button type="submit" disabled={isSubmittingDispute} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg disabled:opacity-50">
+                  {isSubmittingDispute ? 'Submitting...' : 'Submit Dispute'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Timeline Feed */}
       <div className="mt-12 space-y-4">

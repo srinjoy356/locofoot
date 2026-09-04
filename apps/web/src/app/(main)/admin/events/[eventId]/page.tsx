@@ -153,6 +153,27 @@ export default function EventDetailsPage({ params }: { params: Promise<{ eventId
         </div>
       </div>
       
+      {/* Phase 6 Operations (Moved to Top for Visibility) */}
+      <div className="bg-red-50 dark:bg-red-950/20 p-6 border border-red-200 dark:border-red-900/40 rounded">
+        <h2 className="text-xl font-bold text-red-900 dark:text-red-400 mb-4">Operations & Command Centre</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <button onClick={() => router.push(`/admin/events/${eventId}/command-centre`)} className="block text-left border rounded p-4 hover:shadow-md transition bg-white dark:bg-zinc-900 border-red-300 dark:border-zinc-800">
+            <h3 className="font-bold text-red-700 dark:text-red-400">Matchday Command Centre</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Live overview of all fields, broadcast announcements, and monitor active matches.</p>
+          </button>
+          
+          <button onClick={() => router.push(`/admin/events/${eventId}/disciplinary`)} className="block text-left border rounded p-4 hover:shadow-md transition bg-white dark:bg-zinc-900 border-amber-300 dark:border-zinc-800">
+            <h3 className="font-bold text-amber-600 dark:text-amber-400">Disciplinary Dashboard</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Manage suspensions, yellow card accumulation, and red cards.</p>
+          </button>
+
+          <button onClick={() => router.push(`/admin/events/${eventId}/disputes`)} className="block text-left border rounded p-4 hover:shadow-md transition bg-white dark:bg-zinc-900 border-purple-300 dark:border-zinc-800">
+            <h3 className="font-bold text-purple-600 dark:text-purple-400">Disputes & Reports</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Resolve match disputes, correct match timelines, and review referee reports.</p>
+          </button>
+        </div>
+      </div>
+      
       {/* Referee Management */}
       <div className="bg-amber-50 dark:bg-amber-950/30 p-6 border border-amber-200 dark:border-amber-900/50 rounded">
         <h2 className="text-xl font-bold text-amber-900 dark:text-amber-500 mb-4 flex items-center gap-2">
