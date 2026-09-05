@@ -703,12 +703,12 @@ async def get_granular_playmaking(
     # Python-side sort to return multiple leaderboards
     data = res.data
     return {
-        "big_chances": sorted(data, key=lambda x: x.get("big_chances_created", 0), reverse=True)[:10],
-        "key_passes": sorted(data, key=lambda x: x.get("key_passes", 0), reverse=True)[:10],
-        "through_balls": sorted(data, key=lambda x: x.get("through_balls", 0), reverse=True)[:10],
-        "crosses": sorted(data, key=lambda x: x.get("crosses", 0), reverse=True)[:10],
-        "nutmegs": sorted(data, key=lambda x: x.get("nutmegs", 0), reverse=True)[:10],
-        "ankle_breakers": sorted(data, key=lambda x: x.get("ankle_breakers", 0), reverse=True)[:10],
+        "big_chances": sorted(data, key=lambda x: x.get("big_chances_created") or 0, reverse=True)[:10],
+        "key_passes": sorted(data, key=lambda x: x.get("key_passes") or 0, reverse=True)[:10],
+        "through_balls": sorted(data, key=lambda x: x.get("through_balls") or 0, reverse=True)[:10],
+        "crosses": sorted(data, key=lambda x: x.get("crosses") or 0, reverse=True)[:10],
+        "nutmegs": sorted(data, key=lambda x: x.get("nutmegs") or 0, reverse=True)[:10],
+        "ankle_breakers": sorted(data, key=lambda x: x.get("ankle_breakers") or 0, reverse=True)[:10],
     }
 
 @router.get("/granular/goalkeeping/{event_id}")
@@ -729,9 +729,9 @@ async def get_granular_goalkeeping(
         pass
         
     return {
-        "saves": sorted(data, key=lambda x: x.get("saves", 0), reverse=True)[:10],
-        "penalty_saves": sorted(data, key=lambda x: x.get("penalty_saves", 0), reverse=True)[:10],
-        "saves_1v1": sorted(data, key=lambda x: x.get("saves_1v1", 0), reverse=True)[:10],
-        "aerial_claims": sorted(data, key=lambda x: x.get("aerial_claims", 0), reverse=True)[:10],
-        "sweeper_actions": sorted(data, key=lambda x: x.get("sweeper_actions", 0), reverse=True)[:10],
+        "saves": sorted(data, key=lambda x: x.get("saves") or 0, reverse=True)[:10],
+        "penalty_saves": sorted(data, key=lambda x: x.get("penalty_saves") or 0, reverse=True)[:10],
+        "saves_1v1": sorted(data, key=lambda x: x.get("saves_1v1") or 0, reverse=True)[:10],
+        "aerial_claims": sorted(data, key=lambda x: x.get("aerial_claims") or 0, reverse=True)[:10],
+        "sweeper_actions": sorted(data, key=lambda x: x.get("sweeper_actions") or 0, reverse=True)[:10],
     }
