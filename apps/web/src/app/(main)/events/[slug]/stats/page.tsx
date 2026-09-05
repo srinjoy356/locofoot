@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { LeaderboardTable } from '@/components/LeaderboardTable';
 import { Card, CardContent } from '@/components/ui/card';
+import { ExportControls } from '@/components/shared/ExportControls';
 
 export default async function TournamentStatsPage({ params }: { params: Promise<{ slug: string }> }) {
   const supabase = await createClient();
@@ -54,7 +55,7 @@ export default async function TournamentStatsPage({ params }: { params: Promise<
   return (
     <div className="max-w-6xl mx-auto space-y-10 p-4 text-zinc-100">
       {/* HEADER */}
-      <div>
+      <div className="print:hidden">
         <h1 className="text-4xl font-black mb-2">{eventData.name} Statistics</h1>
         {eventData.format && <div className="text-zinc-400 text-sm font-medium">{eventData.format} Format</div>}
         <div className="border-b border-zinc-800 pb-2 flex gap-6 px-2 mt-8 overflow-x-auto">
@@ -67,10 +68,15 @@ export default async function TournamentStatsPage({ params }: { params: Promise<
           <Link href={`/events/${slug}/stats/granular`} className="font-medium pb-2 text-zinc-500 hover:text-zinc-300 transition-colors whitespace-nowrap flex items-center gap-1">Granular <span className="bg-orange-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-black">NEW</span></Link>
         </div>
       </div>
+      
+      <div className="hidden print:block mb-8 text-center border-b-2 border-slate-900 pb-4">
+        <h1 className="text-3xl font-black text-black">{eventData.name} - Official Standings</h1>
+        <p className="text-sm font-semibold text-slate-500 mt-1">LocoFoot Tournament Export</p>
+      </div>
 
       {/* KPIS */}
       {kpis && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 print:hidden">
           <Link href={`/events/${slug}/schedule`} className="block group">
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 text-center group-hover:bg-zinc-800 transition-colors h-full">
                <div className="text-zinc-400 text-sm font-bold uppercase tracking-wider mb-2">Matches</div>
@@ -100,11 +106,28 @@ export default async function TournamentStatsPage({ params }: { params: Promise<
         
         {/* STANDINGS (2 columns wide on XL) */}
         <div className="xl:col-span-2 space-y-6">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-            <div className="bg-zinc-800/50 p-4 font-bold text-sm uppercase tracking-wider text-zinc-400">Standings</div>
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden print:border-none print:shadow-none print:bg-white text-black">
+            <div className="bg-zinc-800/50 p-4 font-bold text-sm uppercase tracking-wider text-zinc-400 print:bg-transparent print:text-black flex justify-between items-center border-b print:border-slate-300 dark:border-zinc-800">
+              <span>Standings</span>
+              <ExportControls 
+                filename={`${eventData.slug}-standings`}
+                data={standings}
+                columns={[
+                  { key: 'team_name', label: 'Team' },
+                  { key: 'matches_played', label: 'MP' },
+                  { key: 'wins', label: 'W' },
+                  { key: 'draws', label: 'D' },
+                  { key: 'losses', label: 'L' },
+                  { key: 'goals_for', label: 'GF' },
+                  { key: 'goals_against', label: 'GA' },
+                  { key: 'goal_difference', label: 'GD' },
+                  { key: 'points', label: 'Pts' }
+                ]}
+              />
+            </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left">
-                <thead className="bg-zinc-900/50 text-zinc-500 border-b border-zinc-800">
+                <thead className="bg-zinc-900/50 text-zinc-500 border-b border-zinc-800 print:bg-slate-100 print:text-black print:border-slate-300">
                   <tr>
                     <th className="p-4 font-semibold w-10 text-center">#</th>
                     <th className="p-4 font-semibold">Team</th>
@@ -115,30 +138,30 @@ export default async function TournamentStatsPage({ params }: { params: Promise<
                     <th className="p-4 font-semibold text-center w-12">GF</th>
                     <th className="p-4 font-semibold text-center w-12">GA</th>
                     <th className="p-4 font-semibold text-center w-12">GD</th>
-                    <th className="p-4 font-black text-center text-white w-12">Pts</th>
-                    <th className="p-4 font-semibold text-center w-32">Form</th>
+                    <th className="p-4 font-black text-center text-white print:text-black w-12">Pts</th>
+                    <th className="p-4 font-semibold text-center w-32 print:hidden">Form</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-800">
+                <tbody className="divide-y divide-zinc-800 print:divide-slate-200">
                   {standings.map((t: any, idx: number) => {
                     const form = teamFormMap[t.team_registration_id] || teamFormMap[t.team_id] || [];
                     return (
                       <tr key={t.team_registration_id || t.team_id} className="hover:bg-zinc-800/30">
-                        <td className="p-4 text-center text-zinc-500 font-bold">{idx + 1}</td>
-                        <td className="p-4 font-bold text-zinc-100">
+                        <td className="p-4 text-center text-zinc-500 font-bold print:text-slate-600">{idx + 1}</td>
+                        <td className="p-4 font-bold text-zinc-100 print:text-black">
                           {t.team_registration_id ? (
                              <Link href={`/events/${slug}/teams/${t.team_registration_id}`} className="hover:underline">{t.team_name}</Link>
                           ) : t.team_name}
                         </td>
-                        <td className="p-4 text-center text-zinc-400">{t.matches_played}</td>
-                        <td className="p-4 text-center text-zinc-300">{t.wins || 0}</td>
-                        <td className="p-4 text-center text-zinc-300">{t.draws || 0}</td>
-                        <td className="p-4 text-center text-zinc-300">{t.losses || 0}</td>
-                        <td className="p-4 text-center text-zinc-300">{t.goals_for || 0}</td>
-                        <td className="p-4 text-center text-zinc-300">{t.goals_against || 0}</td>
-                        <td className="p-4 text-center font-semibold">{t.goal_difference > 0 ? `+${t.goal_difference}` : t.goal_difference}</td>
-                        <td className="p-4 text-center font-black text-lg text-white">{t.points}</td>
-                        <td className="p-4">
+                        <td className="p-4 text-center text-zinc-400 print:text-slate-700">{t.matches_played}</td>
+                        <td className="p-4 text-center text-zinc-300 print:text-slate-700">{t.wins || 0}</td>
+                        <td className="p-4 text-center text-zinc-300 print:text-slate-700">{t.draws || 0}</td>
+                        <td className="p-4 text-center text-zinc-300 print:text-slate-700">{t.losses || 0}</td>
+                        <td className="p-4 text-center text-zinc-300 print:text-slate-700">{t.goals_for || 0}</td>
+                        <td className="p-4 text-center text-zinc-300 print:text-slate-700">{t.goals_against || 0}</td>
+                        <td className="p-4 text-center font-semibold print:text-slate-700">{t.goal_difference > 0 ? `+${t.goal_difference}` : t.goal_difference}</td>
+                        <td className="p-4 text-center font-black text-lg text-white print:text-black">{t.points}</td>
+                        <td className="p-4 print:hidden">
                            <div className="flex gap-1 justify-center">
                              {form.length === 0 ? (
                                <span className="text-zinc-600 text-xs">-</span>
@@ -168,7 +191,7 @@ export default async function TournamentStatsPage({ params }: { params: Promise<
         </div>
 
         {/* LEADERBOARDS (1 column wide on XL) */}
-        <div className="space-y-6">
+        <div className="space-y-6 print:hidden">
           <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden p-1">
              <LeaderboardTable 
                title="Top Scorers" 
@@ -177,6 +200,8 @@ export default async function TournamentStatsPage({ params }: { params: Promise<
                loading={false} 
                viewAllHref={`/events/${slug}/stats/goals`}
                eventSlug={slug}
+               showExport={true}
+               exportFilename={`${eventData.slug}-top-scorers`}
              />
           </div>
           <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden p-1">
@@ -187,6 +212,8 @@ export default async function TournamentStatsPage({ params }: { params: Promise<
                loading={false} 
                viewAllHref={`/events/${slug}/stats/assists`}
                eventSlug={slug}
+               showExport={true}
+               exportFilename={`${eventData.slug}-top-assists`}
              />
           </div>
           <div className="grid grid-cols-2 gap-4 pt-4">

@@ -19,7 +19,13 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
     .eq("id", id)
     .single();
 
-  if (!pData) {
+  const { data: privacyData } = await supabaseAdmin
+    .from("user_privacy_settings")
+    .select("*")
+    .eq("user_id", id)
+    .single();
+
+  if (!pData || !privacyData) {
     return <div className="p-10 text-center text-slate-500 dark:text-zinc-400">Profile not found.</div>;
   }
 
@@ -54,6 +60,42 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
           )}
         </div>
       </div>
+
+      {privacyData.profile_public && (
+        <div className="mt-8 text-left bg-slate-50 dark:bg-zinc-800/50 p-6 rounded-lg border dark:border-zinc-800">
+          <h2 className="font-bold mb-4 border-b pb-2">About</h2>
+          
+          <div className="space-y-4 text-sm">
+            {profile.bio && (
+              <div>
+                <span className="text-slate-500 dark:text-zinc-400 block mb-1">Bio</span>
+                <p className="whitespace-pre-wrap">{profile.bio}</p>
+              </div>
+            )}
+            
+            <div className="grid grid-cols-2 gap-4 pt-2">
+              {profile.location_text && (
+                <div>
+                  <span className="text-slate-500 dark:text-zinc-400 block mb-1">Location</span>
+                  <p className="font-medium">{profile.location_text}</p>
+                </div>
+              )}
+              {profile.preferred_position && (
+                <div>
+                  <span className="text-slate-500 dark:text-zinc-400 block mb-1">Position</span>
+                  <p className="font-medium">{profile.preferred_position}</p>
+                </div>
+              )}
+              {profile.dominant_foot && (
+                <div>
+                  <span className="text-slate-500 dark:text-zinc-400 block mb-1">Strong Foot</span>
+                  <p className="font-medium">{profile.dominant_foot}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="mt-8 pt-8 border-t border-gray-100 flex justify-center">
         {currentUser && currentUser.id !== profile.id && profile.unique_code ? (

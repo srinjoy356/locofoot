@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Locofoot - Event Fixtures</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=Inter+Tight:wght@600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container": "#1e201f",
+                        "on-primary-container": "#007226",
+                        "secondary-fixed-dim": "#c5c7c3",
+                        "secondary-container": "#474a47",
+                        "on-primary": "#00390f",
+                        "on-tertiary": "#2d312f",
+                        "on-secondary": "#2e312f",
+                        "primary": "#f2ffed",
+                        "on-primary-fixed": "#002106",
+                        "surface": "#121413",
+                        "background": "#121413",
+                        "on-secondary-container": "#b7b9b5",
+                        "error": "#ffb4ab",
+                        "on-surface": "#e2e3e0",
+                        "tertiary-fixed": "#e0e3e0",
+                        "tertiary": "#f9fcf8",
+                        "on-surface-variant": "#bacbb6",
+                        "on-error-container": "#ffdad6",
+                        "primary-fixed-dim": "#00e556",
+                        "inverse-primary": "#006e25",
+                        "inverse-on-surface": "#2f312f",
+                        "error-container": "#93000a",
+                        "on-error": "#690005",
+                        "on-tertiary-container": "#5f6360",
+                        "inverse-surface": "#e2e3e0",
+                        "on-tertiary-fixed-variant": "#444845",
+                        "secondary": "#c5c7c3",
+                        "surface-container-lowest": "#0d0f0e",
+                        "primary-fixed": "#6cff80",
+                        "outline-variant": "#3c4b3a",
+                        "on-primary-fixed-variant": "#00531a",
+                        "on-secondary-fixed": "#191c1a",
+                        "surface-bright": "#383a38",
+                        "primary-container": "#39ff6a",
+                        "on-secondary-fixed-variant": "#454745",
+                        "surface-variant": "#333534",
+                        "secondary-fixed": "#e1e3df",
+                        "surface-dim": "#121413",
+                        "surface-container-highest": "#333534",
+                        "surface-container-low": "#1a1c1b",
+                        "surface-tint": "#00e556",
+                        "tertiary-container": "#dcdfdc",
+                        "tertiary-fixed-dim": "#c4c7c4",
+                        "surface-container-high": "#282a29",
+                        "outline": "#859581",
+                        "on-background": "#e2e3e0",
+                        "on-tertiary-fixed": "#181c1b"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-mobile": "16px",
+                        "unit": "8px",
+                        "gutter": "24px",
+                        "margin-desktop": "48px",
+                        "container-max": "1280px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "stats-xl": ["Inter"],
+                        "display-sm": ["Inter Tight"],
+                        "display-lg": ["Inter Tight"],
+                        "headline-lg": ["Inter Tight"],
+                        "headline-lg-mobile": ["Inter Tight"],
+                        "label-caps": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", { "lineHeight": "1.6", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "1.5", "letterSpacing": "0em", "fontWeight": "400" }],
+                        "stats-xl": ["48px", { "lineHeight": "1", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "display-sm": ["40px", { "lineHeight": "1.1", "letterSpacing": "-0.03em", "fontWeight": "700" }],
+                        "display-lg": ["64px", { "lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "700" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "label-caps": ["12px", { "lineHeight": "1", "letterSpacing": "0.1em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .pulse-dot {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(57, 255, 106, 0.7); }
+            70% { box-shadow: 0 0 0 6px rgba(57, 255, 106, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(57, 255, 106, 0); }
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md antialiased selection:bg-primary-container selection:text-on-primary-container min-h-screen flex flex-col md:flex-row">
+<!-- Mobile Top App Bar -->
+<header class="md:hidden bg-surface flex justify-between items-center w-full px-margin-mobile py-4 border-b border-outline-variant z-40 sticky top-0">
+<div class="font-display-sm text-headline-lg-mobile font-bold tracking-tighter text-on-surface">REACTOR ELITE</div>
+<button class="bg-primary-container text-on-primary-container px-4 py-2 font-label-caps text-label-caps hover:bg-primary-fixed transition-colors">LIVE STREAM</button>
+</header>
+<!-- Side Navigation (Desktop) -->
+<nav class="hidden md:flex flex-col h-screen w-64 bg-surface-container py-8 px-4 border-r border-outline-variant fixed left-0 top-0 z-40 shrink-0">
+<div class="mb-12">
+<h1 class="font-headline-lg text-headline-lg font-black text-on-surface">Reactor Studio</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-2">Pro League Access</p>
+</div>
+<div class="flex-1 flex flex-col gap-2">
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant transition-all font-label-caps text-label-caps uppercase ease-in-out duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+                Home
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 bg-primary-container text-on-primary-container font-bold border-l-4 border-on-primary-container font-label-caps text-label-caps uppercase transition-all ease-in-out duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="sensors">sensors</span>
+                Live Matches
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant transition-all font-label-caps text-label-caps uppercase ease-in-out duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="trophy">trophy</span>
+                Tournaments
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant transition-all font-label-caps text-label-caps uppercase ease-in-out duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="monitoring">monitoring</span>
+                Analytics
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant transition-all font-label-caps text-label-caps uppercase ease-in-out duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+                Settings
+            </a>
+</div>
+<div class="mt-auto">
+<button class="w-full mb-6 border border-outline-variant text-on-surface font-label-caps text-label-caps py-3 hover:bg-surface-variant transition-colors uppercase">UPGRADE TO PRO</button>
+<div class="flex flex-col gap-2">
+<a class="flex items-center gap-3 px-4 py-2 text-on-surface-variant hover:bg-surface-variant transition-colors font-label-caps text-label-caps uppercase" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+                    Help
+                </a>
+<a class="flex items-center gap-3 px-4 py-2 text-on-surface-variant hover:bg-surface-variant transition-colors font-label-caps text-label-caps uppercase" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+                    Logout
+                </a>
+</div>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-1 md:ml-64 pb-24 md:pb-8 flex flex-col">
+<!-- Tab Navigation (Desktop Header Area) -->
+<div class="hidden md:flex sticky top-0 bg-background/95 backdrop-blur-sm z-30 border-b border-outline-variant px-gutter py-4">
+<div class="w-full max-w-container-max mx-auto flex items-center justify-between">
+<div class="flex gap-8">
+<a class="text-on-surface-variant font-label-caps text-label-caps uppercase hover:text-primary-fixed transition-colors duration-200" href="#">Overview</a>
+<a class="text-primary-container border-b-2 border-primary-container pb-1 font-label-caps text-label-caps uppercase hover:text-primary-fixed transition-colors duration-200" href="#">Fixtures</a>
+<a class="text-on-surface-variant font-label-caps text-label-caps uppercase hover:text-primary-fixed transition-colors duration-200" href="#">Standings</a>
+<a class="text-on-surface-variant font-label-caps text-label-caps uppercase hover:text-primary-fixed transition-colors duration-200" href="#">Stats</a>
+</div>
+</div>
+</div>
+<div class="w-full max-w-container-max mx-auto px-margin-mobile md:px-gutter pt-8">
+<!-- Page Header -->
+<div class="mb-12 relative overflow-hidden rounded-xl border border-outline-variant p-6 md:p-10">
+<img alt="Stadium background" class="absolute inset-0 w-full h-full object-cover grayscale opacity-25 object-center pointer-events-none" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBnvMNDNw-pe8M93a9UceNOwEmatCaHD-NXCBCR06KAgNx_wARBawBuvHU9lF65nk-DN7dy0LLpAZBOyeXQcPiDvY8-3oRwoo7U1cmLZMEMz5Agj_JWPEm3N7kSzCJYfh5NQMOgx0BkmrxiPw9XeX9ZAmsWnvaj1hXLYOX8dkrXBYeUJZJOmHkdWgE87EUZiC86RUt9d5cOt0NIfDQMPqKPzs1qJMUwFJ2TlOlY4wcPNxZZf4p6lGJNOw6Bk4zgDLyKwQ"/>
+<div class="absolute inset-0 bg-gradient-to-r from-surface via-surface/80 to-transparent pointer-events-none z-0"></div>
+<div class="relative z-10">
+<h1 class="font-display-lg text-display-sm md:text-display-lg text-on-surface mb-2">Locofoot Elite League</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant">2024 Season Fixtures</p>
+</div>
+</div>
+<!-- Live Matches Pinned Section -->
+<section class="mb-12">
+<div class="flex items-center gap-2 mb-4">
+<div class="w-2 h-2 rounded-full bg-primary-container pulse-dot"></div>
+<span class="font-label-caps text-label-caps text-primary-container uppercase">Live Now</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- Live Match Card -->
+<div class="bg-surface border border-primary-container p-6 flex flex-col justify-between hover:bg-surface-container-low transition-colors group cursor-pointer relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-br from-primary-container/5 to-transparent pointer-events-none"></div>
+<div class="flex justify-between items-center mb-6 relative z-10">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Round 3 • 65'</span>
+<span class="font-label-caps text-label-caps text-primary-container border border-primary-container/30 px-2 py-1 bg-primary-container/10">In Play</span>
+</div>
+<div class="flex justify-between items-center relative z-10">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 bg-surface-variant flex items-center justify-center font-label-caps text-label-caps text-on-surface">FC</div>
+<span class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Falcons</span>
+</div>
+<span class="font-stats-xl text-stats-xl text-primary-container">2</span>
+</div>
+<div class="my-4 border-b border-outline-variant/50 relative z-10"></div>
+<div class="flex justify-between items-center relative z-10">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 bg-surface-variant flex items-center justify-center font-label-caps text-label-caps text-on-surface">UN</div>
+<span class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface-variant group-hover:text-on-surface transition-colors">United</span>
+</div>
+<span class="font-stats-xl text-stats-xl text-on-surface-variant">1</span>
+</div>
+</div>
+<!-- Live Match Card 2 -->
+<div class="bg-surface border border-primary-container p-6 flex flex-col justify-between hover:bg-surface-container-low transition-colors group cursor-pointer relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-br from-primary-container/5 to-transparent pointer-events-none"></div>
+<div class="flex justify-between items-center mb-6 relative z-10">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Round 3 • 22'</span>
+<span class="font-label-caps text-label-caps text-primary-container border border-primary-container/30 px-2 py-1 bg-primary-container/10">In Play</span>
+</div>
+<div class="flex justify-between items-center relative z-10">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 bg-surface-variant flex items-center justify-center font-label-caps text-label-caps text-on-surface">RV</div>
+<span class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Rovers</span>
+</div>
+<span class="font-stats-xl text-stats-xl text-on-surface-variant">0</span>
+</div>
+<div class="my-4 border-b border-outline-variant/50 relative z-10"></div>
+<div class="flex justify-between items-center relative z-10">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 bg-surface-variant flex items-center justify-center font-label-caps text-label-caps text-on-surface">CT</div>
+<span class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">City</span>
+</div>
+<span class="font-stats-xl text-stats-xl text-on-surface-variant">0</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Upcoming Fixtures List -->
+<section class="mb-16">
+<!-- Round Divider -->
+<div class="border-b border-outline-variant pb-2 mb-4">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">Round 3 — Aug 30</h3>
+</div>
+<!-- Tabular Rows -->
+<div class="flex flex-col border border-outline-variant bg-surface relative overflow-hidden">
+<div class="absolute inset-0 z-0 opacity-10 pointer-events-none bg-center bg-cover grayscale mix-blend-overlay" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBRwO2ot8YBpeCSsRUAbd3TVmixVQtOJe6xmSE7kgjtXlNBP0iwRiH0mQ80YjVFjXJK7Xu7mqPbj-BUA1Ywvj0dcOby1MjPneICtpg2dHp8A5O0IWStp2CjVoVK1QRX3y9381_15jOjfqwS660MSId8_G6NELcCFXgM-V1xrUD2pJzYVIzjaMpSZoX423w1n4kiX-oLJyHTVHd2ZjH7mLQVA72HRqpRtrXOCbbjSn0kYsW4LIBzQWstJp6OyZrUYWK6EA');"></div>
+<!-- Row 1 -->
+<div class="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between p-4 border-b border-outline-variant hover:bg-surface-container-low transition-colors cursor-pointer group">
+<div class="flex flex-col md:flex-row items-start md:items-center gap-4 w-full md:w-auto mb-4 md:mb-0">
+<div class="w-16 font-label-caps text-label-caps text-on-surface-variant">14:00</div>
+<div class="flex items-center justify-between w-full md:w-64">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 bg-surface-variant flex items-center justify-center font-label-caps text-[10px] text-on-surface">DY</div>
+<span class="font-body-md text-body-md text-on-surface">Dynamos</span>
+</div>
+<span class="font-body-md text-body-md text-on-surface-variant group-hover:text-on-surface">vs</span>
+<div class="flex items-center gap-3 flex-row-reverse">
+<div class="w-8 h-8 bg-surface-variant flex items-center justify-center font-label-caps text-[10px] text-on-surface">AT</div>
+<span class="font-body-md text-body-md text-on-surface">Athletic</span>
+</div>
+</div>
+</div>
+<div class="font-label-caps text-label-caps text-on-surface-variant md:text-right w-full md:w-auto border-t border-outline-variant/30 md:border-t-0 pt-2 md:pt-0">
+                            Pitch 1, Reactor Arena
+                        </div>
+</div>
+<!-- Row 2 -->
+<div class="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between p-4 border-b border-outline-variant hover:bg-surface-container-low transition-colors cursor-pointer group">
+<div class="flex flex-col md:flex-row items-start md:items-center gap-4 w-full md:w-auto mb-4 md:mb-0">
+<div class="w-16 font-label-caps text-label-caps text-on-surface-variant">16:30</div>
+<div class="flex items-center justify-between w-full md:w-64">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 bg-surface-variant flex items-center justify-center font-label-caps text-[10px] text-on-surface">SP</div>
+<span class="font-body-md text-body-md text-on-surface">Spartans</span>
+</div>
+<span class="font-body-md text-body-md text-on-surface-variant group-hover:text-on-surface">vs</span>
+<div class="flex items-center gap-3 flex-row-reverse">
+<div class="w-8 h-8 bg-surface-variant flex items-center justify-center font-label-caps text-[10px] text-on-surface">WG</div>
+<span class="font-body-md text-body-md text-on-surface">Wings</span>
+</div>
+</div>
+</div>
+<div class="font-label-caps text-label-caps text-on-surface-variant md:text-right w-full md:w-auto border-t border-outline-variant/30 md:border-t-0 pt-2 md:pt-0">
+                            Pitch 2, Central Hub
+                        </div>
+</div>
+<!-- Row 3 -->
+<div class="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between p-4 hover:bg-surface-container-low transition-colors cursor-pointer group">
+<div class="flex flex-col md:flex-row items-start md:items-center gap-4 w-full md:w-auto mb-4 md:mb-0">
+<div class="w-16 font-label-caps text-label-caps text-on-surface-variant">19:00</div>
+<div class="flex items-center justify-between w-full md:w-64">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 bg-surface-variant flex items-center justify-center font-label-caps text-[10px] text-on-surface">NM</div>
+<span class="font-body-md text-body-md text-on-surface">Nomads</span>
+</div>
+<span class="font-body-md text-body-md text-on-surface-variant group-hover:text-on-surface">vs</span>
+<div class="flex items-center gap-3 flex-row-reverse">
+<div class="w-8 h-8 bg-surface-variant flex items-center justify-center font-label-caps text-[10px] text-on-surface">EL</div>
+<span class="font-body-md text-body-md text-on-surface">Elite</span>
+</div>
+</div>
+</div>
+<div class="font-label-caps text-label-caps text-on-surface-variant md:text-right w-full md:w-auto border-t border-outline-variant/30 md:border-t-0 pt-2 md:pt-0">
+                            Main Stadium
+                        </div>
+</div>
+</div>
+<!-- Next Round Divider -->
+<div class="border-b border-outline-variant pb-2 mt-12 mb-4">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">Round 4 — Sep 06</h3>
+</div>
+<div class="flex flex-col border border-outline-variant bg-surface relative overflow-hidden">
+<div class="absolute inset-0 z-0 opacity-10 pointer-events-none bg-center bg-cover grayscale mix-blend-overlay" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAK12gWq6zR1IAzGM3PQmSoyiCd8E5EaLZSMdccyG-bwlhCHHK7nyjoIGvdTH4ac6EC65M2P5JPS84qY6NQEx4Kwakayhb4tVnjKEnwee7jxmzHSC1cKewj3AFOtZpMCFVYCslctyrraM9SYj60cpde3qcEDqQrK4U-sPB3a4DXgHPGweCxXU8H87VL00cs8tvzdXgSplqHT-2WzNbNV49HlrZG7zvtf38O34m7uNWE2WglI12A40Dm6Dei6fKP-qDF_w');"></div>
+<!-- Row 1 -->
+<div class="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between p-4 border-b border-outline-variant hover:bg-surface-container-low transition-colors cursor-pointer group">
+<div class="flex flex-col md:flex-row items-start md:items-center gap-4 w-full md:w-auto mb-4 md:mb-0">
+<div class="w-16 font-label-caps text-label-caps text-on-surface-variant">14:00</div>
+<div class="flex items-center justify-between w-full md:w-64">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 bg-surface-variant flex items-center justify-center font-label-caps text-[10px] text-on-surface">WG</div>
+<span class="font-body-md text-body-md text-on-surface">Wings</span>
+</div>
+<span class="font-body-md text-body-md text-on-surface-variant group-hover:text-on-surface">vs</span>
+<div class="flex items-center gap-3 flex-row-reverse">
+<div class="w-8 h-8 bg-surface-variant flex items-center justify-center font-label-caps text-[10px] text-on-surface">DY</div>
+<span class="font-body-md text-body-md text-on-surface">Dynamos</span>
+</div>
+</div>
+</div>
+<div class="font-label-caps text-label-caps text-on-surface-variant md:text-right w-full md:w-auto border-t border-outline-variant/30 md:border-t-0 pt-2 md:pt-0">
+                            Pitch 1, Reactor Arena
+                        </div>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- Mobile Bottom Navigation -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center py-3 bg-surface-container-highest border-t border-outline-variant z-50">
+<a class="flex flex-col items-center justify-center text-primary-container opacity-100 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="emergency_recording">emergency_recording</span>
+<span class="font-label-caps text-label-caps uppercase">Live</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-80 hover:opacity-100 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="sports_soccer">sports_soccer</span>
+<span class="font-label-caps text-label-caps uppercase">Matches</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-80 hover:opacity-100 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="leaderboard">leaderboard</span>
+<span class="font-label-caps text-label-caps uppercase">Stats</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-80 hover:opacity-100 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="person">person</span>
+<span class="font-label-caps text-label-caps uppercase">Profile</span>
+</a>
+</nav>
+</body></html>

@@ -234,10 +234,7 @@ export default function EventDetailsPage({ params }: { params: Promise<{ eventId
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">View the public site with standings and Match Centers.</p>
           </button>
 
-          <button onClick={() => router.push(`/admin/events/${eventId}/matches/create`)} className="block text-left border rounded p-4 hover:shadow-md transition bg-white dark:bg-zinc-900 border-blue-300 dark:border-zinc-800">
-            <h3 className="font-bold text-purple-600 dark:text-purple-400">4. Add Manual Match</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Create a custom match linking specific teams and stages.</p>
-          </button>
+
         </div>
       </div>
 

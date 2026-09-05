@@ -48,15 +48,15 @@ export default function PublicEventTeamsPage({ params }: { params: Promise<{ slu
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {registrations.map(reg => (
-          <div key={reg.id} className="border p-4 rounded bg-white dark:bg-zinc-900 flex justify-between items-center">
+          <Link href={`/events/${slug}/teams/${reg.id}`} key={reg.id} className="border dark:border-zinc-800 p-4 rounded-xl bg-white dark:bg-zinc-900 flex justify-between items-center hover:shadow-md transition-shadow">
             <div>
-              <h3 className="font-bold text-lg">{reg.team_name}</h3>
+              <h3 className="font-bold text-lg dark:text-zinc-100">{reg.team_name}</h3>
               <p className="text-slate-500 dark:text-zinc-400">{reg.team_short_name}</p>
             </div>
-            <div className="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded">
+            <div className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 text-xs font-bold px-2 py-1 rounded">
               APPROVED
             </div>
-          </div>
+          </Link>
         ))}
         {registrations.length === 0 && <p className="text-slate-500 dark:text-zinc-400 col-span-2">No teams have been approved yet.</p>}
       </div>

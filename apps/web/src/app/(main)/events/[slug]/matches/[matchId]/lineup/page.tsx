@@ -2,11 +2,13 @@
 
 import { useState, useEffect, use } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function LineupPage({ params }: { params: Promise<{ slug: string, matchId: string }> }) {
   const { slug, matchId } = use(params);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const urlTeamId = searchParams.get('teamId');
   const supabase = createClient();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -72,7 +74,9 @@ export default function LineupPage({ params }: { params: Promise<{ slug: string,
         const captainTeam = userTeams.find(t => t.is_captain_for_event);
         userTeamId = captainTeam ? captainTeam.event_registration_id : userTeams[0].event_registration_id;
       } else if (isOrganizer) {
-        userTeamId = match.home_registration_id;
+        userTeamId = urlTeamId && [match.home_registration_id, match.away_registration_id].includes(urlTeamId)
+          ? urlTeamId 
+          : match.home_registration_id;
       }
       
       if (!userTeamId) {
@@ -128,7 +132,7 @@ export default function LineupPage({ params }: { params: Promise<{ slug: string,
     }
     
     loadData();
-  }, [matchId, supabase, router]);
+  }, [matchId, supabase, router, urlTeamId]);
 
   const togglePlayer = (playerId: string) => {
     if (lineupStatus === 'CONFIRMED') return;

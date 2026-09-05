@@ -76,6 +76,11 @@ class StateTransitionRequest(BaseModel):
     reason: Optional[str] = None
     announced_added_minutes: Optional[int] = None
 
+class MatchForfeitRequest(BaseModel):
+    idempotency_key: UUID
+    forfeiting_team: str  # 'home' or 'away'
+    reason: Optional[str] = None
+    
 class RefereeEventRequest(BaseModel):
     id: UUID  # Client generated UUID for idempotency
     event_type: RefereeEventType

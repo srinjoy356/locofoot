@@ -61,12 +61,14 @@ export function Navigation() {
       <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between text-sm">
         <div className="flex gap-4 items-center">
           <Link href="/dashboard" className="font-bold text-slate-900 dark:text-zinc-100 text-base">LocoFoot</Link>
+          <Link href="/explore" className="text-slate-600 dark:text-zinc-400 hover:text-black font-medium">Explore</Link>
           <Link href="/events" className="text-slate-600 dark:text-zinc-400 hover:text-black font-medium">Events</Link>
           <Link href="/friends" className="text-slate-600 dark:text-zinc-400 hover:text-black font-medium">Friends</Link>
           <Link href="/admin/events" className="text-slate-600 dark:text-zinc-400 hover:text-black font-medium">Organizer</Link>
         </div>
         <div className="flex gap-4 items-center">
           {uniqueCode && <span className="bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 px-2 py-1 rounded font-mono text-xs select-all border border-slate-200 dark:border-zinc-800">Code: {uniqueCode}</span>}
+          <Link href="/settings" className="text-slate-600 dark:text-zinc-400 hover:text-black font-medium">Settings</Link>
           <Link href="/notifications" className="relative text-slate-600 dark:text-zinc-400 hover:text-black font-medium">
             Notifs
             {unreadCount > 0 && (

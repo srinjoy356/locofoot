@@ -2,8 +2,10 @@
 
 import { useState, useEffect, use } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { Clock, ShieldAlert } from 'lucide-react';
+import { Clock, ShieldAlert, Share2 } from 'lucide-react';
 import Link from 'next/link';
+import { ShareButton } from '@/components/shared/ShareButton';
+import { QRCodeBlock } from '@/components/shared/QRCodeBlock';
 
 import { useMatchClock } from '@/app/(admin)/admin/events/[eventId]/matches/[matchId]/useMatchClock';
 
@@ -215,7 +217,24 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
       </div>
       )}
 
-      {(isAdmin || isCaptain) && matchData.match_state === 'SCHEDULED' && (
+      {isAdmin && matchData.match_state === 'SCHEDULED' && (
+        <div className="mb-6 flex flex-col sm:flex-row justify-center gap-4">
+          <Link 
+            href={`/events/${matchData.event_id || slug}/matches/${matchId}/lineup?teamId=${matchData.home_registration_id}`}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg transition"
+          >
+            Manage Home Lineup
+          </Link>
+          <Link 
+            href={`/events/${matchData.event_id || slug}/matches/${matchId}/lineup?teamId=${matchData.away_registration_id}`}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg transition"
+          >
+            Manage Away Lineup
+          </Link>
+        </div>
+      )}
+
+      {(!isAdmin && isCaptain) && matchData.match_state === 'SCHEDULED' && (
         <div className="mb-6 flex justify-center">
           <Link 
             href={`/events/${matchData.event_id || slug}/matches/${matchId}/lineup`}
@@ -227,6 +246,10 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
       )}
       
       {/* Scoreboard */}
+      <div className="flex justify-end mb-4 print:hidden">
+        <ShareButton url={`/events/${clockEventId}/matches/${matchId}`} title="Share Match" />
+      </div>
+
       <div className="bg-gradient-to-br from-slate-900 to-indigo-950 text-white rounded-3xl p-6 text-center shadow-2xl relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-purple-500"></div>
         <div className="text-sm font-bold text-indigo-300 tracking-widest uppercase mb-6 flex items-center justify-center gap-2">
@@ -406,6 +429,11 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
           <div className="text-slate-500 dark:text-slate-400 text-center py-12 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 font-medium">Waiting for match events...</div>
         )}
       </div>
+
+      <div className="print:hidden flex justify-center py-8">
+        <QRCodeBlock url={`/events/${clockEventId}/matches/${matchId}`} title="Match QR Code" />
+      </div>
+
     </div>
   );
 }

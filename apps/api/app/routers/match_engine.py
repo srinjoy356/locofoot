@@ -10,7 +10,8 @@ from ..schemas.match_operations import (
     StateTransitionRequest,
     RefereeEventRequest,
     TimelineEventRequest,
-    CorrectionRequest
+    CorrectionRequest,
+    MatchForfeitRequest
 )
 from ..services.match_engine_service import MatchEngineService
 
@@ -30,6 +31,17 @@ async def change_match_state(
 ):
     service = MatchEngineService(db)
     return await service.transition_state(match_id, UUID(user['id']), req)
+
+@router.post("/referee/forfeit", response_model=Dict[str, Any])
+async def forfeit_match(
+    event_id: UUID,
+    match_id: UUID,
+    req: MatchForfeitRequest,
+    user: dict = Depends(get_current_user),
+    db: AsyncClient = Depends(get_async_service_supabase)
+):
+    service = MatchEngineService(db)
+    return await service.forfeit_match(match_id, UUID(user['id']), req)
 
 # 2. Referee Events
 @router.post("/referee/event", response_model=Dict[str, Any])

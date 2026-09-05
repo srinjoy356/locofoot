@@ -1,15 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
-export function usePresence(roomName: string) {
+export function usePresence(roomName?: string | null) {
   const [viewerCount, setViewerCount] = useState<number>(0);
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
+
+  const [presenceKey] = useState(() => crypto.randomUUID());
 
   useEffect(() => {
+    if (!roomName) return;
+
     const channel = supabase.channel(`presence:${roomName}`, {
       config: {
         presence: {
-          key: 'viewer',
+          key: presenceKey,
         },
       },
     });
@@ -17,10 +21,9 @@ export function usePresence(roomName: string) {
     channel
       .on('presence', { event: 'sync' }, () => {
         const state = channel.presenceState();
-        // sum up all presence states for all clients
         let total = 0;
-        for (const id in state) {
-          total += state[id].length;
+        for (const presences of Object.values(state)) {
+          total += (presences as any[]).length;
         }
         setViewerCount(total);
       })

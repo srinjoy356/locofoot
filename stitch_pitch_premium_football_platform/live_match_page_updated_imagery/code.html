@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Locofoot - Live Match</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=Inter+Tight:wght@600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "electric-green": "#00ff55",
+                    "charcoal": "#0a0a0a",
+                    "slate": "#141414",
+                    "slate-light": "#1f1f1f",
+                    "hairline": "#2a2a2a",
+                    "on-surface": "#f5f5f5",
+                    "on-surface-variant": "#a3a3a3",
+            },
+            "fontFamily": {
+                    "body-md": ["Inter"],
+                    "headline-lg": ["Inter Tight"],
+                    "display-lg": ["Inter Tight"],
+                    "label-caps": ["Inter"],
+            },
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #0a0a0a;
+            color: #f5f5f5;
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        .tabular-nums {
+            font-variant-numeric: tabular-nums;
+        }
+
+        @keyframes pulse-opacity {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        .pulse-dot {
+            animation: pulse-opacity 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Sidebar hover expansion */
+        .sidebar {
+            width: 72px;
+            transition: width 0.3s ease;
+        }
+        .sidebar:hover {
+            width: 240px;
+        }
+        .sidebar-text {
+            opacity: 0;
+            white-space: nowrap;
+            transition: opacity 0.2s ease;
+        }
+        .sidebar:hover .sidebar-text {
+            opacity: 1;
+            transition-delay: 0.1s;
+        }
+    </style>
+</head>
+<body class="bg-charcoal min-h-screen flex selection:bg-electric-green selection:text-black">
+<!-- Left Sidebar -->
+<aside class="sidebar fixed left-0 top-0 h-full bg-slate border-r border-hairline z-50 flex flex-col py-6 overflow-hidden">
+<div class="px-6 mb-12 flex items-center">
+<span class="material-symbols-outlined text-white font-bold text-2xl" style="font-variation-settings: 'FILL' 1;">sports_soccer</span>
+<span class="sidebar-text ml-4 font-display-lg text-xl font-bold tracking-tighter text-white">LOCOFOOT</span>
+</div>
+<nav class="flex-1 space-y-2">
+<a class="flex items-center px-6 py-4 text-on-surface-variant hover:text-white transition-colors group" href="#">
+<span class="material-symbols-outlined text-[28px] font-light group-hover:scale-110 transition-transform" style="font-variation-settings: 'wght' 200;">explore</span>
+<span class="sidebar-text ml-6 font-label-caps text-xs tracking-widest font-semibold uppercase">Explore</span>
+</a>
+<a class="flex items-center px-6 py-4 text-electric-green bg-slate-light border-l-2 border-electric-green relative group" href="#">
+<span class="material-symbols-outlined text-[28px] font-light group-hover:scale-110 transition-transform" style="font-variation-settings: 'wght' 200;">sports_soccer</span>
+<span class="sidebar-text ml-6 font-label-caps text-xs tracking-widest font-semibold uppercase">Matches</span>
+</a>
+<a class="flex items-center px-6 py-4 text-on-surface-variant hover:text-white transition-colors group" href="#">
+<span class="material-symbols-outlined text-[28px] font-light group-hover:scale-110 transition-transform" style="font-variation-settings: 'wght' 200;">query_stats</span>
+<span class="sidebar-text ml-6 font-label-caps text-xs tracking-widest font-semibold uppercase">Stats</span>
+</a>
+<a class="flex items-center px-6 py-4 text-on-surface-variant hover:text-white transition-colors group" href="#">
+<span class="material-symbols-outlined text-[28px] font-light group-hover:scale-110 transition-transform" style="font-variation-settings: 'wght' 200;">leaderboard</span>
+<span class="sidebar-text ml-6 font-label-caps text-xs tracking-widest font-semibold uppercase">Rankings</span>
+</a>
+<a class="flex items-center px-6 py-4 text-on-surface-variant hover:text-white transition-colors group" href="#">
+<span class="material-symbols-outlined text-[28px] font-light group-hover:scale-110 transition-transform" style="font-variation-settings: 'wght' 200;">admin_panel_settings</span>
+<span class="sidebar-text ml-6 font-label-caps text-xs tracking-widest font-semibold uppercase">Admin</span>
+</a>
+</nav>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-[72px] flex-grow w-full max-w-[1100px] mx-auto px-6 py-12 space-y-12">
+<!-- Hero Score Section -->
+<section class="relative w-full overflow-hidden border border-hairline bg-slate h-[400px] flex flex-col justify-center items-center">
+<!-- Turf Background -->
+<div class="absolute inset-0 bg-cover bg-center grayscale mix-blend-luminosity opacity-40" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAD-GRfEO57ODbURosNOuNbPvBgIXi90ZkCJyDXxFIzH_aSYqXztDG65ye_rLRq6Cb1Md_PHTGXsGBOPBs0HFa6q3LwLKkFMJeOye8XDX2qzwY2awa4w6m9DqOAaRdbIPkmOlQL8X5QL9Al8LgPTku1OqVUaW4sZlpDqhpWkiBx8jOG_wdxhFvapaDQqjd334kTKVoCHJxVnckk7zy5fCaVe5RBSGRegnvAJ5wAUUY7AqlH1ONimcspyRx5Yr7NBtPprg');"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-charcoal via-charcoal/80 to-transparent"></div>
+<!-- Mural Watermark -->
+<div class="absolute inset-0 bg-cover bg-center opacity-5 mix-blend-overlay" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAuqCzALAIAKdj4O0r-yOuLWDGkKhI90N23a1JHSwTmgVckGR1US4PXrWG04j0qMDGh_nMv8L2XYIWfbml1VS4GAif32VRgZUgliuyBfhz5_kf1wlerhsDan4Lr6EhPllqaMHvgFlp8G1dfC_LPMA-tMcdj9uO_Xv6oVJbS07X1Lia8sO0nm7gBcHhQGzDxZuGeTHYompeYDqQnf0s8luAu9akhDLBwIQ0iYfrHsLjg3Dy6i-WaExiCkqOzwnvsT3dc6A');"></div>
+<div class="relative z-10 flex flex-col items-center w-full">
+<!-- Clock & Presence -->
+<div class="flex flex-col items-center mb-6">
+<div class="font-bold text-4xl text-electric-green tabular-nums tracking-tight">72:45</div>
+<div class="flex items-center gap-2 text-on-surface-variant mt-1">
+<span class="w-1.5 h-1.5 rounded-full bg-electric-green pulse-dot shadow-[0_0_8px_rgba(0,255,85,0.8)]"></span>
+<span class="font-label-caps text-[10px] tracking-widest uppercase">14,204 WATCHING</span>
+</div>
+</div>
+<!-- Score Board -->
+<div class="flex items-center justify-between w-full max-w-[600px] px-8">
+<!-- Team A -->
+<div class="flex flex-col items-center gap-3 w-1/3">
+<div class="w-16 h-16 border border-hairline flex items-center justify-center bg-slate-light">
+<span class="material-symbols-outlined text-white text-3xl font-light">shield</span>
+</div>
+<h2 class="font-headline-lg text-lg text-white text-center uppercase tracking-wider">TEAM A</h2>
+</div>
+<!-- Score -->
+<div class="flex items-center justify-center gap-6 w-1/3">
+<span class="font-display-lg text-[120px] font-black text-white tabular-nums leading-none tracking-tighter">2</span>
+<span class="font-display-lg text-4xl text-on-surface-variant/50 font-light">-</span>
+<span class="font-display-lg text-[120px] font-black text-white tabular-nums leading-none tracking-tighter">1</span>
+</div>
+<!-- Team B -->
+<div class="flex flex-col items-center gap-3 w-1/3">
+<div class="w-16 h-16 border border-hairline flex items-center justify-center bg-slate-light">
+<span class="material-symbols-outlined text-white text-3xl font-light">security</span>
+</div>
+<h2 class="font-headline-lg text-lg text-white text-center uppercase tracking-wider">TEAM B</h2>
+</div>
+</div>
+</div>
+</section>
+<!-- Content Layout: Two Column -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+<!-- Left Column: Live Timeline -->
+<section class="lg:col-span-5 h-[500px] flex flex-col border border-hairline bg-slate">
+<div class="p-4 border-b border-hairline flex justify-between items-center bg-slate-light">
+<h3 class="font-label-caps text-[11px] tracking-widest text-white uppercase font-bold">Live Timeline</h3>
+</div>
+<div class="flex-1 overflow-y-auto no-scrollbar p-6 space-y-0">
+<!-- Timeline Item: Goal -->
+<div class="flex gap-4 pb-6">
+<div class="flex flex-col items-center w-8">
+<div class="font-label-caps text-xs text-electric-green tabular-nums font-bold">72'</div>
+<div class="w-px h-full bg-hairline mt-2"></div>
+</div>
+<div class="flex-1 bg-slate-light border border-hairline p-3 flex items-start gap-3">
+<div class="bg-electric-green w-6 h-6 flex items-center justify-center text-black shrink-0">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">sports_soccer</span>
+</div>
+<div>
+<div class="font-label-caps text-[10px] tracking-wider text-white uppercase mb-1">Goal - Team A</div>
+<p class="font-body-md text-sm text-on-surface-variant leading-snug">Spectacular finish from outside the box.</p>
+</div>
+</div>
+</div>
+<!-- Timeline Item: Sub -->
+<div class="flex gap-4 pb-6">
+<div class="flex flex-col items-center w-8">
+<div class="font-label-caps text-xs text-on-surface-variant tabular-nums">60'</div>
+<div class="w-px h-full bg-hairline mt-2"></div>
+</div>
+<div class="flex-1 bg-slate-light border border-hairline p-3 flex items-start gap-3">
+<div class="bg-on-surface-variant w-6 h-6 flex items-center justify-center text-black shrink-0">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">sync_alt</span>
+</div>
+<div>
+<div class="font-label-caps text-[10px] tracking-wider text-white uppercase mb-1">Sub - Team B</div>
+<p class="font-body-md text-sm text-on-surface-variant leading-snug">Player 11 OUT, Player 22 IN.</p>
+</div>
+</div>
+</div>
+<!-- Timeline Item: Card -->
+<div class="flex gap-4 pb-6">
+<div class="flex flex-col items-center w-8">
+<div class="font-label-caps text-xs text-on-surface-variant tabular-nums">41'</div>
+<div class="w-px h-full bg-hairline mt-2"></div>
+</div>
+<div class="flex-1 bg-slate-light border border-hairline p-3 flex items-start gap-3">
+<div class="bg-[#FFC107] w-6 h-6 flex items-center justify-center text-black shrink-0">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">style</span>
+</div>
+<div>
+<div class="font-label-caps text-[10px] tracking-wider text-white uppercase mb-1">Yellow Card</div>
+<p class="font-body-md text-sm text-on-surface-variant leading-snug">Late challenge in the midfield.</p>
+</div>
+</div>
+</div>
+<!-- Timeline Item: Goal -->
+<div class="flex gap-4 pb-6">
+<div class="flex flex-col items-center w-8">
+<div class="font-label-caps text-xs text-on-surface-variant tabular-nums">23'</div>
+<div class="w-px h-full bg-hairline mt-2"></div>
+</div>
+<div class="flex-1 bg-slate-light border border-hairline p-3 flex items-start gap-3">
+<div class="bg-electric-green w-6 h-6 flex items-center justify-center text-black shrink-0">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">sports_soccer</span>
+</div>
+<div>
+<div class="font-label-caps text-[10px] tracking-wider text-white uppercase mb-1">Goal - Team A</div>
+<p class="font-body-md text-sm text-on-surface-variant leading-snug">Header from the corner kick.</p>
+</div>
+</div>
+</div>
+<!-- Timeline Item: Start -->
+<div class="flex gap-4">
+<div class="flex flex-col items-center w-8">
+<div class="font-label-caps text-xs text-on-surface-variant tabular-nums">0'</div>
+</div>
+<div class="flex-1 bg-slate-light border border-hairline p-3 flex items-center gap-3">
+<div class="border border-on-surface-variant w-6 h-6 flex items-center justify-center text-on-surface-variant shrink-0">
+<span class="material-symbols-outlined text-[14px]">flag</span>
+</div>
+<div class="font-label-caps text-[10px] tracking-wider text-white uppercase">Match Start</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Right Column: Match Stats -->
+<section class="lg:col-span-7 flex flex-col border border-hairline bg-slate min-h-[500px]">
+<!-- Tabs -->
+<div class="flex border-b border-hairline bg-slate-light">
+<button class="flex-1 py-3 font-label-caps text-[11px] tracking-widest text-electric-green border-b border-electric-green bg-slate uppercase font-bold">
+                    Match Stats
+                </button>
+<button class="flex-1 py-3 font-label-caps text-[11px] tracking-widest text-on-surface-variant hover:text-white uppercase font-bold">
+                    Lineups
+                </button>
+</div>
+<!-- Stats Content -->
+<div class="flex-1 p-8 flex flex-col justify-center space-y-8">
+<!-- Stat Row: Possession -->
+<div class="space-y-2">
+<div class="flex justify-between font-label-caps text-[11px] tracking-widest text-on-surface-variant uppercase items-end">
+<span class="font-display-lg text-lg font-bold text-white tabular-nums">62%</span>
+<span>Possession</span>
+<span class="font-display-lg text-lg font-bold text-white tabular-nums">38%</span>
+</div>
+<div class="flex h-1 w-full bg-hairline">
+<div class="bg-electric-green h-full" style="width: 62%;"></div>
+<div class="bg-on-surface-variant/30 h-full" style="width: 38%;"></div>
+</div>
+</div>
+<!-- Stat Row: Shots -->
+<div class="space-y-2">
+<div class="flex justify-between font-label-caps text-[11px] tracking-widest text-on-surface-variant uppercase items-end">
+<span class="font-display-lg text-lg font-bold text-white tabular-nums">14</span>
+<span>Shots</span>
+<span class="font-display-lg text-lg font-bold text-white tabular-nums">6</span>
+</div>
+<div class="flex h-1 w-full bg-hairline flex-row-reverse">
+<div class="bg-on-surface-variant/30 h-full" style="width: 30%;"></div>
+<div class="bg-electric-green h-full" style="width: 70%;"></div>
+</div>
+</div>
+<!-- Stat Row: Pass Accuracy -->
+<div class="space-y-2">
+<div class="flex justify-between font-label-caps text-[11px] tracking-widest text-on-surface-variant uppercase items-end">
+<span class="font-display-lg text-lg font-bold text-white tabular-nums">88%</span>
+<span>Pass Accuracy</span>
+<span class="font-display-lg text-lg font-bold text-white tabular-nums">74%</span>
+</div>
+<div class="flex h-1 w-full bg-hairline">
+<div class="bg-electric-green h-full" style="width: 54%;"></div>
+<div class="bg-on-surface-variant/30 h-full" style="width: 46%;"></div>
+</div>
+</div>
+<!-- Additional tabular stats without bars -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-2 pt-6 border-t border-hairline mt-4">
+<div class="flex justify-between items-center py-2 border-b border-hairline">
+<span class="font-display-lg text-base font-bold text-white tabular-nums">4</span>
+<span class="font-label-caps text-[10px] tracking-widest text-on-surface-variant uppercase">Corners</span>
+<span class="font-display-lg text-base font-bold text-white tabular-nums">2</span>
+</div>
+<div class="flex justify-between items-center py-2 border-b border-hairline">
+<span class="font-display-lg text-base font-bold text-white tabular-nums">1</span>
+<span class="font-label-caps text-[10px] tracking-widest text-on-surface-variant uppercase">Offsides</span>
+<span class="font-display-lg text-base font-bold text-white tabular-nums">3</span>
+</div>
+<div class="flex justify-between items-center py-2 border-b border-hairline">
+<span class="font-display-lg text-base font-bold text-white tabular-nums">11</span>
+<span class="font-label-caps text-[10px] tracking-widest text-on-surface-variant uppercase">Fouls</span>
+<span class="font-display-lg text-base font-bold text-white tabular-nums">9</span>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+</body></html>

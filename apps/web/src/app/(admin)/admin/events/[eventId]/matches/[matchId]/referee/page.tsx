@@ -66,6 +66,24 @@ export default function RefereePage({ params }: { params: Promise<{ eventId: str
     }
   };
 
+  const handleForfeit = async (team: 'home' | 'away') => {
+    if (!confirm(`Are you sure you want to declare a forfeit for the ${team.toUpperCase()} team? The match will end immediately, and the other team will be awarded a 3-0 win.`)) return;
+    
+    try {
+      const res = await fetch(`/api/v1/events/${eventId}/matches/${matchId}/referee/forfeit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}` },
+        body: JSON.stringify({ idempotency_key: generateUUID(), forfeiting_team: team, reason: `${team.toUpperCase()} team No Show` })
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        alert(`API Error: ${res.status} ${text}`);
+      }
+    } catch (e: any) {
+      alert(`Fetch Error: ${e.message}`);
+    }
+  };
+
   const handleEventClick = (type: RefereeEventType) => {
     setPendingEvent({ type });
   };
@@ -217,6 +235,23 @@ export default function RefereePage({ params }: { params: Promise<{ eventId: str
             >
               FULL TIME
             </button>
+            
+            {matchState === 'SCHEDULED' && (
+              <div className="col-span-2 grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-slate-200 dark:border-zinc-800">
+                <button 
+                  onClick={() => handleForfeit('home')}
+                  className="py-3 bg-red-50 text-red-700 dark:bg-red-950/20 dark:text-red-400 border border-red-200 dark:border-red-900/50 hover:bg-red-100 dark:hover:bg-red-900/40 font-bold rounded-lg text-sm"
+                >
+                  Home No-Show (Forfeit)
+                </button>
+                <button 
+                  onClick={() => handleForfeit('away')}
+                  className="py-3 bg-red-50 text-red-700 dark:bg-red-950/20 dark:text-red-400 border border-red-200 dark:border-red-900/50 hover:bg-red-100 dark:hover:bg-red-900/40 font-bold rounded-lg text-sm"
+                >
+                  Away No-Show (Forfeit)
+                </button>
+              </div>
+            )}
           </>
         )}
       </div>

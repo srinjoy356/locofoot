@@ -49,8 +49,9 @@ export function EmergencyBanner({ eventId }: { eventId: string }) {
       }
 
       // 3. Subscribe to new announcements
+      const channelName = `event_announcements_${resolvedEventId}_${Math.random().toString(36).substring(7)}`;
       channel = supabase
-        .channel(`public:event_announcements:event_id=eq.${resolvedEventId}`)
+        .channel(channelName)
         .on(
           'postgres_changes',
           {

@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Event Overview - Locofoot</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=Inter+Tight:wght@600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container": "#1e201f",
+                        "on-primary-container": "#007226",
+                        "secondary-fixed-dim": "#c5c7c3",
+                        "secondary-container": "#474a47",
+                        "on-primary": "#00390f",
+                        "on-tertiary": "#2d312f",
+                        "on-secondary": "#2e312f",
+                        "primary": "#f2ffed",
+                        "on-primary-fixed": "#002106",
+                        "surface": "#121413",
+                        "background": "#121413",
+                        "on-secondary-container": "#b7b9b5",
+                        "error": "#ffb4ab",
+                        "on-surface": "#e2e3e0",
+                        "tertiary-fixed": "#e0e3e0",
+                        "tertiary": "#f9fcf8",
+                        "on-surface-variant": "#bacbb6",
+                        "on-error-container": "#ffdad6",
+                        "primary-fixed-dim": "#00e556",
+                        "inverse-primary": "#006e25",
+                        "inverse-on-surface": "#2f312f",
+                        "error-container": "#93000a",
+                        "on-error": "#690005",
+                        "on-tertiary-container": "#5f6360",
+                        "inverse-surface": "#e2e3e0",
+                        "on-tertiary-fixed-variant": "#444845",
+                        "secondary": "#c5c7c3",
+                        "surface-container-lowest": "#0d0f0e",
+                        "primary-fixed": "#6cff80",
+                        "outline-variant": "#3c4b3a",
+                        "on-primary-fixed-variant": "#00531a",
+                        "on-secondary-fixed": "#191c1a",
+                        "surface-bright": "#383a38",
+                        "primary-container": "#39ff6a",
+                        "on-secondary-fixed-variant": "#454745",
+                        "surface-variant": "#333534",
+                        "secondary-fixed": "#e1e3df",
+                        "surface-dim": "#121413",
+                        "surface-container-highest": "#333534",
+                        "surface-container-low": "#1a1c1b",
+                        "surface-tint": "#00e556",
+                        "tertiary-container": "#dcdfdc",
+                        "tertiary-fixed-dim": "#c4c7c4",
+                        "surface-container-high": "#282a29",
+                        "outline": "#859581",
+                        "on-background": "#e2e3e0",
+                        "on-tertiary-fixed": "#181c1b"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-mobile": "16px",
+                        "unit": "8px",
+                        "gutter": "24px",
+                        "margin-desktop": "48px",
+                        "container-max": "1280px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "stats-xl": ["Inter"],
+                        "display-sm": ["Inter Tight"],
+                        "display-lg": ["Inter Tight"],
+                        "headline-lg": ["Inter Tight"],
+                        "headline-lg-mobile": ["Inter Tight"],
+                        "label-caps": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", { "lineHeight": "1.6", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "1.5", "letterSpacing": "0em", "fontWeight": "400" }],
+                        "stats-xl": ["48px", { "lineHeight": "1", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "display-sm": ["40px", { "lineHeight": "1.1", "letterSpacing": "-0.03em", "fontWeight": "700" }],
+                        "display-lg": ["64px", { "lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "700" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "label-caps": ["12px", { "lineHeight": "1", "letterSpacing": "0.1em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md antialiased overflow-x-hidden min-h-screen flex selection:bg-primary-container selection:text-on-primary-container">
+<!-- SideNavBar (Hidden on mobile) -->
+<nav class="hidden md:flex flex-col bg-surface-container dark:bg-surface-container fixed left-0 h-full w-64 border-r border-outline-variant py-8 px-4 z-40">
+<div class="mb-8 px-4">
+<h1 class="font-headline-lg text-headline-lg font-black text-on-surface">Reactor Studio</h1>
+<p class="text-on-surface-variant font-body-md text-body-md mt-1">Pro League Access</p>
+</div>
+<div class="flex-grow space-y-2">
+<a class="flex items-center space-x-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-all ease-in-out duration-150 group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary-container transition-colors">home</span>
+<span class="font-label-caps text-label-caps">Home</span>
+</a>
+<a class="flex items-center space-x-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-all ease-in-out duration-150 group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary-container transition-colors">sensors</span>
+<span class="font-label-caps text-label-caps">Live Matches</span>
+</a>
+<a class="flex items-center space-x-3 px-4 py-3 bg-primary-container text-on-primary-container font-bold border-l-4 border-on-primary-container ease-in-out duration-150" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">trophy</span>
+<span class="font-label-caps text-label-caps">Tournaments</span>
+</a>
+<a class="flex items-center space-x-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-all ease-in-out duration-150 group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary-container transition-colors">monitoring</span>
+<span class="font-label-caps text-label-caps">Analytics</span>
+</a>
+<a class="flex items-center space-x-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-all ease-in-out duration-150 group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary-container transition-colors">settings</span>
+<span class="font-label-caps text-label-caps">Settings</span>
+</a>
+</div>
+<div class="mt-8">
+<button class="w-full bg-primary-container text-on-primary-container font-label-caps text-label-caps py-3 uppercase tracking-widest hover:bg-primary-fixed transition-colors">
+                UPGRADE TO PRO
+            </button>
+</div>
+<div class="mt-8 space-y-2 border-t border-outline-variant pt-4">
+<a class="flex items-center space-x-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-all ease-in-out duration-150 group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary-container transition-colors">help</span>
+<span class="font-label-caps text-label-caps">Help</span>
+</a>
+<a class="flex items-center space-x-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-all ease-in-out duration-150 group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary-container transition-colors">logout</span>
+<span class="font-label-caps text-label-caps">Logout</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-1 md:ml-64 w-full flex flex-col min-h-screen bg-surface">
+<!-- TopAppBar (Mobile Only for Event Pages usually, but following instructions to provide TopAppBar structure if needed for Mobile) -->
+<header class="md:hidden flex justify-between items-center w-full px-gutter py-4 bg-surface dark:bg-surface border-b border-outline-variant docked full-width top-0 z-30">
+<div class="font-display-sm text-display-sm font-bold tracking-tighter text-on-surface dark:text-on-surface">REACTOR ELITE</div>
+<button class="text-primary-container font-label-caps text-label-caps uppercase tracking-widest border border-outline-variant px-4 py-2 hover:bg-surface-variant transition-colors">LIVE STREAM</button>
+</header>
+<!-- Banner Section -->
+<div class="relative w-full h-[50vh] min-h-[400px] border-b border-outline-variant overflow-hidden">
+<div class="absolute inset-0 bg-[#0B0D0C] opacity-60 mix-blend-multiply z-10"></div>
+<img alt="Full-bleed turf photo" class="absolute inset-0 w-full h-full object-cover saturate-50 contrast-125 object-center grayscale-[30%]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuARWtRKBONxj0YLAUQ2SwFZJsptDuf3dFLHBtugQdvB9Vy9NN4uNt1QUvyXGEjv7tycmR9-VEGR2NboBAN0Pw5Fg0NAfW8FHkBLSNF9PuaKeB3PTsVmFzMD6atvwcAbqZ4y-CRW2i95jFc0ryOUDSWQrdFnqev6hLIXCvkozgaVk8UleA4OBgVkk35UMlKey4XM1QQr8BVRcutnChu7buz5C7S-k0wT-5nnZgbUH7odz_auMi9bn5UyNkfOOrRwh8WrNg"/>
+<div class="absolute inset-0 bg-gradient-to-t from-[#0B0D0C] via-transparent to-transparent z-10"></div>
+<div class="absolute bottom-0 left-0 w-full p-6 md:p-12 z-20 flex flex-col justify-end h-full">
+<div class="max-w-container-max mx-auto w-full">
+<div class="inline-flex items-center bg-surface-container-highest border border-outline-variant px-3 py-1 mb-4">
+<span class="w-2 h-2 bg-primary-container rounded-full animate-pulse mr-2"></span>
+<span class="font-label-caps text-label-caps text-primary-container">REGISTRATION OPEN</span>
+</div>
+<h1 class="font-display-lg text-display-lg md:text-[80px] font-bold tracking-tighter text-on-surface mb-2 leading-none uppercase">Summer Clash '24</h1>
+<div class="flex flex-col md:flex-row md:items-center text-on-surface-variant font-body-lg text-body-lg gap-2 md:gap-6 mt-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container">calendar_month</span>
+<span>Aug 12 - Aug 28, 2024</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container">location_on</span>
+<span>Reactor Arena, Sector 4</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Navigation Tabs -->
+<div class="w-full bg-surface-container border-b border-outline-variant sticky top-0 md:top-0 z-20">
+<div class="max-w-container-max mx-auto px-4 md:px-12 overflow-x-auto no-scrollbar">
+<nav class="flex space-x-8 whitespace-nowrap">
+<a class="py-4 font-label-caps text-label-caps text-primary-container border-b-2 border-primary-container pb-[14px]" href="#">OVERVIEW</a>
+<a class="py-4 font-label-caps text-label-caps text-on-surface-variant hover:text-primary-fixed transition-colors duration-200" href="#">FIXTURES</a>
+<a class="py-4 font-label-caps text-label-caps text-on-surface-variant hover:text-primary-fixed transition-colors duration-200" href="#">STANDINGS</a>
+<a class="py-4 font-label-caps text-label-caps text-on-surface-variant hover:text-primary-fixed transition-colors duration-200" href="#">TEAMS</a>
+<a class="py-4 font-label-caps text-label-caps text-on-surface-variant hover:text-primary-fixed transition-colors duration-200" href="#">LEADERBOARDS</a>
+</nav>
+</div>
+</div>
+<!-- Main Content Grid -->
+<div class="max-w-container-max mx-auto w-full px-4 md:px-12 py-12 flex-grow">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-24">
+<!-- Left Column: Info & Description -->
+<div class="lg:col-span-8 space-y-12">
+<!-- Key Info List -->
+<section>
+<h2 class="font-label-caps text-label-caps text-on-surface-variant mb-6 border-b border-outline-variant pb-2 uppercase tracking-widest">Tournament Details</h2>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 border-y border-outline-variant divide-x divide-outline-variant py-4 bg-[#151816]">
+<div class="px-4">
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Format</p>
+<p class="font-body-md text-body-md text-on-surface font-semibold">5v5 Turf</p>
+</div>
+<div class="px-4">
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Entry Fee</p>
+<p class="font-body-md text-body-md text-on-surface font-semibold">$150 / Team</p>
+</div>
+<div class="px-4">
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Prize Pool</p>
+<p class="font-body-md text-body-md text-primary-container font-semibold">$5,000</p>
+</div>
+<div class="px-4">
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Slots Left</p>
+<p class="font-body-md text-body-md text-on-surface font-semibold">4 / 32</p>
+</div>
+</div>
+</section>
+<!-- Description -->
+<section class="prose prose-invert max-w-none">
+<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">
+                            The ultimate summer showdown is back. Join 32 elite amateur teams battling it out on the premium turf at Reactor Arena. This year features enhanced analytics tracking for every match, live-streamed finals, and a completely revamped knockout stage. Assemble your squad, prove your dominance, and claim the championship title.
+                        </p>
+</section>
+</div>
+<!-- Right Column: Registration & Teams -->
+<div class="lg:col-span-4 space-y-8">
+<!-- CTA Card -->
+<div class="bg-[#151816] border border-outline-variant p-6 flex flex-col space-y-6 relative overflow-hidden">
+<img alt="" class="absolute inset-0 w-full h-full object-cover opacity-10 pointer-events-none" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBfGE9k9PHteHIDIFCm_T7wAsRqhzhaTkSNIU1tAtQM_nw63ZsE017qK7vnUd_hBV6ewWI-x5hAcNUIaBdsjLq7aYdh6JiDQu5sIr0Ng6o3FFcRk4dM7ulmdjLVoYlmXTD1yTJlaT3s8hHrcLTXbKIUqYq7mkWDWYob0iQCHnZ0tgnUEhqUTy0gB9_gJduAPCPQkgFEatbYR2JpNvyaPUy7o9dgbG4TYIpaR9f0HJWB-Q5KxlHY53F2mekKr0IWydbN4w"/>
+<div class="relative z-10">
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-2">Registration Closes In</p>
+<p class="font-headline-lg text-headline-lg font-bold text-on-surface">3d 14h 22m</p>
+</div>
+<button class="relative z-10 w-full bg-primary-container text-on-primary-fixed font-label-caps text-label-caps py-4 uppercase tracking-widest font-bold hover:bg-primary-fixed transition-colors focus:outline-none focus:ring-2 focus:ring-primary-container focus:ring-offset-2 focus:ring-offset-[#151816]">
+                            REGISTER NOW
+                        </button>
+</div>
+<!-- Registered Teams Grid -->
+<section>
+<div class="flex justify-between items-end mb-4 border-b border-outline-variant pb-2">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">Registered Squads</h3>
+<span class="font-label-caps text-label-caps text-primary-container">28 / 32</span>
+</div>
+<div class="grid grid-cols-3 gap-3">
+<div class="aspect-square bg-surface border border-outline-variant flex items-center justify-center p-2 hover:border-primary-container transition-colors">
+<span class="material-symbols-outlined text-3xl text-on-surface-variant">shield</span>
+</div>
+<div class="aspect-square bg-surface border border-outline-variant flex items-center justify-center p-2 hover:border-primary-container transition-colors">
+<span class="material-symbols-outlined text-3xl text-on-surface-variant">sports_soccer</span>
+</div>
+<div class="aspect-square bg-surface border border-outline-variant flex items-center justify-center p-2 hover:border-primary-container transition-colors">
+<span class="material-symbols-outlined text-3xl text-on-surface-variant">local_fire_department</span>
+</div>
+<div class="aspect-square bg-surface border border-outline-variant flex items-center justify-center p-2 hover:border-primary-container transition-colors">
+<span class="material-symbols-outlined text-3xl text-on-surface-variant">bolt</span>
+</div>
+<div class="aspect-square bg-surface border border-outline-variant flex items-center justify-center p-2 hover:border-primary-container transition-colors">
+<span class="material-symbols-outlined text-3xl text-on-surface-variant">anchor</span>
+</div>
+<div class="aspect-square bg-surface-container-high border border-outline-variant flex items-center justify-center p-2 group cursor-pointer">
+<span class="font-label-caps text-label-caps text-on-surface-variant group-hover:text-primary-container">+23 MORE</span>
+</div>
+</div>
+</section>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center py-3 bg-surface-container-highest border-t border-outline-variant z-50">
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-80 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined mb-1">emergency_recording</span>
+<span class="font-label-caps text-[10px] uppercase tracking-wider">Live</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary-container" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">sports_soccer</span>
+<span class="font-label-caps text-[10px] uppercase tracking-wider">Matches</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-80 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined mb-1">leaderboard</span>
+<span class="font-label-caps text-[10px] uppercase tracking-wider">Stats</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-80 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined mb-1">person</span>
+<span class="font-label-caps text-[10px] uppercase tracking-wider">Profile</span>
+</a>
+</nav>
+</body></html>

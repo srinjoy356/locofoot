@@ -5,6 +5,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { ShareButton } from "@/components/shared/ShareButton";
+import { QRCodeBlock } from "@/components/shared/QRCodeBlock";
+import { usePresence } from "@/hooks/usePresence";
 
 export default function PublicEventPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
@@ -15,6 +17,7 @@ export default function PublicEventPage({ params }: { params: Promise<{ slug: st
   const [announcement, setAnnouncement] = useState<any>(null);
   const [eventUrl, setEventUrl] = useState("");
   const [scheduleTimeframe, setScheduleTimeframe] = useState<{ start: string | null, end: string | null }>({ start: null, end: null });
+  const viewers = usePresence(event?.id);
   const supabase = createClient();
 
   useEffect(() => {
@@ -43,7 +46,9 @@ export default function PublicEventPage({ params }: { params: Promise<{ slug: st
             home_team:event_team_registrations!home_registration_id(team_name),
             away_team:event_team_registrations!away_registration_id(team_name)
           `)
-          .eq('event_id', ev.id);
+          .eq('event_id', ev.id)
+          .eq('scheduling_status', 'ASSIGNED')
+          .order('scheduled_start', { ascending: true, nullsFirst: false });
         if (matchData) setMatches(matchData);
 
         if (ev.slot_structure_state === 'FINALIZED') {
@@ -147,6 +152,13 @@ export default function PublicEventPage({ params }: { params: Promise<{ slug: st
         <div className="mt-4 flex justify-center gap-4">
           <div className="inline-block bg-white dark:bg-zinc-800 px-4 py-2 rounded shadow-sm text-sm font-semibold dark:text-zinc-200">
             Status: {event.status}
+          </div>
+          <div className="inline-block bg-white dark:bg-zinc-800 px-4 py-2 rounded shadow-sm text-sm font-semibold dark:text-zinc-200 flex items-center gap-2">
+            <span className="relative flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+            </span>
+            {viewers} Live Viewers
           </div>
           {scheduleTimeframe.start && scheduleTimeframe.end && (
             <div className="inline-block bg-white dark:bg-zinc-800 px-4 py-2 rounded shadow-sm text-sm font-semibold text-indigo-700 dark:text-indigo-400">
@@ -268,6 +280,10 @@ export default function PublicEventPage({ params }: { params: Promise<{ slug: st
         <Link href={`/events/${event.slug || event.id}/stats`} className="text-blue-600 hover:underline">
           View Statistics & Leaderboards →
         </Link>
+      </div>
+
+      <div className="flex justify-center py-8">
+        <QRCodeBlock url={`/events/${event.slug || event.id}`} title="Event QR Code" />
       </div>
     </div>
   );

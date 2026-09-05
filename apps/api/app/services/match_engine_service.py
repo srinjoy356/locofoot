@@ -7,7 +7,8 @@ from ..schemas.match_operations import (
     StateTransitionRequest,
     RefereeEventRequest,
     TimelineEventRequest,
-    CorrectionRequest
+    CorrectionRequest,
+    MatchForfeitRequest
 )
 
 class MatchEngineService:
@@ -120,6 +121,62 @@ class MatchEngineService:
             
         return {"status": "success", "new_state": req.new_state}
 
+
+    async def forfeit_match(self, match_id: UUID, actor_id: UUID, req: MatchForfeitRequest) -> Dict[str, Any]:
+        from datetime import datetime, timezone
+        
+        # 1. Fetch match and check if allowed
+        res = await self.db.table("matches").select("match_state").eq("id", str(match_id)).execute()
+        if not res.data:
+            raise HTTPException(status_code=404, detail="Match not found")
+            
+        match_data = res.data[0]
+        current_state = match_data["match_state"]
+        
+        if current_state in ["FULL_TIME", "COMPLETED", "ABANDONED", "CANCELLED"]:
+            raise HTTPException(status_code=400, detail="Match cannot be forfeited in its current state")
+            
+        now = datetime.now(timezone.utc).isoformat()
+        
+        # 2. Determine scores (3-0 win for the non-forfeiting team)
+        home_score = 0
+        away_score = 0
+        if req.forfeiting_team == "home":
+            away_score = 3
+        elif req.forfeiting_team == "away":
+            home_score = 3
+        else:
+            raise HTTPException(status_code=400, detail="Invalid forfeiting team")
+            
+        # 3. Update match
+        updates = {
+            "match_state": "COMPLETED",
+            "home_score": home_score,
+            "away_score": away_score,
+            "paused_at": now
+        }
+        await self.db.table("matches").update(updates).eq("id", str(match_id)).execute()
+        
+        # 4. Phase 5 Ratings (trigger it just in case)
+        try:
+            await self.db.rpc("compute_match_ratings_and_mvp", {"p_match_id": str(match_id)}).execute()
+        except Exception:
+            pass
+            
+        # 5. Insert transition log
+        try:
+            await self.db.table("match_state_transitions").insert({
+                "id": str(req.idempotency_key),
+                "match_id": str(match_id),
+                "previous_state": current_state,
+                "new_state": "COMPLETED",
+                "reason": req.reason or f"{req.forfeiting_team.capitalize()} team forfeited (No Show)",
+                "actor_id": str(actor_id)
+            }).execute()
+        except Exception:
+            pass
+            
+        return {"status": "success", "new_state": "COMPLETED", "home_score": home_score, "away_score": away_score}
 
     async def _upsert_participation(self, match_id: str, event_player_id: str, event_registration_id: str, updates: dict):
         # We try to update first

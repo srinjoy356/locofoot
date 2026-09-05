@@ -74,7 +74,16 @@ export default function NotificationsPage() {
                 {n.type === 'REFEREE_ASSIGNED' && `⚽ You have been assigned to officiate a match!`}
                 {n.type === 'EVENT_REFEREE_ASSIGNED' && `⚽ You have been assigned as a Tournament Referee!`}
                 {n.type === 'REFEREE_ACCEPTED' && `✅ Referee assignment accepted.`}
-                {!['PLAYER_INVITED', 'REFEREE_ASSIGNED', 'REFEREE_ACCEPTED', 'EVENT_REFEREE_ASSIGNED'].includes(n.type) && `Notification: ${n.type}`}
+                {n.type === 'FRIEND_REQUEST' && `👋 You have a new friend request!`}
+                {n.type === 'FRIEND_ACCEPTED' && `🎉 Your friend request was accepted!`}
+                {n.type === 'ROSTER_INCOMPLETE' && `⚠️ Your team roster is incomplete. Please add more players.`}
+                {n.type === 'MATCH_STARTING_SOON' && `⏰ Your match is starting soon!`}
+                {n.type === 'MATCH_CHANGED' && `📅 The schedule for your match has been updated.`}
+                {n.type === 'TEAM_REGISTRATION_APPROVED' && `✅ Your team registration has been approved!`}
+                {n.type === 'TOURNAMENT_COMPLETED' && `🏆 The tournament has concluded. Thanks for playing!`}
+                {n.type === 'TEAM_ROSTER_LOCKED' && `🔒 Your team roster has been locked by the organizer.`}
+                {n.type === 'DM_RECEIVED' && `💬 You received a new direct message.`}
+                {!['PLAYER_INVITED', 'REFEREE_ASSIGNED', 'REFEREE_ACCEPTED', 'EVENT_REFEREE_ASSIGNED', 'FRIEND_REQUEST', 'FRIEND_ACCEPTED', 'ROSTER_INCOMPLETE', 'MATCH_STARTING_SOON', 'MATCH_CHANGED', 'TEAM_REGISTRATION_APPROVED', 'TOURNAMENT_COMPLETED', 'TEAM_ROSTER_LOCKED', 'DM_RECEIVED'].includes(n.type) && `Notification: ${n.type}`}
               </p>
               <p className="text-xs text-gray-400">{new Date(n.created_at).toLocaleString()}</p>
             </div>
@@ -95,6 +104,22 @@ export default function NotificationsPage() {
                   load();
                 }} className="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1 rounded text-sm font-bold shadow">
                   Acknowledge
+                </button>
+              )}
+              {n.type === 'FRIEND_REQUEST' && !n.read_at && (
+                <button onClick={async () => {
+                  await supabase.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', n.id);
+                  window.location.href = '/friends';
+                }} className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm font-bold shadow">
+                  View Request
+                </button>
+              )}
+              {!['PLAYER_INVITED', 'REFEREE_ASSIGNED', 'EVENT_REFEREE_ASSIGNED', 'FRIEND_REQUEST'].includes(n.type) && !n.read_at && (
+                <button onClick={async () => {
+                  await supabase.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', n.id);
+                  load();
+                }} className="bg-slate-200 dark:bg-zinc-800 hover:bg-slate-300 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 px-3 py-1 rounded text-sm font-bold shadow">
+                  Dismiss
                 </button>
               )}
             </div>
