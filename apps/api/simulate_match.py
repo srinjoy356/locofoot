@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from supabase import create_client
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://lcxgjwdffkexrrnfcuik.supabase.co")
-SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxjeGdqd2RmZmtleHJybmZjdWlrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NzU0MDEwMCwiZXhwIjoyMTAzMTE2MTAwfQ.rU1nB3a9wmRR_lXOMbGbm7od6kVlXLY6-S7bDgJR0nM")
+SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", os.environ.get("SUPABASE_SERVICE_ROLE_KEY"))
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 API_BASE = "http://127.0.0.1:8000/api/v1"
