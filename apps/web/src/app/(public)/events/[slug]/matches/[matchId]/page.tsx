@@ -201,33 +201,32 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-4 md:p-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      
+    <div className="w-full flex flex-col bg-background text-on-surface h-full min-h-screen">
       {/* Admin Quick Actions */}
       {(isAdmin || isReferee) && (
-      <div className="mb-6 flex gap-4 justify-center">
-        <Link href={`/admin/events/${matchData.event_id || slug}/matches/${matchId}/referee`} className="bg-yellow-500 hover:bg-yellow-600 text-black px-4 py-2 rounded font-bold flex items-center gap-2 text-sm shadow-sm">
-          <ShieldAlert className="w-4 h-4" /> Open Referee Dashboard
-        </Link>
-        {isAdmin && (
-          <Link href={`/admin/events/${matchData.event_id || slug}/matches/${matchId}/recorder`} className="bg-emerald-50 dark:bg-emerald-950/200 hover:bg-emerald-600 text-white px-4 py-2 rounded font-bold flex items-center gap-2 text-sm shadow-sm">
-            Open Event Recorder
+        <div className="flex gap-4 p-4 border-b border-outline-variant bg-surface-container shrink-0 overflow-x-auto no-scrollbar">
+          <Link href={`/admin/events/${matchData.event_id || slug}/matches/${matchId}/referee`} className="bg-primary-container text-on-primary-container px-4 py-2 font-label-caps text-label-caps uppercase tracking-widest flex items-center gap-2 shrink-0 hover:bg-primary-fixed transition-colors">
+            <span className="material-symbols-outlined text-sm">sports</span> Referee Dashboard
           </Link>
-        )}
-      </div>
+          {isAdmin && (
+            <Link href={`/admin/events/${matchData.event_id || slug}/matches/${matchId}/recorder`} className="bg-surface-variant text-on-surface border border-outline-variant px-4 py-2 font-label-caps text-label-caps uppercase tracking-widest flex items-center gap-2 shrink-0 hover:bg-surface-container-highest transition-colors">
+              Event Recorder
+            </Link>
+          )}
+        </div>
       )}
 
       {isAdmin && matchData.match_state === 'SCHEDULED' && (
-        <div className="mb-6 flex flex-col sm:flex-row justify-center gap-4">
+        <div className="flex flex-col sm:flex-row p-4 border-b border-outline-variant gap-4 bg-surface shrink-0">
           <Link 
             href={`/events/${matchData.event_id || slug}/matches/${matchId}/lineup?teamId=${matchData.home_registration_id}`}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg transition"
+            className="flex-1 border border-outline-variant bg-surface hover:bg-surface-variant text-on-surface px-6 py-3 font-label-caps text-label-caps uppercase tracking-widest text-center transition"
           >
             Manage Home Lineup
           </Link>
           <Link 
             href={`/events/${matchData.event_id || slug}/matches/${matchId}/lineup?teamId=${matchData.away_registration_id}`}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg transition"
+            className="flex-1 border border-outline-variant bg-surface hover:bg-surface-variant text-on-surface px-6 py-3 font-label-caps text-label-caps uppercase tracking-widest text-center transition"
           >
             Manage Away Lineup
           </Link>
@@ -235,10 +234,10 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
       )}
 
       {(!isAdmin && isCaptain) && matchData.match_state === 'SCHEDULED' && (
-        <div className="mb-6 flex justify-center">
+        <div className="p-4 border-b border-outline-variant bg-surface shrink-0">
           <Link 
             href={`/events/${matchData.event_id || slug}/matches/${matchId}/lineup`}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg transition"
+            className="block w-full border border-primary-container text-primary-container hover:bg-primary-container/10 px-6 py-3 font-label-caps text-label-caps uppercase tracking-widest text-center transition"
           >
             Manage Starting Lineup
           </Link>
@@ -246,61 +245,67 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
       )}
       
       {/* Scoreboard */}
-      <div className="flex justify-end mb-4 print:hidden">
-        <ShareButton url={`/events/${clockEventId}/matches/${matchId}`} title="Share Match" />
-      </div>
-
-      <div className="bg-gradient-to-br from-slate-900 to-indigo-950 text-white rounded-3xl p-6 text-center shadow-2xl relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-purple-500"></div>
-        <div className="text-sm font-bold text-indigo-300 tracking-widest uppercase mb-6 flex items-center justify-center gap-2">
-          {matchData.match_state === 'LIVE' && <span className="relative flex h-3 w-3"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span className="relative inline-flex rounded-full h-3 w-3 bg-red-50 dark:bg-red-950/200"></span></span>}
-          {matchData.match_state.replace('_', ' ')}
-        </div>
+      <div className="w-full bg-[#0b0d0c] border-b border-outline-variant relative shrink-0 overflow-hidden min-h-[300px] flex flex-col justify-center py-12 px-margin-mobile md:px-gutter">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#0b0d0c]/80 z-10 pointer-events-none"></div>
         
-        <div className="flex justify-between items-center px-4 relative z-10">
-          <div className="flex flex-col items-center gap-2 w-4/12 text-center">
-            <span className="font-bold text-slate-100 line-clamp-2 leading-tight text-lg md:text-2xl">
-              {matchData.home_team?.team_name || 'HOME'}
-            </span>
+        <div className="relative z-20 max-w-container-max mx-auto w-full">
+          <div className="flex justify-between items-center mb-12">
+            <div className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest flex items-center gap-2">
+              {matchData.match_state === 'LIVE' && <div className="w-2 h-2 rounded-full bg-primary-container animate-pulse shadow-[0_0_8px_rgba(57,255,106,0.8)]"></div>}
+              {matchData.match_state.replace('_', ' ')}
+            </div>
+            <div className="print:hidden">
+              <ShareButton url={`/events/${clockEventId}/matches/${matchId}`} title="Share Match" />
+            </div>
           </div>
+          
+          <div className="flex justify-between items-center w-full">
+            <div className="flex flex-col items-start w-1/3">
+              <span className="font-headline-lg-mobile md:text-5xl uppercase tracking-tighter text-on-surface line-clamp-2">
+                {matchData.home_team?.team_name || 'HOME'}
+              </span>
+            </div>
 
-          <div className="w-4/12 flex justify-center text-5xl md:text-7xl font-mono font-black tracking-tighter drop-shadow-md bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-400 whitespace-nowrap">
-            {homeGoals} - {awayGoals}
-          </div>
+            <div className="w-1/3 flex justify-center items-center">
+              <div className="font-mono text-6xl md:text-[120px] font-black tracking-tighter text-on-surface whitespace-nowrap tabular-nums leading-none">
+                {homeGoals} <span className="text-outline-variant">-</span> {awayGoals}
+              </div>
+            </div>
 
-          <div className="flex flex-col items-center gap-2 w-4/12 text-center">
-            <span className="font-bold text-slate-100 line-clamp-2 leading-tight text-lg md:text-2xl">
-              {matchData.away_team?.team_name || 'AWAY'}
-            </span>
+            <div className="flex flex-col items-end w-1/3 text-right">
+              <span className="font-headline-lg-mobile md:text-5xl uppercase tracking-tighter text-on-surface line-clamp-2">
+                {matchData.away_team?.team_name || 'AWAY'}
+              </span>
+            </div>
           </div>
-        </div>
-        
-        <div className="mt-8 flex justify-center items-center gap-4">
-           <div className="bg-slate-800/80 rounded-xl px-6 py-2 border border-slate-700/50 shadow-inner">
-             <div className="text-2xl font-mono font-bold text-slate-200">
-               {formatClock()}
+          
+          <div className="mt-12 flex justify-center items-center">
+             <div className="border border-outline-variant bg-surface px-6 py-2">
+               <div className="text-4xl font-mono font-bold text-primary-container tabular-nums tracking-tighter">
+                 {formatClock()}
+               </div>
              </div>
-           </div>
+          </div>
         </div>
       </div>
 
       {/* Match Statistics Button */}
-      <div className="mt-8 flex justify-center gap-4">
+      <div className="w-full max-w-container-max mx-auto px-margin-mobile md:px-gutter mt-8">
         <Link 
           href={`/events/${matchData.event_id || slug}/matches/${matchId}/stats`} 
-          className="bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-700 px-8 py-4 rounded-xl font-black uppercase tracking-widest shadow-lg hover:shadow-xl transition flex items-center gap-3 text-lg"
+          className="block w-full border border-outline-variant bg-surface hover:bg-surface-variant text-on-surface px-6 py-4 font-label-caps text-label-caps uppercase tracking-widest text-center transition-colors flex justify-center items-center gap-2"
         >
-          <span>📊</span> View Full Match Statistics
+          <span className="material-symbols-outlined">analytics</span> View Full Match Statistics
         </Link>
       </div>
 
       {['COMPLETED', 'FULL_TIME', 'ABANDONED'].includes(matchData.match_state) && (isAdmin || isCaptain) && (
-        <div className="mt-4 flex justify-center">
+        <div className="max-w-container-max mx-auto px-margin-mobile md:px-gutter mt-4">
           <button 
             onClick={() => setShowDisputeModal(true)}
-            className="text-red-500 hover:text-red-600 font-bold flex items-center gap-2 px-4 py-2 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition"
+            className="w-full border border-error text-error hover:bg-error/10 px-6 py-4 font-label-caps text-label-caps uppercase tracking-widest flex justify-center items-center gap-2 transition-colors"
           >
-            <ShieldAlert className="w-5 h-5" /> File a Dispute
+            <span className="material-symbols-outlined">gavel</span> File a Dispute
           </button>
         </div>
       )}
@@ -352,82 +357,83 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
       )}
 
       {/* Timeline Feed */}
-      <div className="mt-12 space-y-4">
-        <h2 className="font-black text-2xl mb-6 text-slate-800 dark:text-slate-200 flex items-center gap-2">
+      <div className="w-full max-w-container-max mx-auto px-margin-mobile md:px-gutter mt-12 pb-12 flex-1">
+        <h2 className="font-headline-lg-mobile text-headline-lg-mobile uppercase text-on-surface mb-6 tracking-tighter">
           Match Timeline
-          <div className="h-px bg-slate-200 dark:bg-slate-700 flex-1 ml-4"></div>
         </h2>
-        {allEvents.map((ev, i) => {
-          const isGoal = ev.metadata?.result === 'GOAL';
-          const isCard = ev.event_type === 'YELLOW_CARD' || ev.event_type === 'RED_CARD';
-          const isFoul = ev.event_type === 'FOUL';
-          const isSub = ev.event_type === 'SUBSTITUTION';
-          
-          let actorName = (ev.actor_player_id || ev.player_id || ev.event_player_id) ? playerMap[ev.actor_player_id || ev.player_id || ev.event_player_id] : (ev.metadata?.committed_by_player_name || ev.metadata?.player_out_name || null);
-          let targetName = ev.target_player_id ? playerMap[ev.target_player_id] : (ev.metadata?.received_by_player_name || ev.metadata?.player_in_name || null);
-          
-          return (
-            <div key={ev.id || i} className={`bg-white dark:bg-slate-900 border dark:border-slate-800 rounded-2xl p-5 shadow-sm flex items-center gap-5 transition hover:shadow-md ${isGoal ? 'border-emerald-200 dark:border-emerald-900/50 bg-emerald-50 dark:bg-emerald-950/20/30 dark:bg-emerald-900/20' : ''} ${isCard ? 'border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/30/30 dark:bg-amber-900/20' : ''}`}>
-              <div className="font-mono font-black text-slate-400 dark:text-slate-500 w-16 text-lg shrink-0 text-center">
-                {ev.display_minute}<span>&apos;</span>
-              </div>
-              <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wide text-sm">{ev.event_type.replace(/_/g, ' ')}</span>
-                    {isGoal && <span className="bg-emerald-50 dark:bg-emerald-950/200 text-white text-xs font-bold px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse">GOAL!</span>}
-                    {ev.event_type === 'YELLOW_CARD' && <span className="bg-amber-400 w-3 h-4 rounded-sm inline-block shadow-sm"></span>}
-                    {ev.event_type === 'RED_CARD' && <span className="bg-red-600 w-3 h-4 rounded-sm inline-block shadow-sm"></span>}
-                  </div>
-                  
-                  {isSub ? (
-                    <div className="text-sm font-medium mt-2 flex flex-col gap-1">
-                      <div className="flex gap-2 items-center text-red-600 dark:text-red-400">
-                        <span className="font-bold uppercase text-[10px] tracking-wider bg-red-100 dark:bg-red-900/30 px-1.5 py-0.5 rounded">OUT</span> 
-                        <span className="dark:text-slate-300">{actorName || 'Unknown Player'}</span>
-                      </div>
-                      <div className="flex gap-2 items-center text-emerald-600 dark:text-emerald-400">
-                        <span className="font-bold uppercase text-[10px] tracking-wider bg-emerald-100 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded">IN</span> 
-                        <span className="dark:text-slate-300">{targetName || 'Unknown Player'}</span>
-                      </div>
+        <div className="flex flex-col gap-0 border-t border-outline-variant">
+          {allEvents.map((ev, i) => {
+            const isGoal = ev.metadata?.result === 'GOAL';
+            const isCard = ev.event_type === 'YELLOW_CARD' || ev.event_type === 'RED_CARD';
+            const isFoul = ev.event_type === 'FOUL';
+            const isSub = ev.event_type === 'SUBSTITUTION';
+            
+            let actorName = (ev.actor_player_id || ev.player_id || ev.event_player_id) ? playerMap[ev.actor_player_id || ev.player_id || ev.event_player_id] : (ev.metadata?.committed_by_player_name || ev.metadata?.player_out_name || null);
+            let targetName = ev.target_player_id ? playerMap[ev.target_player_id] : (ev.metadata?.received_by_player_name || ev.metadata?.player_in_name || null);
+            
+            return (
+              <div key={ev.id || i} className={`flex items-center border-b border-outline-variant p-4 transition-colors hover:bg-surface ${isGoal ? 'bg-primary-container/5 border-l-4 border-l-primary-container' : 'bg-background'} ${isCard ? (ev.event_type === 'RED_CARD' ? 'border-l-4 border-l-error bg-error/5' : 'border-l-4 border-l-yellow-400 bg-yellow-400/5') : ''}`}>
+                <div className="font-mono text-xl tabular-nums tracking-tighter text-on-surface-variant w-12 shrink-0">
+                  {ev.display_minute}<span>'</span>
+                </div>
+                <div className="flex-1 ml-4">
+                    <div className="flex items-center gap-3 mb-1">
+                      <span className="font-label-caps text-[10px] text-on-surface uppercase tracking-widest">{ev.event_type.replace(/_/g, ' ')}</span>
+                      {isGoal && <span className="bg-primary-container text-on-primary-container text-[9px] font-bold px-2 py-0.5 rounded-none uppercase tracking-widest">GOAL</span>}
+                      {ev.event_type === 'YELLOW_CARD' && <span className="bg-yellow-400 w-3 h-4 border border-outline-variant shadow-sm block"></span>}
+                      {ev.event_type === 'RED_CARD' && <span className="bg-error w-3 h-4 border border-outline-variant shadow-sm block"></span>}
                     </div>
-                  ) : (
-                    <>
-                      {actorName && (
-                        <div className="text-sm font-semibold text-slate-700 dark:text-slate-300 mt-1 mb-1 flex items-center gap-2 flex-wrap">
-                          <span className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-800 dark:text-slate-200">{actorName}</span>
-                          {targetName && (
-                            <>
-                              <span className="text-slate-400 text-xs">&rarr;</span>
-                              <span className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-800 dark:text-slate-200">{targetName}</span>
-                            </>
-                          )}
+                    
+                    {isSub ? (
+                      <div className="text-sm font-medium flex flex-col gap-1 mt-2">
+                        <div className="flex gap-2 items-center text-error">
+                          <span className="font-mono text-[9px] uppercase tracking-widest border border-error px-1">OUT</span> 
+                          <span className="text-on-surface">{actorName || 'Unknown Player'}</span>
                         </div>
-                      )}
-                      
-                      {ev.metadata && Object.keys(ev.metadata).length > 0 && (
-                        <div className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-1.5 flex flex-wrap gap-x-4 gap-y-1">
-                          {Object.entries(ev.metadata).map(([k, v]) => {
-                            if (k === 'result' && v === 'GOAL') return null;
-                            if (k.includes('_id') || k.includes('_name')) return null; // hide raw internal keys
-                            
-                            return (
-                              <span key={k} className="capitalize flex gap-1">
-                                <span className="text-slate-400 dark:text-slate-500">{k.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ').trim()}:</span> 
-                                <span className="text-slate-700 dark:text-slate-300">{String(v).replace(/_/g, ' ')}</span>
-                              </span>
-                            );
-                          })}
+                        <div className="flex gap-2 items-center text-primary-fixed-dim">
+                          <span className="font-mono text-[9px] uppercase tracking-widest border border-primary-fixed-dim px-1">IN</span> 
+                          <span className="text-on-surface">{targetName || 'Unknown Player'}</span>
                         </div>
-                      )}
-                    </>
-                  )}
+                      </div>
+                    ) : (
+                      <>
+                        {actorName && (
+                          <div className="font-body-md text-on-surface mt-1 flex items-center gap-2 flex-wrap">
+                            <span className="border border-outline-variant bg-surface px-2 py-1">{actorName}</span>
+                            {targetName && (
+                              <>
+                                <span className="text-on-surface-variant text-xs">&rarr;</span>
+                                <span className="border border-outline-variant bg-surface px-2 py-1">{targetName}</span>
+                              </>
+                            )}
+                          </div>
+                        )}
+                        
+                        {ev.metadata && Object.keys(ev.metadata).length > 0 && (
+                          <div className="text-sm text-on-surface-variant font-mono mt-2 flex flex-wrap gap-x-4 gap-y-1 opacity-70">
+                            {Object.entries(ev.metadata).map(([k, v]) => {
+                              if (k === 'result' && v === 'GOAL') return null;
+                              if (k.includes('_id') || k.includes('_name')) return null; 
+                              
+                              return (
+                                <span key={k} className="capitalize flex gap-1">
+                                  <span>{k.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ').trim()}:</span> 
+                                  <span className="text-on-surface">{String(v).replace(/_/g, ' ')}</span>
+                                </span>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </>
+                    )}
+                </div>
               </div>
-            </div>
-          );
-        })}
-        {allEvents.length === 0 && (
-          <div className="text-slate-500 dark:text-slate-400 text-center py-12 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 font-medium">Waiting for match events...</div>
-        )}
+            );
+          })}
+          {allEvents.length === 0 && (
+            <div className="text-on-surface-variant text-center py-12 border-b border-outline-variant bg-surface opacity-50 font-label-caps text-label-caps uppercase tracking-widest">No match events logged yet</div>
+          )}
+        </div>
       </div>
 
       <div className="print:hidden flex justify-center py-8">

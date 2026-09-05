@@ -129,161 +129,168 @@ export default function PublicEventPage({ params }: { params: Promise<{ slug: st
   if (!event) return <div>Loading public event...</div>;
 
   return (
-    <div className="space-y-6">
+    <div className="w-full h-full flex flex-col bg-background text-on-surface">
       {announcement && (
-        <div className={`${announcement.is_emergency ? 'bg-red-600' : 'bg-blue-600'} text-white p-4 rounded-xl shadow-xl flex items-center gap-4 animate-in fade-in slide-in-from-top-4`}>
-          <div className={`${announcement.is_emergency ? 'bg-red-800' : 'bg-blue-800'} p-2 rounded-full animate-pulse flex-shrink-0`}>
-            <span className="text-xl">{announcement.is_emergency ? '🚨' : 'ℹ️'}</span>
+        <div className={`p-4 border-b border-outline-variant flex items-center gap-4 ${announcement.is_emergency ? 'bg-error text-on-error' : 'bg-primary-container text-on-primary-container'} animate-in fade-in slide-in-from-top-4`}>
+          <div className="flex-shrink-0 animate-pulse">
+            <span className="material-symbols-outlined text-2xl">{announcement.is_emergency ? 'warning' : 'info'}</span>
           </div>
           <div className="flex-1">
-            <h3 className="font-bold text-lg">{announcement.is_emergency ? 'EMERGENCY ANNOUNCEMENT' : 'ANNOUNCEMENT'}</h3>
-            <p className={`${announcement.is_emergency ? 'text-red-100' : 'text-blue-100'}`}>{announcement.message}</p>
+            <h3 className="font-label-caps text-label-caps uppercase tracking-widest">{announcement.is_emergency ? 'EMERGENCY ANNOUNCEMENT' : 'ANNOUNCEMENT'}</h3>
+            <p className="font-body-md mt-1">{announcement.message}</p>
           </div>
-          <button onClick={() => setAnnouncement(null)} className={`${announcement.is_emergency ? 'text-red-200' : 'text-blue-200'} hover:text-white font-bold text-2xl leading-none`}>&times;</button>
+          <button onClick={() => setAnnouncement(null)} className="font-display-lg text-2xl leading-none opacity-50 hover:opacity-100">&times;</button>
         </div>
       )}
 
-      <div className="bg-gray-100 dark:bg-zinc-900/50 p-8 rounded text-center relative border border-transparent dark:border-zinc-800">
-        <div className="absolute top-4 right-4">
+      {/* Hero Header */}
+      <div className="w-full bg-[#0b0d0c] border-b border-outline-variant relative shrink-0 overflow-hidden min-h-[250px] flex flex-col justify-end pt-24 pb-12 px-margin-mobile md:px-gutter text-center">
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent z-10 pointer-events-none"></div>
+        <div className="absolute top-4 right-4 z-20">
           <ShareButton url={eventUrl} title="Share Event" />
         </div>
-        <h1 className="text-3xl font-bold dark:text-zinc-100">{event.name}</h1>
-        <p className="text-gray-600 dark:text-zinc-400 mt-2">{event.description}</p>
-        <div className="mt-4 flex justify-center gap-4">
-          <div className="inline-block bg-white dark:bg-zinc-800 px-4 py-2 rounded shadow-sm text-sm font-semibold dark:text-zinc-200">
-            Status: {event.status}
+        
+        <div className="relative z-20 max-w-container-max mx-auto w-full">
+          <h1 className="font-display-lg text-display-lg md:text-[64px] uppercase tracking-tighter leading-none text-on-surface mb-2">{event.name}</h1>
+          <p className="font-body-lg text-on-surface-variant max-w-2xl mx-auto">{event.description}</p>
+          
+          <div className="mt-8 flex flex-wrap justify-center gap-2">
+            <div className="border border-outline-variant bg-surface px-4 py-2 font-label-caps text-[10px] text-on-surface uppercase tracking-widest">
+              Status: {event.status}
+            </div>
+            <div className="border border-outline-variant bg-surface px-4 py-2 font-label-caps text-[10px] text-on-surface uppercase tracking-widest flex items-center gap-2">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-error opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-error"></span>
+              </span>
+              {viewers} Live Viewers
+            </div>
+            {scheduleTimeframe.start && scheduleTimeframe.end && (
+              <div className="border border-primary-container bg-primary-container/10 px-4 py-2 font-label-caps text-[10px] text-primary-container uppercase tracking-widest">
+                Matches: {scheduleTimeframe.start} to {scheduleTimeframe.end}
+              </div>
+            )}
           </div>
-          <div className="inline-block bg-white dark:bg-zinc-800 px-4 py-2 rounded shadow-sm text-sm font-semibold dark:text-zinc-200 flex items-center gap-2">
-            <span className="relative flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
-            </span>
-            {viewers} Live Viewers
-          </div>
-          {scheduleTimeframe.start && scheduleTimeframe.end && (
-            <div className="inline-block bg-white dark:bg-zinc-800 px-4 py-2 rounded shadow-sm text-sm font-semibold text-indigo-700 dark:text-indigo-400">
-              Matches Scheduled: {scheduleTimeframe.start} to {scheduleTimeframe.end}
+          
+          {event.status === 'LIVE' && (
+            <div className="mt-8 flex justify-center">
+              <Link href={`/events/${event.slug || event.id}/schedule`} className="border border-error bg-error/10 hover:bg-error/20 text-error px-6 py-4 font-label-caps text-label-caps uppercase tracking-widest transition-colors flex items-center gap-2">
+                <span className="h-2 w-2 bg-error rounded-full block animate-ping"></span>
+                Tournament is Live - Watch Matches
+              </Link>
+            </div>
+          )}
+
+          {event.status !== 'LIVE' && event.scheduling_state === 'LIVE' && (
+            <div className="mt-8 flex justify-center">
+              <Link href={`/events/${event.slug || event.id}/schedule`} className="border border-error bg-error/10 hover:bg-error/20 text-error px-6 py-4 font-label-caps text-label-caps uppercase tracking-widest transition-colors flex items-center gap-2">
+                <span className="h-2 w-2 bg-error rounded-full block animate-ping"></span>
+                View Live Scheduling Broadcast
+              </Link>
+            </div>
+          )}
+          
+          {event.status !== 'LIVE' && event.scheduling_state === 'COMPLETED' && (
+            <div className="mt-8 flex justify-center">
+              <Link href={`/events/${event.slug || event.id}/schedule`} className="border border-primary-container bg-primary-container/10 hover:bg-primary-container/20 text-primary-container px-6 py-4 font-label-caps text-label-caps uppercase tracking-widest transition-colors">
+                View Tournament Schedule
+              </Link>
             </div>
           )}
         </div>
-        
-        {event.status === 'LIVE' && (
-          <div className="mt-6 text-center">
-            <Link href={`/events/${event.slug || event.id}/schedule`} className="inline-block bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg animate-pulse hover:animate-none flex items-center gap-2 justify-center mx-auto w-max">
-              <span className="h-3 w-3 bg-white dark:bg-zinc-900 rounded-full block animate-ping mr-1"></span>
-              Tournament is Live - Watch Matches
-            </Link>
-          </div>
-        )}
-
-        {event.status !== 'LIVE' && event.scheduling_state === 'LIVE' && (
-          <div className="mt-6">
-            <Link href={`/events/${event.slug || event.id}/schedule`} className="inline-block bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg animate-pulse hover:animate-none flex items-center gap-2 justify-center mx-auto w-max">
-              <span className="h-3 w-3 bg-white dark:bg-zinc-900 rounded-full block animate-ping mr-1"></span>
-              View Live Scheduling Broadcast
-            </Link>
-          </div>
-        )}
-        
-        {event.status !== 'LIVE' && event.scheduling_state === 'COMPLETED' && (
-          <div className="mt-6">
-            <Link href={`/events/${event.slug || event.id}/schedule`} className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-full font-bold shadow-lg flex items-center gap-2 justify-center mx-auto w-max">
-              View Tournament Schedule
-            </Link>
-          </div>
-        )}
       </div>
 
-      {isAdmin && (
-        <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 border border-yellow-200 dark:border-yellow-700/50 rounded flex justify-between items-center">
-          <p className="text-yellow-800 dark:text-yellow-500 text-sm">You are an admin for this event.</p>
-          <Link href={`/admin/events/${event.id}`} className="bg-yellow-100 dark:bg-yellow-800/50 text-yellow-800 dark:text-yellow-500 px-4 py-2 rounded text-sm font-bold border border-yellow-300 dark:border-yellow-700/50">
-            Go to Admin Dashboard
+      <div className="w-full max-w-container-max mx-auto px-margin-mobile md:px-gutter py-8 md:py-12 flex-1 space-y-12">
+        
+        {isAdmin && (
+          <div className="border border-yellow-500/50 bg-yellow-500/5 p-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="font-label-caps text-label-caps text-yellow-500 uppercase tracking-widest">You are an admin for this event.</p>
+            <Link href={`/admin/events/${event.id}`} className="border border-yellow-500/50 hover:bg-yellow-500/10 text-yellow-500 px-4 py-2 font-label-caps text-label-caps uppercase tracking-widest transition-colors">
+              Admin Dashboard
+            </Link>
+          </div>
+        )}
+
+        <div className="border-t border-outline-variant pt-8">
+          <h2 className="font-headline-lg-mobile text-headline-lg-mobile uppercase tracking-tighter text-on-surface mb-6">Your Registrations</h2>
+          
+          {myRegistrations.length > 0 ? (
+            <div className="grid grid-cols-1 border border-outline-variant bg-surface divide-y divide-outline-variant">
+              {myRegistrations.map((reg: any) => (
+                <div key={reg.event_registration_id} className="p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:bg-surface-variant transition-colors">
+                  <div>
+                    <div className="font-headline-lg-mobile text-on-surface uppercase tracking-tighter">{reg.event_team_registrations.team_name}</div>
+                    <div className="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest mt-1">
+                      Status: {reg.event_team_registrations.status} <span className="mx-2">|</span> Role: {reg.is_captain_for_event ? 'Captain' : 'Player'}
+                    </div>
+                  </div>
+                  <Link 
+                    href={`/events/${event.slug || event.id}/registrations/${reg.event_registration_id}`}
+                    className="border border-outline-variant bg-surface hover:bg-surface-variant px-4 py-2 font-label-caps text-[10px] text-on-surface uppercase tracking-widest transition-colors"
+                  >
+                    View Team
+                  </Link>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="font-body-md text-on-surface-variant italic">You are not part of any team for this event yet.</p>
+          )}
+
+          {event.status === 'REGISTRATION_OPEN' ? (
+            <div className="mt-6">
+              <Link 
+                href={`/events/${event.slug || event.id}/register`}
+                className="border border-outline-variant bg-surface hover:bg-surface-variant px-6 py-4 font-label-caps text-label-caps text-on-surface uppercase tracking-widest transition-colors inline-block"
+              >
+                Register a New Team
+              </Link>
+            </div>
+          ) : (
+            <p className="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest mt-6 opacity-60">Registration is closed or not yet open.</p>
+          )}
+        </div>
+
+        <div className="border-t border-outline-variant pt-8">
+          <h2 className="font-headline-lg-mobile text-headline-lg-mobile uppercase tracking-tighter text-on-surface mb-6">Upcoming & Live Matches</h2>
+          {matches.length > 0 ? (
+            <div className="grid grid-cols-1 border border-outline-variant bg-surface divide-y divide-outline-variant">
+              {matches.map((m: any) => (
+                <div key={m.id} className="p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:bg-surface-variant transition-colors">
+                  <div>
+                    <div className="font-headline-lg-mobile text-on-surface uppercase tracking-tighter">
+                      {m.home_team?.team_name || 'TBD'} <span className="text-on-surface-variant mx-2 text-sm font-sans">vs</span> {m.away_team?.team_name || 'TBD'}
+                    </div>
+                    <div className="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest mt-1">
+                      State: {m.match_state.replace('_', ' ')}
+                    </div>
+                  </div>
+                  <Link 
+                    href={`/events/${event.slug || event.id}/matches/${m.id}`}
+                    className="border border-primary-container text-primary-container hover:bg-primary-container/10 px-4 py-2 font-label-caps text-[10px] uppercase tracking-widest transition-colors"
+                  >
+                    Match Center
+                  </Link>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="font-body-md text-on-surface-variant italic">No matches scheduled yet.</p>
+          )}
+        </div>
+
+        <div className="border-t border-outline-variant pt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Link href={`/events/${event.slug || event.id}/teams`} className="border border-outline-variant bg-surface hover:bg-surface-variant px-6 py-6 font-label-caps text-label-caps text-on-surface uppercase tracking-widest transition-colors flex justify-between items-center group">
+            View Teams <span className="material-symbols-outlined opacity-50 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+          </Link>
+          <Link href={`/events/${event.slug || event.id}/stats`} className="border border-outline-variant bg-surface hover:bg-surface-variant px-6 py-6 font-label-caps text-label-caps text-on-surface uppercase tracking-widest transition-colors flex justify-between items-center group">
+            View Statistics <span className="material-symbols-outlined opacity-50 group-hover:opacity-100 transition-opacity">arrow_forward</span>
           </Link>
         </div>
-      )}
 
-      <div className="flex flex-col gap-4 bg-white dark:bg-zinc-900 p-4 border dark:border-zinc-800 rounded">
-        <h2 className="text-xl font-bold dark:text-zinc-100">Your Registrations</h2>
-        
-        {myRegistrations.length > 0 ? (
-          <ul className="space-y-2">
-            {myRegistrations.map((reg: any) => (
-              <li key={reg.event_registration_id} className="flex justify-between items-center border dark:border-zinc-800 p-3 rounded">
-                <div>
-                  <div className="font-bold dark:text-zinc-200">{reg.event_team_registrations.team_name}</div>
-                  <div className="text-xs text-gray-500 dark:text-zinc-400">
-                    Team Status: {reg.event_team_registrations.status} | Your Role: {reg.is_captain_for_event ? 'Captain' : 'Player'}
-                  </div>
-                </div>
-                <Link 
-                  href={`/events/${event.slug || event.id}/registrations/${reg.event_registration_id}`}
-                  className="bg-gray-100 dark:bg-zinc-800 text-black dark:text-white px-4 py-2 rounded text-sm font-medium hover:bg-gray-200 dark:hover:bg-zinc-700"
-                >
-                  View Team
-                </Link>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-gray-500 dark:text-zinc-400 text-sm">You are not part of any team for this event yet.</p>
-        )}
-
-        {event.status === 'REGISTRATION_OPEN' ? (
-          <div className="mt-4 pt-4 border-t dark:border-zinc-800">
-            <Link 
-              href={`/events/${event.slug || event.id}/register`}
-              className="bg-black dark:bg-white text-white dark:text-black px-6 py-2 rounded inline-block font-medium"
-            >
-              Register a New Team
-            </Link>
-          </div>
-        ) : (
-          <p className="text-gray-500 dark:text-zinc-400 mt-4 pt-4 border-t dark:border-zinc-800">Registration is closed or not yet open.</p>
-        )}
-      </div>
-
-      
-      <div className="flex flex-col gap-4 bg-white dark:bg-zinc-900 p-4 border dark:border-zinc-800 rounded mt-8">
-        <h2 className="text-xl font-bold dark:text-zinc-100">Matches</h2>
-        {matches.length > 0 ? (
-          <ul className="space-y-2">
-            {matches.map((m: any) => (
-              <li key={m.id} className="flex justify-between items-center border dark:border-zinc-800 p-3 rounded hover:bg-slate-50 dark:bg-zinc-900/50 dark:hover:bg-zinc-800/50 transition">
-                <div>
-                  <div className="font-bold dark:text-zinc-200">
-                    {m.home_team?.team_name || 'TBD'} vs {m.away_team?.team_name || 'TBD'}
-                  </div>
-                  <div className="text-xs text-gray-500 dark:text-zinc-400 font-semibold">
-                    State: {m.match_state}
-                  </div>
-                </div>
-                <Link 
-                  href={`/events/${event.slug || event.id}/matches/${m.id}`}
-                  className="bg-indigo-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-indigo-700"
-                >
-                  View Match Center
-                </Link>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-gray-500 dark:text-zinc-400 text-sm">No matches found for this event yet.</p>
-        )}
-      </div>
-
-      <div className="mt-8 flex gap-4">
-
-        <Link href={`/events/${event.slug || event.id}/teams`} className="text-blue-600 hover:underline">
-          View Participating Teams →
-        </Link>
-        <Link href={`/events/${event.slug || event.id}/stats`} className="text-blue-600 hover:underline">
-          View Statistics & Leaderboards →
-        </Link>
-      </div>
-
-      <div className="flex justify-center py-8">
-        <QRCodeBlock url={`/events/${event.slug || event.id}`} title="Event QR Code" />
+        <div className="flex justify-center py-12">
+          <QRCodeBlock url={`/events/${event.slug || event.id}`} title="Event QR Code" />
+        </div>
       </div>
     </div>
   );

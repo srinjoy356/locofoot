@@ -106,145 +106,155 @@ export default async function PlayerProfilePage({ params }: { params: Promise<{ 
   }), { matches: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0 });
 
   return (
-    <div className="max-w-4xl mx-auto p-4 sm:p-6 space-y-8 print:p-0 print:m-0">
+    <div className="w-full h-full flex flex-col bg-background text-on-surface print:bg-white print:text-black">
       
       {/* Header Profile Section */}
-      <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border dark:border-zinc-800 overflow-hidden print:border-none print:shadow-none">
-        <div className="h-32 bg-gradient-to-r from-blue-600 to-indigo-800 relative print:h-24 print:bg-white print:border-b"></div>
-        <div className="px-6 pb-6 pt-20 relative sm:pt-20">
-          <div className="absolute -top-16 left-6 w-32 h-32 rounded-full border-4 border-white dark:border-zinc-900 bg-slate-100 overflow-hidden print:-top-12">
-            {avatarUrl ? (
-              <Image src={avatarUrl} alt={pData.display_name || "Avatar"} fill className="object-cover" unoptimized />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-4xl font-light text-slate-400">
-                {pData.display_name?.charAt(0) || '?'}
-              </div>
-            )}
-          </div>
-          
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 print:mt-0">
-            <div>
-              <h1 className="text-3xl font-bold dark:text-zinc-100">{pData.display_name || "Unnamed Player"}</h1>
-              <p className="text-slate-500 font-mono mt-1 text-sm">{pData.unique_code}</p>
+      <div className="w-full bg-[#0b0d0c] border-b border-outline-variant relative shrink-0 overflow-hidden min-h-[300px] flex flex-col justify-end pt-24 pb-12 px-margin-mobile md:px-gutter">
+        <div className="absolute inset-0 z-0">
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent z-10"></div>
+          {avatarUrl && (
+            <Image src={avatarUrl} alt="Avatar" fill className="object-cover filter grayscale opacity-40 mix-blend-luminosity" unoptimized />
+          )}
+        </div>
+        
+        <div className="relative z-20 max-w-container-max mx-auto w-full flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div className="flex flex-col md:flex-row md:items-end gap-6">
+            <div className="w-24 h-24 md:w-32 md:h-32 bg-surface-variant border border-outline-variant flex items-center justify-center overflow-hidden shrink-0">
+              {avatarUrl ? (
+                <Image src={avatarUrl} alt={pData.display_name || "Avatar"} width={128} height={128} className="object-cover w-full h-full grayscale" unoptimized />
+              ) : (
+                <span className="font-display-lg text-display-lg text-on-surface-variant uppercase">{pData.display_name?.charAt(0) || '?'}</span>
+              )}
             </div>
             
-            <div className="flex items-center gap-3 print:hidden">
-              <ShareButton url={`/players/${pData.unique_code}`} title="Share Player" />
+            <div className="flex flex-col">
+              <span className="font-mono text-on-surface-variant tracking-widest uppercase mb-2">{pData.unique_code}</span>
+              <h1 className="font-display-lg text-display-lg md:text-[64px] uppercase tracking-tighter leading-none text-on-surface">
+                {pData.display_name || "Unknown"}
+              </h1>
             </div>
+          </div>
+          
+          <div className="print:hidden">
+            <ShareButton url={`/players/${pData.unique_code}`} title="Share Player" />
           </div>
         </div>
       </div>
 
       {/* Career Overview */}
-      {statsPublic ? (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white dark:bg-zinc-900 border dark:border-zinc-800 p-5 rounded-xl shadow-sm text-center print:border-slate-200">
-            <div className="text-slate-500 dark:text-zinc-400 text-sm font-medium mb-1 flex items-center justify-center gap-1"><Activity size={16}/> Matches</div>
-            <div className="text-3xl font-bold dark:text-zinc-100">{career.matches}</div>
-          </div>
-          <div className="bg-white dark:bg-zinc-900 border dark:border-zinc-800 p-5 rounded-xl shadow-sm text-center print:border-slate-200">
-            <div className="text-slate-500 dark:text-zinc-400 text-sm font-medium mb-1 flex items-center justify-center gap-1"><Trophy size={16}/> Goals</div>
-            <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">{career.goals}</div>
-          </div>
-          <div className="bg-white dark:bg-zinc-900 border dark:border-zinc-800 p-5 rounded-xl shadow-sm text-center print:border-slate-200">
-            <div className="text-slate-500 dark:text-zinc-400 text-sm font-medium mb-1 flex items-center justify-center gap-1"><Star size={16}/> Assists</div>
-            <div className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{career.assists}</div>
-          </div>
-          <div className="bg-white dark:bg-zinc-900 border dark:border-zinc-800 p-5 rounded-xl shadow-sm text-center print:border-slate-200">
-            <div className="text-slate-500 dark:text-zinc-400 text-sm font-medium mb-1 flex items-center justify-center gap-1">Discipline</div>
-            <div className="flex justify-center gap-2 text-xl font-bold">
-              <span className="text-yellow-500">{career.yellowCards}</span>
-              <span className="text-slate-300">/</span>
-              <span className="text-red-500">{career.redCards}</span>
+      <div className="w-full max-w-container-max mx-auto px-margin-mobile md:px-gutter py-8 md:py-12 flex-1">
+        {statsPublic ? (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-0 border border-outline-variant bg-[#151816]">
+            <div className="p-6 border-b border-r border-outline-variant flex flex-col items-center justify-center hover:bg-surface-variant transition-colors">
+              <div className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest mb-2 flex items-center gap-2"><span className="material-symbols-outlined text-sm">sports_soccer</span> Matches</div>
+              <div className="font-mono text-5xl font-black text-on-surface tabular-nums">{career.matches}</div>
             </div>
-          </div>
-        </div>
-      ) : (
-        <div className="bg-slate-50 dark:bg-zinc-900/50 p-6 rounded-xl border dark:border-zinc-800 text-center italic text-slate-500">
-          This player's statistics are private.
-        </div>
-      )}
-
-      {profilePublic && (
-        <div className="mt-8 bg-white dark:bg-zinc-900 p-6 rounded-xl border dark:border-zinc-800 shadow-sm print:border-slate-200">
-          <h2 className="font-bold text-lg mb-4 border-b pb-2">About</h2>
-          
-          <div className="space-y-4 text-sm">
-            {pData.bio && (
-              <div>
-                <span className="text-slate-500 dark:text-zinc-400 block mb-1 font-medium">Bio</span>
-                <p className="whitespace-pre-wrap">{pData.bio}</p>
+            <div className="p-6 border-b md:border-r border-outline-variant flex flex-col items-center justify-center hover:bg-surface-variant transition-colors">
+              <div className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest mb-2 flex items-center gap-2"><span className="material-symbols-outlined text-sm">emoji_events</span> Goals</div>
+              <div className="font-mono text-5xl font-black text-primary-container tabular-nums">{career.goals}</div>
+            </div>
+            <div className="p-6 border-b border-r md:border-b-0 border-outline-variant flex flex-col items-center justify-center hover:bg-surface-variant transition-colors">
+              <div className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest mb-2 flex items-center gap-2"><span className="material-symbols-outlined text-sm">star</span> Assists</div>
+              <div className="font-mono text-5xl font-black text-on-surface tabular-nums">{career.assists}</div>
+            </div>
+            <div className="p-6 border-outline-variant flex flex-col items-center justify-center hover:bg-surface-variant transition-colors">
+              <div className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest mb-2">Discipline (Y/R)</div>
+              <div className="font-mono text-5xl font-black tabular-nums flex items-center gap-2">
+                <span className="text-yellow-400">{career.yellowCards}</span>
+                <span className="text-on-surface-variant text-3xl font-light">/</span>
+                <span className="text-error">{career.redCards}</span>
               </div>
-            )}
-            
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-2">
-              {pData.location_text && (
-                <div>
-                  <span className="text-slate-500 dark:text-zinc-400 block mb-1 font-medium">Location</span>
-                  <p className="font-semibold text-base">{pData.location_text}</p>
-                </div>
-              )}
-              {pData.preferred_position && (
-                <div>
-                  <span className="text-slate-500 dark:text-zinc-400 block mb-1 font-medium">Position</span>
-                  <p className="font-semibold text-base">{pData.preferred_position}</p>
-                </div>
-              )}
-              {pData.dominant_foot && (
-                <div>
-                  <span className="text-slate-500 dark:text-zinc-400 block mb-1 font-medium">Strong Foot</span>
-                  <p className="font-semibold text-base">{pData.dominant_foot}</p>
-                </div>
-              )}
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Tournament History */}
-      <div className="bg-white dark:bg-zinc-900 border dark:border-zinc-800 rounded-xl shadow-sm overflow-hidden print:shadow-none print:border-none">
-        <div className="p-5 border-b dark:border-zinc-800 print:border-b-2 print:border-slate-900">
-          <h2 className="text-xl font-bold flex items-center gap-2 dark:text-zinc-100"><Calendar size={20}/> Tournament History</h2>
-        </div>
-        
-        {eventStats.length === 0 ? (
-          <div className="p-8 text-center text-slate-500">No tournament appearances yet.</div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm whitespace-nowrap">
-              <thead className="bg-slate-50 dark:bg-zinc-800/50 text-slate-500 dark:text-zinc-400">
-                <tr>
-                  <th className="px-5 py-3 font-medium">Team</th>
-                  <th className="px-5 py-3 font-medium">Matches</th>
-                  <th className="px-5 py-3 font-medium">Goals</th>
-                  <th className="px-5 py-3 font-medium">Assists</th>
-                  <th className="px-5 py-3 font-medium">Cards (Y/R)</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y dark:divide-zinc-800">
-                {eventStats.map((stat, i) => (
-                  <tr key={i} className="hover:bg-slate-50 dark:hover:bg-zinc-800/20 transition-colors">
-                    <td className="px-5 py-4">
-                      <div className="font-semibold dark:text-zinc-100">{stat.team_name}</div>
-                    </td>
-                    <td className="px-5 py-4 dark:text-zinc-300">{stat.matches_played || 0}</td>
-                    <td className="px-5 py-4 font-medium text-blue-600 dark:text-blue-400">{stat.goals || 0}</td>
-                    <td className="px-5 py-4 dark:text-zinc-300">{stat.assists || 0}</td>
-                    <td className="px-5 py-4 dark:text-zinc-300">
-                      <span className="text-yellow-600">{stat.yellow_cards || 0}</span> / <span className="text-red-500">{stat.red_cards || 0}</span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="border border-outline-variant bg-surface p-8 text-center text-on-surface-variant font-label-caps text-label-caps uppercase tracking-widest opacity-60">
+            This player's statistics are private.
           </div>
         )}
-      </div>
 
-      <div className="print:hidden flex justify-center py-8">
-        <QRCodeBlock url={`/players/${pData.unique_code}`} title="Player Profile QR" />
-      </div>
+        {profilePublic && (
+          <div className="mt-8 border border-outline-variant bg-surface p-6">
+            <h2 className="font-headline-lg-mobile text-headline-lg-mobile uppercase text-on-surface tracking-tighter mb-6 border-b border-outline-variant pb-4">Profile</h2>
+            
+            <div className="space-y-6">
+              {pData.bio && (
+                <div>
+                  <span className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest block mb-2">Bio</span>
+                  <p className="font-body-md text-on-surface whitespace-pre-wrap">{pData.bio}</p>
+                </div>
+              )}
+              
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-6 pt-2">
+                {pData.location_text && (
+                  <div>
+                    <span className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest block mb-2">Location</span>
+                    <p className="font-body-lg text-on-surface uppercase">{pData.location_text}</p>
+                  </div>
+                )}
+                {pData.preferred_position && (
+                  <div>
+                    <span className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest block mb-2">Position</span>
+                    <p className="font-body-lg text-on-surface uppercase">{pData.preferred_position}</p>
+                  </div>
+                )}
+                {pData.dominant_foot && (
+                  <div>
+                    <span className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest block mb-2">Strong Foot</span>
+                    <p className="font-body-lg text-on-surface uppercase">{pData.dominant_foot}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
+        {/* Tournament History */}
+        <div className="mt-8">
+          <h2 className="font-headline-lg-mobile text-headline-lg-mobile uppercase text-on-surface tracking-tighter mb-6 flex items-center gap-2">
+            Tournament History
+          </h2>
+          
+          {eventStats.length === 0 ? (
+            <div className="p-8 text-center text-on-surface-variant font-label-caps text-label-caps uppercase border border-outline-variant bg-surface opacity-60 tracking-widest">
+              No tournament appearances yet
+            </div>
+          ) : (
+            <div className="border border-outline-variant bg-surface overflow-x-auto w-full">
+              <table className="w-full text-left whitespace-nowrap">
+                <thead className="bg-surface-variant border-b border-outline-variant text-on-surface-variant font-label-caps text-[10px] uppercase tracking-widest">
+                  <tr>
+                    <th className="px-6 py-4 font-normal">Team</th>
+                    <th className="px-6 py-4 font-normal">Matches</th>
+                    <th className="px-6 py-4 font-normal">Goals</th>
+                    <th className="px-6 py-4 font-normal">Assists</th>
+                    <th className="px-6 py-4 font-normal">Cards (Y/R)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-outline-variant">
+                  {eventStats.map((stat, i) => (
+                    <tr key={i} className="hover:bg-surface-variant transition-colors">
+                      <td className="px-6 py-5">
+                        <div className="font-headline-lg-mobile text-on-surface uppercase tracking-tighter">{stat.team_name}</div>
+                      </td>
+                      <td className="px-6 py-5 font-mono text-on-surface">{stat.matches_played || 0}</td>
+                      <td className="px-6 py-5 font-mono text-primary-container font-bold">{stat.goals || 0}</td>
+                      <td className="px-6 py-5 font-mono text-on-surface">{stat.assists || 0}</td>
+                      <td className="px-6 py-5 font-mono text-on-surface">
+                        <span className="text-yellow-400">{stat.yellow_cards || 0}</span> <span className="text-outline-variant font-sans mx-1">/</span> <span className="text-error">{stat.red_cards || 0}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        <div className="print:hidden flex justify-center py-12">
+          <QRCodeBlock url={`/players/${pData.unique_code}`} title="Player Profile QR" />
+        </div>
+
+      </div>
     </div>
   );
 }

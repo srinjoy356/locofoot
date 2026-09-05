@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'; // We won't use this but keep import for now, or just remove it.
 import { Clock, CalendarDays, MapPin } from 'lucide-react';
-
+import { format } from 'date-fns';
 export default function PublicSchedulePage() {
   const params = useParams();
   const slug = params.slug as string;
@@ -66,75 +66,101 @@ export default function PublicSchedulePage() {
   if (!event) return null;
 
   return (
-    <div className="container max-w-5xl py-12 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="text-center space-y-4">
-        <h1 className="text-5xl font-black tracking-tight text-slate-900 dark:text-zinc-100 drop-shadow-sm">
-          Tournament Schedule
-        </h1>
-        <p className="text-xl text-slate-500 dark:text-zinc-400 font-medium max-w-2xl mx-auto">
-          {event.name}
-        </p>
+    <div className="w-full h-full flex flex-col bg-background text-on-surface">
+      {/* Header */}
+      <div className="w-full bg-surface-container border-b border-outline-variant px-margin-mobile md:px-gutter py-8 md:py-12">
+        <div className="max-w-container-max mx-auto">
+          <span className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest mb-2 block">
+            {event.name}
+          </span>
+          <h1 className="font-display-lg text-display-lg md:text-[64px] uppercase tracking-tighter leading-none">
+            Tournament <span className="text-primary-container">Schedule</span>
+          </h1>
+        </div>
       </div>
 
-      <div className="space-y-6">
-        {schedule.length === 0 ? (
-          <Card className="border-slate-200 dark:border-zinc-800 shadow-sm bg-slate-50 dark:bg-zinc-900/50/50">
-            <CardContent className="flex flex-col items-center justify-center py-20 text-slate-400 space-y-4">
-              <CalendarDays className="h-16 w-16 text-slate-300" />
-              <p className="text-xl font-semibold text-slate-500 dark:text-zinc-400">The schedule is currently being finalized.</p>
-              <p>Check back later or watch for live updates!</p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {schedule.map((match) => (
-              <Card key={match.id} className="border-slate-200 dark:border-zinc-800/60 dark:border-zinc-800 shadow-md hover:shadow-xl transition-all duration-300 bg-white dark:bg-zinc-900 group overflow-hidden relative">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-indigo-500 transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
-                <CardHeader className="pb-3 bg-slate-50 dark:bg-zinc-900/50/50 dark:bg-zinc-800/50 border-b dark:border-zinc-800">
-                  <div className="flex items-center justify-between text-sm font-semibold text-slate-600 dark:text-zinc-400">
-                    <div className="flex items-center gap-1.5">
-                      <Clock className="h-4 w-4 text-indigo-500 dark:text-indigo-400" />
-                      {new Date(match.scheduled_start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+      {/* Main Content */}
+      <div className="flex-1 w-full bg-background px-margin-mobile md:px-gutter py-8">
+        <div className="max-w-container-max mx-auto">
+          {schedule.length === 0 ? (
+            <div className="w-full border border-outline-variant bg-[#151816] flex flex-col items-center justify-center py-24 opacity-60">
+              <span className="material-symbols-outlined text-6xl text-outline-variant mb-4">calendar_month</span>
+              <p className="font-headline-lg-mobile text-headline-lg-mobile uppercase tracking-widest text-on-surface-variant">
+                Schedule Finalizing
+              </p>
+              <p className="font-body-md text-on-surface-variant mt-2 text-sm uppercase tracking-widest">
+                Check back later for fixtures
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-col border border-outline-variant bg-[#151816]">
+              {schedule.map((match, index) => (
+                <div 
+                  key={match.id} 
+                  className={`flex flex-col md:flex-row md:items-stretch w-full group transition-colors hover:bg-surface-variant cursor-pointer ${
+                    index !== schedule.length - 1 ? 'border-b border-outline-variant' : ''
+                  }`}
+                >
+                  {/* Match Info Column */}
+                  <div className="flex md:flex-col justify-between md:justify-center p-4 md:w-48 shrink-0 border-b md:border-b-0 md:border-r border-outline-variant bg-surface">
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-on-surface-variant text-sm">schedule</span>
+                      <span className="font-label-caps text-label-caps text-on-surface uppercase tabular-nums tracking-widest">
+                        {format(new Date(match.scheduled_start), 'HH:mm')}
+                      </span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-slate-500 dark:text-zinc-400 bg-slate-200/50 dark:bg-zinc-800 px-2.5 py-1 rounded-full text-xs">
-                      <MapPin className="h-3.5 w-3.5" />
-                      {match.venue_field?.name || 'TBD'}
+                    <div className="flex items-center gap-2 mt-0 md:mt-2">
+                      <span className="material-symbols-outlined text-on-surface-variant text-sm">location_on</span>
+                      <span className="font-label-caps text-label-caps text-on-surface-variant uppercase truncate max-w-[120px]">
+                        {match.venue_field?.name || 'TBD'}
+                      </span>
                     </div>
                   </div>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex flex-col items-center gap-2 w-5/12 text-center">
-                      <div className="h-14 w-14 rounded-full bg-slate-100 dark:bg-zinc-800 flex items-center justify-center text-slate-400 text-xs font-bold border-2 border-white dark:border-zinc-900 shadow-sm overflow-hidden">
+
+                  {/* Teams Column */}
+                  <div className="flex-1 flex items-center justify-between p-4 md:p-6">
+                    {/* Home Team */}
+                    <div className="flex items-center gap-4 flex-1">
+                      <div className="w-12 h-12 md:w-16 md:h-16 shrink-0 bg-background border border-outline-variant flex items-center justify-center">
                         {match.home_team?.logo_media_id ? (
-                          <img src={match.home_team.logo_media_id} alt="Logo" className="w-full h-full object-cover" />
-                        ) : 'TBD'}
+                          <img src={match.home_team.logo_media_id} alt="Logo" className="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all" />
+                        ) : (
+                          <span className="font-display-sm text-display-sm text-on-surface-variant uppercase">
+                            {match.home_team?.team_short_name?.[0] || match.home_team?.team_name?.[0] || '?'}
+                          </span>
+                        )}
                       </div>
-                      <span className="font-bold text-slate-800 dark:text-zinc-100 line-clamp-2 leading-tight">
-                        {match.home_team?.team_short_name || match.home_team?.team_name || 'TBD'}
+                      <span className="font-headline-lg-mobile md:text-2xl uppercase tracking-tighter text-on-surface group-hover:text-primary-container transition-colors line-clamp-1">
+                        {match.home_team?.team_name || 'TBD'}
                       </span>
                     </div>
 
-                    <div className="w-2/12 flex justify-center">
-                      <div className="bg-slate-100 dark:bg-zinc-800 text-slate-400 dark:text-zinc-500 text-xs font-black px-2 py-1 rounded-md">VS</div>
+                    {/* VS divider */}
+                    <div className="px-4 md:px-8 flex flex-col items-center justify-center shrink-0">
+                      <span className="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest">VS</span>
                     </div>
 
-                    <div className="flex flex-col items-center gap-2 w-5/12 text-center">
-                      <div className="h-14 w-14 rounded-full bg-slate-100 dark:bg-zinc-800 flex items-center justify-center text-slate-400 text-xs font-bold border-2 border-white dark:border-zinc-900 shadow-sm overflow-hidden">
+                    {/* Away Team */}
+                    <div className="flex items-center justify-end gap-4 flex-1 text-right">
+                      <span className="font-headline-lg-mobile md:text-2xl uppercase tracking-tighter text-on-surface group-hover:text-primary-container transition-colors line-clamp-1">
+                        {match.away_team?.team_name || 'TBD'}
+                      </span>
+                      <div className="w-12 h-12 md:w-16 md:h-16 shrink-0 bg-background border border-outline-variant flex items-center justify-center">
                         {match.away_team?.logo_media_id ? (
-                          <img src={match.away_team.logo_media_id} alt="Logo" className="w-full h-full object-cover" />
-                        ) : 'TBD'}
+                          <img src={match.away_team.logo_media_id} alt="Logo" className="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all" />
+                        ) : (
+                          <span className="font-display-sm text-display-sm text-on-surface-variant uppercase">
+                            {match.away_team?.team_short_name?.[0] || match.away_team?.team_name?.[0] || '?'}
+                          </span>
+                        )}
                       </div>
-                      <span className="font-bold text-slate-800 dark:text-zinc-100 line-clamp-2 leading-tight">
-                        {match.away_team?.team_short_name || match.away_team?.team_name || 'TBD'}
-                      </span>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

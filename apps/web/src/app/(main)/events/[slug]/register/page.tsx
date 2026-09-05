@@ -4,6 +4,7 @@ import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
 
 export default function EventRegistrationPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
@@ -76,53 +77,80 @@ export default function EventRegistrationPage({ params }: { params: Promise<{ sl
     }
   }
 
-  if (loading) return <div>Loading...</div>;
-  if (!event) return <div>Event not found.</div>;
+  if (loading) return (
+    <div className="w-full flex items-center justify-center min-h-[50vh] bg-background">
+      <div className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest animate-pulse">Loading Event...</div>
+    </div>
+  );
+  if (!event) return (
+    <div className="w-full flex items-center justify-center min-h-[50vh] bg-background">
+      <div className="font-label-caps text-label-caps text-error uppercase tracking-widest">Event not found.</div>
+    </div>
+  );
 
   return (
-    <div className="max-w-xl mx-auto py-8">
-      <Link href={`/events/${event.slug || event.id}`} className="text-blue-600 hover:underline mb-4 inline-block">
-        &larr; Back to {event.name}
-      </Link>
-      <h1 className="text-2xl font-bold mb-6">Register a Team for {event.name}</h1>
-      
-      {error && (
-        <div className="bg-red-50 dark:bg-red-950/20 text-red-600 p-3 rounded mb-4 text-sm">
-          {error}
+    <div className="w-full bg-background min-h-screen text-on-surface">
+      <div className="border-b border-outline-variant bg-surface sticky top-0 z-10">
+        <div className="max-w-container-max mx-auto px-margin-mobile md:px-gutter h-14 flex items-center">
+          <Link href={`/events/${event.slug || event.id}`} className="flex items-center gap-2 text-on-surface-variant hover:text-on-surface transition-colors">
+            <ChevronLeft size={16} />
+            <span className="font-label-caps text-label-caps uppercase tracking-widest">Back to {event.name}</span>
+          </Link>
         </div>
-      )}
+      </div>
 
-      <form onSubmit={handleRegister} className="space-y-4 bg-white dark:bg-zinc-900 p-6 rounded border">
-        <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-zinc-300 mb-1">Team Name</label>
-          <input
-            required
-            type="text"
-            className="w-full border p-2 rounded"
-            value={teamName}
-            onChange={e => setTeamName(e.target.value)}
-            placeholder="E.g. LocoFoot United"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-zinc-300 mb-1">Short Name (Optional)</label>
-          <input
-            type="text"
-            className="w-full border p-2 rounded"
-            value={teamShortName}
-            onChange={e => setTeamShortName(e.target.value)}
-            placeholder="E.g. LFU"
-          />
-        </div>
+      <div className="max-w-[600px] mx-auto px-margin-mobile md:px-gutter py-12 md:py-24">
+        <h1 className="font-display-lg text-display-lg md:text-[56px] uppercase tracking-tighter leading-none mb-8 text-on-surface">
+          REGISTER TEAM
+        </h1>
         
-        <button
-          type="submit"
-          disabled={submitting}
-          className="w-full bg-black text-white py-2 rounded disabled:opacity-50"
-        >
-          {submitting ? "Creating..." : "Create Team Registration"}
-        </button>
-      </form>
+        {error && (
+          <div className="border border-error bg-error/10 p-4 mb-8">
+            <span className="font-label-caps text-[10px] uppercase tracking-widest text-error block mb-1">Error</span>
+            <div className="font-body-md text-error">{error}</div>
+          </div>
+        )}
+
+        <form onSubmit={handleRegister} className="border border-outline-variant bg-surface p-6 md:p-8 space-y-8">
+          <div className="space-y-6">
+            <div>
+              <label className="font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant block mb-2">
+                Team Name
+              </label>
+              <input
+                required
+                type="text"
+                className="w-full bg-background border border-outline-variant text-on-surface font-headline-sm uppercase tracking-tighter p-4 rounded-none focus:outline-none focus:border-primary-container transition-colors placeholder:text-on-surface-variant/50"
+                value={teamName}
+                onChange={e => setTeamName(e.target.value)}
+                placeholder="E.G. LOCOFOOT UNITED"
+              />
+            </div>
+            <div>
+              <label className="font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant block mb-2">
+                Short Name (Optional)
+              </label>
+              <input
+                type="text"
+                className="w-full bg-background border border-outline-variant text-on-surface font-headline-sm uppercase tracking-tighter p-4 rounded-none focus:outline-none focus:border-primary-container transition-colors placeholder:text-on-surface-variant/50"
+                value={teamShortName}
+                onChange={e => setTeamShortName(e.target.value)}
+                placeholder="E.G. LFU"
+                maxLength={4}
+              />
+            </div>
+          </div>
+          
+          <button
+            type="submit"
+            disabled={submitting || !teamName.trim()}
+            className="w-full bg-primary-container text-on-primary-container hover:bg-primary-container/90 py-4 font-headline-sm uppercase tracking-tighter disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {submitting ? "CREATING TEAM..." : "CREATE TEAM REGISTRATION"}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
+

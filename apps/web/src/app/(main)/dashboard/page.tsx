@@ -85,75 +85,98 @@ export default function DashboardPage() {
   if (!user) return <div className="p-10">Loading...</div>;
 
   return (
-    <div className="max-w-2xl mx-auto mt-10 p-6 border rounded-lg">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        {profileUrl && <ShareButton url={profileUrl} title="Share Profile" />}
-      </div>
-      
-      <div className="flex items-center gap-6 mb-8">
-        <div className="w-24 h-24 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center relative">
-          {avatar ? (
-            <Image src={avatar.secure_url} alt="Avatar" fill className="object-cover" unoptimized />
-          ) : (
-            <span className="text-slate-500 dark:text-zinc-400">No Avatar</span>
-          )}
-        </div>
+    <div className="w-full flex flex-col bg-background text-on-surface min-h-screen pb-12">
+      {/* Header */}
+      <div className="w-full border-b border-outline-variant bg-[#0b0d0c] pt-12 pb-8 px-margin-mobile md:px-gutter shrink-0 flex justify-between items-end">
         <div>
-          <h2 className="text-xl font-semibold">{profile?.display_name || user.email}</h2>
-          <p className="text-slate-500 dark:text-zinc-400">{user.email}</p>
-          {profile?.unique_code && (
-            <div className="mt-2 inline-block bg-slate-100 dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 px-3 py-1 rounded-md font-mono text-sm border border-slate-200 dark:border-zinc-800">
-              <span className="font-semibold text-slate-500 dark:text-zinc-400 mr-2">Friend Code:</span>
-              {profile.unique_code}
+          <h1 className="font-display-lg text-display-lg md:text-[64px] uppercase tracking-tighter leading-none text-on-surface">Dashboard</h1>
+          <p className="font-body-md text-on-surface-variant mt-2 max-w-xl">Manage your profile, view your active assignments, and update your settings.</p>
+        </div>
+        {profileUrl && (
+          <div className="hidden md:block">
+            <ShareButton url={profileUrl} title="Share Profile" />
+          </div>
+        )}
+      </div>
+
+      <div className="w-full max-w-container-max mx-auto px-margin-mobile md:px-gutter py-8 space-y-12">
+        {/* Profile Section */}
+        <div className="flex flex-col md:flex-row gap-8 items-start border border-outline-variant bg-surface p-6">
+          <div className="w-32 h-32 bg-background border border-outline-variant flex items-center justify-center relative shrink-0 overflow-hidden">
+            {avatar ? (
+              <Image src={avatar.secure_url} alt="Avatar" fill className="object-cover" unoptimized />
+            ) : (
+              <span className="material-symbols-outlined text-4xl text-on-surface-variant">person</span>
+            )}
+          </div>
+          <div className="flex-1 flex flex-col justify-center">
+            <h2 className="font-headline-lg-mobile text-headline-lg-mobile md:text-headline-lg uppercase tracking-tighter">{profile?.display_name || user.email}</h2>
+            <p className="font-body-md text-on-surface-variant">{user.email}</p>
+            {profile?.unique_code && (
+              <div className="mt-4 flex items-center gap-4 bg-background border border-outline-variant px-4 py-2 w-max">
+                <span className="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest">Friend Code</span>
+                <span className="font-mono text-primary-container font-bold tracking-widest select-all">{profile.unique_code}</span>
+              </div>
+            )}
+          </div>
+          {profileUrl && (
+            <div className="md:hidden mt-4 w-full">
+              <ShareButton url={profileUrl} title="Share Profile" />
             </div>
           )}
         </div>
-      </div>
 
-      <div className="mb-8">
-        <h3 className="text-lg font-semibold mb-2">Upload Avatar</h3>
-        <ImageUploader 
-          ownerType="USER_AVATAR" 
-          ownerId={user.id} 
-          onUploadSuccess={() => {
-            // refresh page to see new avatar
-            window.location.reload();
-          }} 
-        />
-      </div>
-
-      {refereeMatches.length > 0 && (
-        <div className="mb-8">
-          <h3 className="text-xl font-bold text-amber-900 dark:text-amber-500 mb-4 border-b pb-2">My Referee Assignments</h3>
-          <div className="grid gap-4">
-            {refereeMatches.map((rm) => (
-              <div key={rm.id} className="border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/30 rounded-lg p-4 flex justify-between items-center">
-                <div>
-                  <h4 className="font-bold">{rm.matches.events.name}</h4>
-                  <p className="text-sm text-slate-600 dark:text-zinc-400">Match ID: {rm.matches.id.substring(0, 8)}... | Status: {rm.matches.match_state}</p>
-                </div>
-                <button 
-                  onClick={() => router.push(`/admin/events/${rm.matches.events.id}/matches/${rm.matches.id}/referee`)}
-                  className="bg-amber-600 hover:bg-amber-700 text-white font-bold px-4 py-2 rounded shadow"
-                >
-                  Enter Command Center
-                </button>
-              </div>
-            ))}
+        <div className="border border-outline-variant bg-surface p-6">
+          <h3 className="font-headline-sm uppercase tracking-tighter mb-4">Upload Avatar</h3>
+          <div className="max-w-md">
+            <ImageUploader 
+              ownerType="USER_AVATAR" 
+              ownerId={user.id} 
+              onUploadSuccess={() => {
+                window.location.reload();
+              }} 
+            />
           </div>
         </div>
-      )}
 
-      <button 
-        onClick={() => {
-          supabase.auth.signOut();
-          router.push("/login");
-        }}
-        className="text-red-600 hover:underline"
-      >
-        Sign Out
-      </button>
+        {refereeMatches.length > 0 && (
+          <div className="space-y-4">
+            <h3 className="font-headline-lg-mobile uppercase tracking-tighter text-error border-b border-error pb-2">My Referee Assignments</h3>
+            <div className="grid grid-cols-1 border border-outline-variant bg-surface divide-y divide-outline-variant">
+              {refereeMatches.map((rm) => (
+                <div key={rm.id} className="p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:bg-surface-variant transition-colors">
+                  <div>
+                    <h4 className="font-headline-sm uppercase tracking-tighter text-on-surface">{rm.matches.events.name}</h4>
+                    <p className="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest mt-1">
+                      Match ID: <span className="font-mono">{rm.matches.id.substring(0, 8)}</span> <span className="mx-2">|</span> Status: {rm.matches.match_state}
+                    </p>
+                  </div>
+                  <button 
+                    onClick={() => router.push(`/admin/events/${rm.matches.events.id}/matches/${rm.matches.id}/referee`)}
+                    className="border border-error bg-error/10 hover:bg-error/20 text-error px-6 py-4 font-label-caps text-label-caps uppercase tracking-widest transition-colors flex items-center gap-2"
+                  >
+                    Command Center
+                    <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="pt-8 border-t border-outline-variant">
+          <button 
+            onClick={() => {
+              supabase.auth.signOut();
+              router.push("/login");
+            }}
+            className="border border-outline-variant bg-background hover:bg-surface-variant text-error px-6 py-4 font-label-caps text-label-caps uppercase tracking-widest transition-colors flex items-center gap-2"
+          >
+            <span className="material-symbols-outlined text-sm">logout</span>
+            Sign Out
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

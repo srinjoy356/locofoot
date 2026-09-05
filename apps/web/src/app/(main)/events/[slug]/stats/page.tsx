@@ -53,186 +53,185 @@ export default async function TournamentStatsPage({ params }: { params: Promise<
   });
 
   return (
-    <div className="max-w-6xl mx-auto space-y-10 p-4 text-zinc-100">
+    <div className="w-full flex flex-col bg-background text-on-surface h-full min-h-screen">
       {/* HEADER */}
-      <div className="print:hidden">
-        <h1 className="text-4xl font-black mb-2">{eventData.name} Statistics</h1>
-        {eventData.format && <div className="text-zinc-400 text-sm font-medium">{eventData.format} Format</div>}
-        <div className="border-b border-zinc-800 pb-2 flex gap-6 px-2 mt-8 overflow-x-auto">
-          <Link href={`/events/${slug}/stats`} className="font-bold border-b-2 border-white pb-2 text-white whitespace-nowrap">Overview</Link>
-          <Link href={`/events/${slug}/stats/players`} className="font-medium pb-2 text-zinc-500 hover:text-zinc-300 transition-colors whitespace-nowrap">Players</Link>
-          <Link href={`/events/${slug}/stats/teams`} className="font-medium pb-2 text-zinc-500 hover:text-zinc-300 transition-colors whitespace-nowrap">Teams</Link>
-          <Link href={`/events/${slug}/stats/analytics`} className="font-medium pb-2 text-zinc-500 hover:text-zinc-300 transition-colors whitespace-nowrap">Analytics</Link>
-          <Link href={`/events/${slug}/stats/form`} className="font-medium pb-2 text-zinc-500 hover:text-zinc-300 transition-colors whitespace-nowrap">Form</Link>
-          <Link href={`/events/${slug}/stats/advanced`} className="font-medium pb-2 text-zinc-500 hover:text-zinc-300 transition-colors whitespace-nowrap">Advanced</Link>
-          <Link href={`/events/${slug}/stats/granular`} className="font-medium pb-2 text-zinc-500 hover:text-zinc-300 transition-colors whitespace-nowrap flex items-center gap-1">Granular <span className="bg-orange-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-black">NEW</span></Link>
+      <div className="w-full border-b border-outline-variant bg-[#0b0d0c] pt-12 pb-0 px-margin-mobile md:px-gutter print:hidden shrink-0">
+        <div className="max-w-container-max mx-auto">
+          <h1 className="font-display-lg text-display-lg md:text-[64px] uppercase tracking-tighter leading-none text-on-surface mb-2">{eventData.name} Statistics</h1>
+          {eventData.format && <div className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">{eventData.format} Format</div>}
+          
+          <div className="flex gap-0 mt-12 overflow-x-auto no-scrollbar border-b border-outline-variant">
+            <Link href={`/events/${slug}/stats`} className="px-6 py-4 font-label-caps text-label-caps uppercase tracking-widest bg-surface-variant text-on-surface border-b-2 border-primary-container whitespace-nowrap">Overview</Link>
+            <Link href={`/events/${slug}/stats/players`} className="px-6 py-4 font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant hover:bg-surface hover:text-on-surface transition-colors whitespace-nowrap">Players</Link>
+            <Link href={`/events/${slug}/stats/teams`} className="px-6 py-4 font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant hover:bg-surface hover:text-on-surface transition-colors whitespace-nowrap">Teams</Link>
+            <Link href={`/events/${slug}/stats/analytics`} className="px-6 py-4 font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant hover:bg-surface hover:text-on-surface transition-colors whitespace-nowrap">Analytics</Link>
+            <Link href={`/events/${slug}/stats/form`} className="px-6 py-4 font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant hover:bg-surface hover:text-on-surface transition-colors whitespace-nowrap">Form</Link>
+            <Link href={`/events/${slug}/stats/advanced`} className="px-6 py-4 font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant hover:bg-surface hover:text-on-surface transition-colors whitespace-nowrap">Advanced</Link>
+            <Link href={`/events/${slug}/stats/granular`} className="px-6 py-4 font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant hover:bg-surface hover:text-on-surface transition-colors whitespace-nowrap flex items-center gap-2">Granular <span className="bg-primary-container text-on-primary-container text-[9px] px-1.5 py-0.5 rounded-none font-black">NEW</span></Link>
+          </div>
         </div>
       </div>
       
-      <div className="hidden print:block mb-8 text-center border-b-2 border-slate-900 pb-4">
-        <h1 className="text-3xl font-black text-black">{eventData.name} - Official Standings</h1>
-        <p className="text-sm font-semibold text-slate-500 mt-1">LocoFoot Tournament Export</p>
+      <div className="hidden print:block mb-8 text-center border-b border-outline-variant pb-4">
+        <h1 className="text-3xl font-black text-black uppercase tracking-tighter">{eventData.name} - Official Standings</h1>
+        <p className="text-sm font-semibold text-gray-500 mt-1 uppercase tracking-widest">LocoFoot Tournament Export</p>
       </div>
 
-      {/* KPIS */}
-      {kpis && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 print:hidden">
-          <Link href={`/events/${slug}/schedule`} className="block group">
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 text-center group-hover:bg-zinc-800 transition-colors h-full">
-               <div className="text-zinc-400 text-sm font-bold uppercase tracking-wider mb-2">Matches</div>
-               <div className="text-4xl font-black text-zinc-100">{kpis.matches_played}</div>
+      <div className="w-full max-w-container-max mx-auto px-margin-mobile md:px-gutter py-8 flex-1 space-y-12">
+        {/* KPIS */}
+        {kpis && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-0 border border-outline-variant bg-[#151816] print:hidden">
+            <Link href={`/events/${slug}/schedule`} className="p-6 border-b border-r border-outline-variant flex flex-col items-center justify-center hover:bg-surface-variant transition-colors group">
+              <div className="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest mb-2 group-hover:text-primary-container transition-colors">Matches</div>
+              <div className="font-mono text-5xl font-black text-on-surface tabular-nums">{kpis.matches_played}</div>
+            </Link>
+            <Link href={`/events/${slug}/stats/goals`} className="p-6 border-b md:border-r border-outline-variant flex flex-col items-center justify-center hover:bg-surface-variant transition-colors group">
+              <div className="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest mb-2 group-hover:text-primary-container transition-colors">Goals</div>
+              <div className="font-mono text-5xl font-black text-primary-container tabular-nums">{kpis.total_goals}</div>
+            </Link>
+            <div className="p-6 border-b border-r md:border-b-0 border-outline-variant flex flex-col items-center justify-center bg-surface">
+              <div className="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest mb-2">Goals/Match</div>
+              <div className="font-mono text-5xl font-black text-on-surface tabular-nums">{kpis.goals_per_match}</div>
             </div>
-          </Link>
-          <Link href={`/events/${slug}/stats/goals`} className="block group">
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 text-center group-hover:bg-zinc-800 transition-colors h-full">
-               <div className="text-zinc-400 text-sm font-bold uppercase tracking-wider mb-2">Goals</div>
-               <div className="text-4xl font-black text-zinc-100">{kpis.total_goals}</div>
-            </div>
-          </Link>
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 text-center h-full">
-             <div className="text-zinc-400 text-sm font-bold uppercase tracking-wider mb-2">Goals/Match</div>
-             <div className="text-4xl font-black text-zinc-100">{kpis.goals_per_match}</div>
+            <Link href={`/events/${slug}/stats/cards`} className="p-6 border-outline-variant flex flex-col items-center justify-center hover:bg-surface-variant transition-colors group">
+              <div className="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest mb-2 group-hover:text-yellow-400 transition-colors">Yellow Cards</div>
+              <div className="font-mono text-5xl font-black text-yellow-400 tabular-nums">{kpis.yellow_cards}</div>
+            </Link>
           </div>
-          <Link href={`/events/${slug}/stats/cards`} className="block group">
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 text-center group-hover:bg-zinc-800 transition-colors h-full">
-               <div className="text-zinc-400 text-sm font-bold uppercase tracking-wider mb-2">Yellow Cards</div>
-               <div className="text-4xl font-black text-yellow-500">{kpis.yellow_cards}</div>
-            </div>
-          </Link>
-        </div>
-      )}
+        )}
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-        
-        {/* STANDINGS (2 columns wide on XL) */}
-        <div className="xl:col-span-2 space-y-6">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden print:border-none print:shadow-none print:bg-white text-black">
-            <div className="bg-zinc-800/50 p-4 font-bold text-sm uppercase tracking-wider text-zinc-400 print:bg-transparent print:text-black flex justify-between items-center border-b print:border-slate-300 dark:border-zinc-800">
-              <span>Standings</span>
-              <ExportControls 
-                filename={`${eventData.slug}-standings`}
-                data={standings}
-                columns={[
-                  { key: 'team_name', label: 'Team' },
-                  { key: 'matches_played', label: 'MP' },
-                  { key: 'wins', label: 'W' },
-                  { key: 'draws', label: 'D' },
-                  { key: 'losses', label: 'L' },
-                  { key: 'goals_for', label: 'GF' },
-                  { key: 'goals_against', label: 'GA' },
-                  { key: 'goal_difference', label: 'GD' },
-                  { key: 'points', label: 'Pts' }
-                ]}
-              />
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left">
-                <thead className="bg-zinc-900/50 text-zinc-500 border-b border-zinc-800 print:bg-slate-100 print:text-black print:border-slate-300">
-                  <tr>
-                    <th className="p-4 font-semibold w-10 text-center">#</th>
-                    <th className="p-4 font-semibold">Team</th>
-                    <th className="p-4 font-semibold text-center w-12">MP</th>
-                    <th className="p-4 font-semibold text-center w-12">W</th>
-                    <th className="p-4 font-semibold text-center w-12">D</th>
-                    <th className="p-4 font-semibold text-center w-12">L</th>
-                    <th className="p-4 font-semibold text-center w-12">GF</th>
-                    <th className="p-4 font-semibold text-center w-12">GA</th>
-                    <th className="p-4 font-semibold text-center w-12">GD</th>
-                    <th className="p-4 font-black text-center text-white print:text-black w-12">Pts</th>
-                    <th className="p-4 font-semibold text-center w-32 print:hidden">Form</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-800 print:divide-slate-200">
-                  {standings.map((t: any, idx: number) => {
-                    const form = teamFormMap[t.team_registration_id] || teamFormMap[t.team_id] || [];
-                    return (
-                      <tr key={t.team_registration_id || t.team_id} className="hover:bg-zinc-800/30">
-                        <td className="p-4 text-center text-zinc-500 font-bold print:text-slate-600">{idx + 1}</td>
-                        <td className="p-4 font-bold text-zinc-100 print:text-black">
-                          {t.team_registration_id ? (
-                             <Link href={`/events/${slug}/teams/${t.team_registration_id}`} className="hover:underline">{t.team_name}</Link>
-                          ) : t.team_name}
-                        </td>
-                        <td className="p-4 text-center text-zinc-400 print:text-slate-700">{t.matches_played}</td>
-                        <td className="p-4 text-center text-zinc-300 print:text-slate-700">{t.wins || 0}</td>
-                        <td className="p-4 text-center text-zinc-300 print:text-slate-700">{t.draws || 0}</td>
-                        <td className="p-4 text-center text-zinc-300 print:text-slate-700">{t.losses || 0}</td>
-                        <td className="p-4 text-center text-zinc-300 print:text-slate-700">{t.goals_for || 0}</td>
-                        <td className="p-4 text-center text-zinc-300 print:text-slate-700">{t.goals_against || 0}</td>
-                        <td className="p-4 text-center font-semibold print:text-slate-700">{t.goal_difference > 0 ? `+${t.goal_difference}` : t.goal_difference}</td>
-                        <td className="p-4 text-center font-black text-lg text-white print:text-black">{t.points}</td>
-                        <td className="p-4 print:hidden">
-                           <div className="flex gap-1 justify-center">
-                             {form.length === 0 ? (
-                               <span className="text-zinc-600 text-xs">-</span>
-                             ) : (
-                               form.map((res: string, i: number) => (
-                                 <div key={i} className={`w-5 h-5 rounded-sm flex items-center justify-center text-[10px] font-black ${
-                                   res === 'W' ? 'bg-green-600 text-white' : 
-                                   res === 'D' ? 'bg-zinc-500 text-white' : 
-                                   res === 'L' ? 'bg-red-600 text-white' : 'bg-zinc-800 text-transparent'
-                                 }`}>
-                                   {res}
-                                 </div>
-                               ))
-                             )}
-                           </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                  {standings.length === 0 && (
-                    <tr><td colSpan={11} className="p-8 text-center text-zinc-500">No standings data available.</td></tr>
-                  )}
-                </tbody>
-              </table>
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+          
+          {/* STANDINGS (2 columns wide on XL) */}
+          <div className="xl:col-span-2 space-y-6">
+            <div className="bg-surface border border-outline-variant overflow-hidden print:border-none print:shadow-none print:bg-white text-on-surface">
+              <div className="bg-surface-variant p-4 font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant print:bg-transparent print:text-black flex justify-between items-center border-b border-outline-variant print:border-slate-300">
+                <span>Standings</span>
+                <ExportControls 
+                  filename={`${eventData.slug}-standings`}
+                  data={standings}
+                  columns={[
+                    { key: 'team_name', label: 'Team' },
+                    { key: 'matches_played', label: 'MP' },
+                    { key: 'wins', label: 'W' },
+                    { key: 'draws', label: 'D' },
+                    { key: 'losses', label: 'L' },
+                    { key: 'goals_for', label: 'GF' },
+                    { key: 'goals_against', label: 'GA' },
+                    { key: 'goal_difference', label: 'GD' },
+                    { key: 'points', label: 'Pts' }
+                  ]}
+                />
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead className="bg-background text-on-surface-variant border-b border-outline-variant print:bg-slate-100 print:text-black print:border-slate-300">
+                    <tr>
+                      <th className="p-4 font-label-caps text-[10px] uppercase tracking-widest w-10 text-center">#</th>
+                      <th className="p-4 font-label-caps text-[10px] uppercase tracking-widest">Team</th>
+                      <th className="p-4 font-label-caps text-[10px] uppercase tracking-widest text-center w-12">MP</th>
+                      <th className="p-4 font-label-caps text-[10px] uppercase tracking-widest text-center w-12">W</th>
+                      <th className="p-4 font-label-caps text-[10px] uppercase tracking-widest text-center w-12">D</th>
+                      <th className="p-4 font-label-caps text-[10px] uppercase tracking-widest text-center w-12">L</th>
+                      <th className="p-4 font-label-caps text-[10px] uppercase tracking-widest text-center w-12">GF</th>
+                      <th className="p-4 font-label-caps text-[10px] uppercase tracking-widest text-center w-12">GA</th>
+                      <th className="p-4 font-label-caps text-[10px] uppercase tracking-widest text-center w-12">GD</th>
+                      <th className="p-4 font-label-caps text-[10px] uppercase tracking-widest text-center text-primary-container print:text-black w-12">Pts</th>
+                      <th className="p-4 font-label-caps text-[10px] uppercase tracking-widest text-center w-32 print:hidden">Form</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-outline-variant print:divide-slate-200">
+                    {standings.map((t: any, idx: number) => {
+                      const form = teamFormMap[t.team_registration_id] || teamFormMap[t.team_id] || [];
+                      return (
+                        <tr key={t.team_registration_id || t.team_id} className="hover:bg-surface-variant transition-colors">
+                          <td className="p-4 text-center text-on-surface-variant font-mono tabular-nums print:text-slate-600">{idx + 1}</td>
+                          <td className="p-4 font-headline-lg-mobile text-on-surface uppercase tracking-tighter print:text-black">
+                            {t.team_registration_id ? (
+                               <Link href={`/events/${slug}/teams/${t.team_registration_id}`} className="hover:text-primary-container transition-colors">{t.team_name}</Link>
+                            ) : t.team_name}
+                          </td>
+                          <td className="p-4 text-center text-on-surface-variant font-mono tabular-nums print:text-slate-700">{t.matches_played}</td>
+                          <td className="p-4 text-center text-on-surface-variant font-mono tabular-nums print:text-slate-700">{t.wins || 0}</td>
+                          <td className="p-4 text-center text-on-surface-variant font-mono tabular-nums print:text-slate-700">{t.draws || 0}</td>
+                          <td className="p-4 text-center text-on-surface-variant font-mono tabular-nums print:text-slate-700">{t.losses || 0}</td>
+                          <td className="p-4 text-center text-on-surface-variant font-mono tabular-nums print:text-slate-700">{t.goals_for || 0}</td>
+                          <td className="p-4 text-center text-on-surface-variant font-mono tabular-nums print:text-slate-700">{t.goals_against || 0}</td>
+                          <td className="p-4 text-center font-mono tabular-nums text-on-surface print:text-slate-700">{t.goal_difference > 0 ? `+${t.goal_difference}` : t.goal_difference}</td>
+                          <td className="p-4 text-center font-mono text-xl font-bold text-primary-container tabular-nums print:text-black">{t.points}</td>
+                          <td className="p-4 print:hidden">
+                             <div className="flex gap-1 justify-center">
+                               {form.length === 0 ? (
+                                 <span className="text-on-surface-variant font-mono">-</span>
+                               ) : (
+                                 form.map((res: string, i: number) => (
+                                   <div key={i} className={`w-5 h-5 flex items-center justify-center font-mono text-[10px] font-bold border ${
+                                     res === 'W' ? 'bg-primary-container text-on-primary-container border-primary-container' : 
+                                     res === 'D' ? 'bg-surface-variant text-on-surface border-outline-variant' : 
+                                     res === 'L' ? 'bg-error text-on-error border-error' : 'bg-background text-transparent border-outline-variant'
+                                   }`}>
+                                     {res}
+                                   </div>
+                                 ))
+                               )}
+                             </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {standings.length === 0 && (
+                      <tr><td colSpan={11} className="p-8 text-center text-on-surface-variant font-label-caps uppercase tracking-widest opacity-60">No standings data available.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* LEADERBOARDS (1 column wide on XL) */}
-        <div className="space-y-6 print:hidden">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden p-1">
-             <LeaderboardTable 
-               title="Top Scorers" 
-               metricLabel="Goals" 
-               data={goals.slice(0, 5)} 
-               loading={false} 
-               viewAllHref={`/events/${slug}/stats/goals`}
-               eventSlug={slug}
-               showExport={true}
-               exportFilename={`${eventData.slug}-top-scorers`}
-             />
-          </div>
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden p-1">
-             <LeaderboardTable 
-               title="Top Assists" 
-               metricLabel="Assists" 
-               data={assists.slice(0, 5)} 
-               loading={false} 
-               viewAllHref={`/events/${slug}/stats/assists`}
-               eventSlug={slug}
-               showExport={true}
-               exportFilename={`${eventData.slug}-top-assists`}
-             />
-          </div>
-          <div className="grid grid-cols-2 gap-4 pt-4">
-            <Link href={`/events/${slug}/stats/goal-contributions`} className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex flex-col items-center justify-center hover:bg-zinc-800 transition-colors text-center text-sm font-bold text-zinc-300">
-              <span className="text-[#ccff00] text-xl block mb-1">G+A</span>
-              Goal Contribs
-            </Link>
-            <Link href={`/events/${slug}/stats/tackles`} className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex flex-col items-center justify-center hover:bg-zinc-800 transition-colors text-center text-sm font-bold text-zinc-300">
-              <span className="text-zinc-500 text-xl block mb-1">⚔️</span>
-              Tackles
-            </Link>
-            <Link href={`/events/${slug}/stats/interceptions`} className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex flex-col items-center justify-center hover:bg-zinc-800 transition-colors text-center text-sm font-bold text-zinc-300">
-              <span className="text-zinc-500 text-xl block mb-1">🛡️</span>
-              Interceptions
-            </Link>
-            <Link href={`/events/${slug}/stats/saves`} className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex flex-col items-center justify-center hover:bg-zinc-800 transition-colors text-center text-sm font-bold text-zinc-300">
-              <span className="text-zinc-500 text-xl block mb-1">🧤</span>
-              Saves
-            </Link>
+          {/* LEADERBOARDS (1 column wide on XL) */}
+          <div className="space-y-6 print:hidden">
+            <div className="border border-outline-variant bg-surface">
+               <LeaderboardTable 
+                 title="Top Scorers" 
+                 metricLabel="Goals" 
+                 data={goals.slice(0, 5)} 
+                 loading={false} 
+                 viewAllHref={`/events/${slug}/stats/goals`}
+                 eventSlug={slug}
+                 showExport={true}
+                 exportFilename={`${eventData.slug}-top-scorers`}
+               />
+            </div>
+            <div className="border border-outline-variant bg-surface">
+               <LeaderboardTable 
+                 title="Top Assists" 
+                 metricLabel="Assists" 
+                 data={assists.slice(0, 5)} 
+                 loading={false} 
+                 viewAllHref={`/events/${slug}/stats/assists`}
+                 eventSlug={slug}
+                 showExport={true}
+                 exportFilename={`${eventData.slug}-top-assists`}
+               />
+            </div>
+            <div className="grid grid-cols-2 gap-4 pt-4">
+              <Link href={`/events/${slug}/stats/goal-contributions`} className="border border-outline-variant bg-surface hover:bg-surface-variant p-4 flex flex-col items-center justify-center transition-colors text-center">
+                <span className="text-primary-container font-mono text-xl block mb-1">G+A</span>
+                <span className="font-label-caps text-[10px] text-on-surface uppercase tracking-widest">Goal Contribs</span>
+              </Link>
+              <Link href={`/events/${slug}/stats/tackles`} className="border border-outline-variant bg-surface hover:bg-surface-variant p-4 flex flex-col items-center justify-center transition-colors text-center">
+                <span className="material-symbols-outlined text-on-surface-variant text-xl block mb-1">swords</span>
+                <span className="font-label-caps text-[10px] text-on-surface uppercase tracking-widest">Tackles</span>
+              </Link>
+              <Link href={`/events/${slug}/stats/interceptions`} className="border border-outline-variant bg-surface hover:bg-surface-variant p-4 flex flex-col items-center justify-center transition-colors text-center">
+                <span className="material-symbols-outlined text-on-surface-variant text-xl block mb-1">shield</span>
+                <span className="font-label-caps text-[10px] text-on-surface uppercase tracking-widest">Interceptions</span>
+              </Link>
+              <Link href={`/events/${slug}/stats/saves`} className="border border-outline-variant bg-surface hover:bg-surface-variant p-4 flex flex-col items-center justify-center transition-colors text-center">
+                <span className="material-symbols-outlined text-on-surface-variant text-xl block mb-1">front_hand</span>
+                <span className="font-label-caps text-[10px] text-on-surface uppercase tracking-widest">Saves</span>
+              </Link>
+            </div>
           </div>
         </div>
       </div>

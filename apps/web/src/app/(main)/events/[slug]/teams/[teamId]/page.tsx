@@ -42,100 +42,125 @@ async function TeamStatsContent({ slug, teamId }: { slug: string, teamId: string
   }
 
   return (
-    <div className="space-y-8 print:p-0 print:m-0">
-      <div className="flex items-center justify-between mb-6 border-b dark:border-zinc-800 pb-4 print:border-b-2 print:border-slate-900">
-        <div className="flex items-center space-x-4">
-          <Link href={`/events/${slug}/stats/teams`} className="text-slate-400 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white transition-colors print:hidden">
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
-          <h1 className="text-3xl font-bold dark:text-zinc-100">{stats.team_name}</h1>
-        </div>
-        <div className="print:hidden flex gap-2">
-          {isCaptain && (
-            <Link href={`/events/${slug}/teams/${teamId}/settings`} className="flex items-center gap-2 bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 px-3 py-1.5 rounded-md font-medium text-sm transition-colors border dark:border-zinc-700">
-              <Settings size={16} />
-              Edit Team
-            </Link>
-          )}
-          <ShareButton url={`/events/${slug}/teams/${teamId}`} title="Share Team" />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-zinc-900 border dark:border-zinc-800 p-4 rounded-xl shadow-sm print:border-slate-200">
-          <p className="text-sm text-slate-500 dark:text-zinc-400 font-medium uppercase tracking-wider mb-1">Matches</p>
-          <p className="text-3xl font-bold font-mono dark:text-zinc-100">{stats.matches_played}</p>
-        </div>
-        <div className="bg-white dark:bg-zinc-900 border dark:border-zinc-800 p-4 rounded-xl shadow-sm print:border-slate-200">
-          <p className="text-sm text-slate-500 dark:text-zinc-400 font-medium uppercase tracking-wider mb-1">Wins</p>
-          <p className="text-3xl font-bold font-mono text-green-600 dark:text-green-500">{stats.wins}</p>
-        </div>
-        <div className="bg-white dark:bg-zinc-900 border dark:border-zinc-800 p-4 rounded-xl shadow-sm print:border-slate-200">
-          <p className="text-sm text-slate-500 dark:text-zinc-400 font-medium uppercase tracking-wider mb-1">Draws</p>
-          <p className="text-3xl font-bold font-mono text-yellow-500">{stats.draws}</p>
-        </div>
-        <div className="bg-white dark:bg-zinc-900 border dark:border-zinc-800 p-4 rounded-xl shadow-sm print:border-slate-200">
-          <p className="text-sm text-slate-500 dark:text-zinc-400 font-medium uppercase tracking-wider mb-1">Losses</p>
-          <p className="text-3xl font-bold font-mono text-red-600 dark:text-red-500">{stats.losses}</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-zinc-900 border dark:border-zinc-800 p-4 rounded-xl shadow-sm print:border-slate-200">
-          <p className="text-sm text-slate-500 dark:text-zinc-400 font-medium uppercase tracking-wider mb-1">Points</p>
-          <p className="text-3xl font-bold font-mono text-blue-600 dark:text-blue-400">{stats.points}</p>
-        </div>
-        <div className="bg-white dark:bg-zinc-900 border dark:border-zinc-800 p-4 rounded-xl shadow-sm print:border-slate-200">
-          <p className="text-sm text-slate-500 dark:text-zinc-400 font-medium uppercase tracking-wider mb-1">Goals For</p>
-          <p className="text-3xl font-bold font-mono dark:text-zinc-100">{stats.goals_for}</p>
-        </div>
-        <div className="bg-white dark:bg-zinc-900 border dark:border-zinc-800 p-4 rounded-xl shadow-sm print:border-slate-200">
-          <p className="text-sm text-slate-500 dark:text-zinc-400 font-medium uppercase tracking-wider mb-1">Goals Against</p>
-          <p className="text-3xl font-bold font-mono dark:text-zinc-100">{stats.goals_against}</p>
-        </div>
-        <div className="bg-white dark:bg-zinc-900 border dark:border-zinc-800 p-4 rounded-xl shadow-sm print:border-slate-200">
-          <p className="text-sm text-slate-500 dark:text-zinc-400 font-medium uppercase tracking-wider mb-1">Goal Diff</p>
-          <p className={`text-3xl font-bold font-mono ${stats.goal_difference > 0 ? 'text-green-600 dark:text-green-500' : stats.goal_difference < 0 ? 'text-red-600 dark:text-red-500' : 'dark:text-zinc-100'}`}>
-            {stats.goal_difference > 0 ? '+' : ''}{stats.goal_difference}
-          </p>
-        </div>
-      </div>
-      
-      <div className="bg-white dark:bg-zinc-900 border dark:border-zinc-800 rounded-xl shadow-sm overflow-hidden print:border-none print:shadow-none">
-        <div className="p-5 border-b dark:border-zinc-800 print:border-b-2 print:border-slate-900">
-          <h2 className="text-xl font-bold flex items-center gap-2 dark:text-zinc-100"><Users size={20}/> Team Roster</h2>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-5">
-          {roster?.map((player) => {
-            const user = player.users as any;
-            if (!user?.unique_code) return null;
-            return (
-              <Link 
-                key={player.id} 
-                href={`/players/${user.unique_code}`}
-                className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-zinc-800 transition-colors border border-transparent hover:border-slate-200 dark:hover:border-zinc-700"
-              >
-                <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-zinc-800 flex items-center justify-center overflow-hidden border dark:border-zinc-700 relative">
-                  {user.media_assets?.secure_url ? (
-                    <Image src={user.media_assets.secure_url} alt={user.display_name} fill className="object-cover" unoptimized />
-                  ) : (
-                    <span className="text-sm font-medium text-slate-500">{user.display_name?.charAt(0) || '?'}</span>
-                  )}
-                </div>
-                <div>
-                  <div className="font-semibold dark:text-zinc-100">{user.display_name}</div>
-                  <div className="text-xs font-mono text-slate-400">{user.unique_code}</div>
-                </div>
+    <div className="w-full bg-background min-h-screen text-on-surface">
+      {/* Header Profile Section */}
+      <div className="w-full border-b border-outline-variant bg-[#0b0d0c] pt-12 pb-8 px-margin-mobile md:px-gutter shrink-0">
+        <div className="max-w-container-max mx-auto flex flex-col md:flex-row items-center md:items-start justify-between gap-6">
+          <div className="flex flex-col md:flex-row items-center md:items-end gap-6 flex-1">
+            <div className="w-32 h-32 border border-outline-variant bg-surface flex items-center justify-center relative shrink-0">
+              <span className="text-on-surface-variant font-display-md text-display-md uppercase">
+                {stats.team_name.charAt(0)}
+              </span>
+            </div>
+            <div className="flex flex-col items-center md:items-start text-center md:text-left gap-4">
+              <Link href={`/events/${slug}/stats/teams`} className="flex items-center gap-2 text-on-surface-variant hover:text-on-surface transition-colors mb-2 print:hidden">
+                <ArrowLeft size={16} />
+                <span className="font-label-caps text-[10px] uppercase tracking-widest">Back to Teams</span>
               </Link>
-            );
-          })}
+              <h1 className="font-display-lg text-display-lg md:text-[64px] uppercase tracking-tighter leading-none text-on-surface truncate w-full max-w-[80vw]">
+                {stats.team_name}
+              </h1>
+            </div>
+          </div>
+          
+          <div className="print:hidden flex flex-col md:flex-row items-center gap-4 shrink-0">
+            {isCaptain && (
+              <Link href={`/events/${slug}/teams/${teamId}/settings`} className="border border-primary-container bg-primary-container/10 text-primary-container hover:bg-primary-container/20 px-4 py-2 flex items-center gap-2 font-label-caps text-[10px] uppercase tracking-widest transition-colors">
+                <Settings size={16} />
+                <span>Edit Team</span>
+              </Link>
+            )}
+            <ShareButton url={`/events/${slug}/teams/${teamId}`} title="Share Team" />
+          </div>
         </div>
       </div>
 
-      <div className="print:hidden flex justify-center py-8">
-        <QRCodeBlock url={`/events/${slug}/teams/${teamId}`} title="Team Profile QR" />
-      </div>
+      <div className="w-full max-w-container-max mx-auto px-margin-mobile md:px-gutter py-8 space-y-8">
+        
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="border border-outline-variant bg-surface p-6 flex flex-col gap-2">
+            <span className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">Matches</span>
+            <span className="font-display-md text-display-md text-on-surface">{stats.matches_played}</span>
+          </div>
+          <div className="border border-outline-variant bg-surface p-6 flex flex-col gap-2">
+            <span className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">Wins</span>
+            <span className="font-display-md text-display-md text-primary-container">{stats.wins}</span>
+          </div>
+          <div className="border border-outline-variant bg-surface p-6 flex flex-col gap-2">
+            <span className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">Draws</span>
+            <span className="font-display-md text-display-md text-yellow-500">{stats.draws}</span>
+          </div>
+          <div className="border border-outline-variant bg-surface p-6 flex flex-col gap-2">
+            <span className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">Losses</span>
+            <span className="font-display-md text-display-md text-error">{stats.losses}</span>
+          </div>
+          
+          <div className="border border-outline-variant bg-surface p-6 flex flex-col gap-2">
+            <span className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">Points</span>
+            <span className="font-display-md text-display-md text-on-surface">{stats.points}</span>
+          </div>
+          <div className="border border-outline-variant bg-surface p-6 flex flex-col gap-2">
+            <span className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">Goals For</span>
+            <span className="font-display-md text-display-md text-on-surface">{stats.goals_for}</span>
+          </div>
+          <div className="border border-outline-variant bg-surface p-6 flex flex-col gap-2">
+            <span className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">Goals Against</span>
+            <span className="font-display-md text-display-md text-on-surface">{stats.goals_against}</span>
+          </div>
+          <div className="border border-outline-variant bg-surface p-6 flex flex-col gap-2">
+            <span className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">Goal Diff</span>
+            <span className={`font-display-md text-display-md ${stats.goal_difference > 0 ? 'text-primary-container' : stats.goal_difference < 0 ? 'text-error' : 'text-on-surface'}`}>
+              {stats.goal_difference > 0 ? '+' : ''}{stats.goal_difference}
+            </span>
+          </div>
+        </div>
+        
+        {/* Roster */}
+        <div className="border border-outline-variant bg-surface">
+          <div className="p-4 border-b border-outline-variant bg-surface-container">
+            <h2 className="font-headline-sm uppercase tracking-tighter text-on-surface flex items-center gap-2">
+              <Users size={16} /> Team Roster
+            </h2>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-outline-variant">
+            {roster?.map((player) => {
+              const user = player.users as any;
+              if (!user?.unique_code) return null;
+              return (
+                <Link 
+                  key={player.id} 
+                  href={`/players/${user.unique_code}`}
+                  className="flex items-center gap-4 p-4 hover:bg-surface-variant transition-colors group"
+                >
+                  <div className="w-12 h-12 border border-outline-variant bg-background flex items-center justify-center relative shrink-0">
+                    {user.media_assets?.secure_url ? (
+                      <Image src={user.media_assets.secure_url} alt={user.display_name} fill className="object-cover grayscale group-hover:grayscale-0 transition-all" unoptimized />
+                    ) : (
+                      <span className="font-headline-sm uppercase text-on-surface-variant">{user.display_name?.charAt(0) || '?'}</span>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-headline-sm uppercase tracking-tighter text-on-surface truncate">{user.display_name}</div>
+                    <div className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">{user.unique_code}</div>
+                  </div>
+                </Link>
+              );
+            })}
+            
+            {(!roster || roster.length === 0) && (
+              <div className="col-span-full p-8 text-center">
+                <span className="font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant">No players found in this roster.</span>
+              </div>
+            )}
+          </div>
+        </div>
 
+        <div className="print:hidden flex justify-center py-12">
+          <QRCodeBlock url={`/events/${slug}/teams/${teamId}`} title="TEAM PROFILE QR" />
+        </div>
+      </div>
     </div>
   );
 }

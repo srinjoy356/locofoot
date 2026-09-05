@@ -52,6 +52,8 @@ class MatchEngineService:
         
         now = datetime.now(timezone.utc).isoformat()
         updates = {"match_state": req.new_state.value}
+        if req.new_state.value == "COMPLETED":
+            updates["status"] = "COMPLETED"
         
         # 2. Handle Timestamps for Time Tracking
         if req.new_state.value in ["LIVE", "FIRST_HALF", "SECOND_HALF", "EXTRA_TIME_1", "EXTRA_TIME_2"]:
@@ -151,6 +153,8 @@ class MatchEngineService:
         # 3. Update match
         updates = {
             "match_state": "COMPLETED",
+            "status": "COMPLETED",
+            "scheduling_status": "ASSIGNED",
             "home_score": home_score,
             "away_score": away_score,
             "paused_at": now

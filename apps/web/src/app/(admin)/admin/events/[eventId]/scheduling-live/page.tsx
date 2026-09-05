@@ -3,11 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Loader2, Play, Calendar, Trophy, AlertCircle, Clock, Zap, CheckCircle2, XCircle, UserPlus } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-
+import { Loader2, Play, Calendar, Trophy, AlertCircle, Clock, Zap, CheckCircle2, XCircle, UserPlus, ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
 
 const generateUUID = () => {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
@@ -129,7 +126,7 @@ export default function SchedulingLivePage() {
       alert(error.message);
     } else {
       // Don't alert on dropdown change to make it feel seamless
-      if (!directCode) alert('Referee invited! They will receive a notification.');
+      if (!directCode) alert('REFEREE INVITED! THEY WILL RECEIVE A NOTIFICATION.');
       setRefereeCodeInputs(prev => ({ ...prev, [matchId]: '' }));
       fetchData();
     }
@@ -152,7 +149,7 @@ export default function SchedulingLivePage() {
       });
 
       if (!res.ok) {
-        let errorMsg = "Failed to generate fixtures";
+        let errorMsg = "FAILED TO GENERATE FIXTURES";
         try {
           const errorData = await res.json();
           errorMsg = errorData.detail || errorData.message || errorMsg;
@@ -188,7 +185,7 @@ export default function SchedulingLivePage() {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.detail || 'Failed to generate next slot');
+        throw new Error(data.detail || 'FAILED TO GENERATE NEXT SLOT');
       }
       
       // Realtime will trigger UI update
@@ -217,7 +214,7 @@ export default function SchedulingLivePage() {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.detail || 'Failed to unassign fixture');
+        throw new Error(data.detail || 'FAILED TO UNASSIGN FIXTURE');
       }
       
       // Realtime will trigger UI update
@@ -245,7 +242,7 @@ export default function SchedulingLivePage() {
       });
 
       if (!res.ok) {
-        let errorMsg = "Failed to update broadcast state";
+        let errorMsg = "FAILED TO UPDATE BROADCAST STATE";
         try {
           const errorData = await res.json();
           errorMsg = errorData.detail || errorData.message || errorMsg;
@@ -263,212 +260,242 @@ export default function SchedulingLivePage() {
   };
 
   return (
-    <div className="container max-w-7xl py-10 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent drop-shadow-sm flex items-center gap-3">
-            <Zap className="h-8 w-8 text-emerald-500" />
-            Live Command Center
-          </h1>
-          <p className="text-muted-foreground mt-2 text-lg font-medium">Assign fixtures dynamically into available slots while broadcasting live.</p>
-        </div>
-        
-        <div className="flex items-center gap-4 bg-white dark:bg-zinc-900 p-2 pr-4 rounded-full shadow-sm border border-slate-200 dark:border-zinc-800">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 dark:bg-zinc-800">
-            <Trophy className="h-5 w-5 text-slate-600 dark:text-zinc-400" />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Unassigned</span>
-            <span className="text-lg font-black text-slate-800 dark:text-zinc-200 leading-none">{unassignedFixtures.length}</span>
+    <div className="w-full bg-background min-h-[calc(100vh-64px)] text-on-surface">
+      {/* Top Bar */}
+      <div className="border-b border-outline-variant bg-surface sticky top-0 z-10">
+        <div className="max-w-container-max mx-auto px-margin-mobile md:px-gutter h-14 flex items-center justify-between">
+          <Link href={`/admin/events/${eventId}`} className="flex items-center gap-2 text-on-surface-variant hover:text-on-surface transition-colors">
+            <ArrowLeft size={16} />
+            <span className="font-label-caps text-label-caps uppercase tracking-widest">EVENT DASHBOARD</span>
+          </Link>
+          
+          <div className="flex items-center gap-2 border border-outline-variant px-3 py-1 bg-background">
+            <Trophy size={12} className="text-primary-container" />
+            <span className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">
+              UNASSIGNED: <span className="text-on-surface font-bold">{unassignedFixtures.length}</span>
+            </span>
           </div>
         </div>
       </div>
 
-      {error && (
-        <Alert variant="destructive" className="border-red-500/50 bg-red-50 dark:bg-red-950/200/10 text-red-600 shadow-sm">
-          <AlertCircle className="h-5 w-5" />
-          <AlertTitle className="font-bold text-base">Scheduling Blocked</AlertTitle>
-          <AlertDescription className="text-sm font-medium">{error}</AlertDescription>
-        </Alert>
-      )}
-
-      <div className="grid gap-8 grid-cols-1 xl:grid-cols-3">
-        {/* Actions & Stats */}
-        <div className="xl:col-span-1 space-y-6">
-          <Card className="border-slate-200 dark:border-zinc-800/60 shadow-lg shadow-emerald-100/50 backdrop-blur-xl bg-white dark:bg-zinc-900/70 overflow-hidden">
-            <div className="h-2 w-full bg-gradient-to-r from-emerald-400 to-teal-500" />
-            <CardHeader>
-              <CardTitle>Schedule Engine</CardTitle>
-              <CardDescription>Populate the next available field slot without violating constraints.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button 
-                onClick={handleGenerateNext} 
-                disabled={loading || unassignedFixtures.length === 0} 
-                className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-md hover:shadow-lg transition-all h-14 text-lg font-bold rounded-xl flex items-center justify-center gap-2 group"
-              >
-                {loading ? (
-                  <Loader2 className="h-6 w-6 animate-spin" />
-                ) : (
-                  <Play className="h-6 w-6 fill-current group-hover:scale-110 transition-transform" />
-                )}
-                Generate Next Fixture
-              </Button>
-              
-              {unassignedFixtures.length === 0 && assignments.length === 0 && (
-                <Button 
-                  onClick={handleGenerateFixtures} 
-                  disabled={loading} 
-                  variant="outline"
-                  className="w-full mt-4 border-emerald-200 text-emerald-700 hover:bg-emerald-50 dark:bg-emerald-950/20 h-12 text-md font-semibold rounded-xl flex items-center justify-center gap-2"
-                >
-                  {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Zap className="h-5 w-5" />}
-                  Generate Fixtures
-                </Button>
-              )}
-
-              <Button
-                onClick={() => window.open(`/admin/events/${eventId}/matches/create`, '_blank')}
-                variant="outline"
-                className="w-full mt-4 border-slate-200 text-slate-700 hover:bg-slate-50 h-12 text-md font-semibold rounded-xl flex items-center justify-center gap-2"
-              >
-                + Add Manual Match
-              </Button>
-
-              <div className="mt-8 pt-6 border-t border-slate-200 dark:border-zinc-800">
-                <h3 className="text-sm font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider mb-4">Broadcasting</h3>
-                {event?.scheduling_state !== 'LIVE' ? (
-                  <Button 
-                    onClick={() => handleToggleBroadcast('LIVE')} 
-                    disabled={loading} 
-                    className="w-full bg-red-600 hover:bg-red-700 text-white shadow-md hover:shadow-lg transition-all h-12 text-md font-bold rounded-xl flex items-center justify-center gap-2 animate-pulse hover:animate-none"
-                  >
-                    Start Scheduling Broadcast
-                  </Button>
-                ) : (
-                  <Button 
-                    onClick={() => handleToggleBroadcast('COMPLETED')} 
-                    disabled={loading} 
-                    variant="outline"
-                    className="w-full border-red-200 text-red-600 hover:bg-red-50 dark:bg-red-950/20 h-12 text-md font-bold rounded-xl flex items-center justify-center gap-2"
-                  >
-                    End Scheduling Broadcast
-                  </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+      <div className="max-w-container-max mx-auto px-margin-mobile md:px-gutter py-8 space-y-8">
+        <div>
+          <h1 className="font-display-lg text-display-lg md:text-[56px] uppercase tracking-tighter leading-none text-on-surface flex items-center gap-4">
+            <Zap className="h-10 w-10 text-primary-container hidden md:block" />
+            LIVE SCHEDULING
+          </h1>
+          <p className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant mt-4 max-w-xl">
+            ASSIGN FIXTURES DYNAMICALLY INTO AVAILABLE SLOTS WHILE BROADCASTING LIVE.
+          </p>
         </div>
 
-        {/* Live Grid */}
-        <div className="xl:col-span-2">
-          <Card className="border-slate-200 dark:border-zinc-800/60 shadow-lg shadow-slate-100/50 backdrop-blur-xl bg-white dark:bg-zinc-900/70 overflow-hidden h-full">
-            <CardHeader className="border-b bg-slate-50 dark:bg-zinc-900/50/50 pb-4">
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-slate-500 dark:text-zinc-400" />
-                Live Assignment Grid
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
+        {error && (
+          <div className="border border-error bg-error/10 p-4 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-error flex-shrink-0 mt-0.5" />
+            <div>
+              <h3 className="font-headline-sm uppercase tracking-tighter text-error">SCHEDULING BLOCKED</h3>
+              <p className="font-body-sm text-error mt-1">{error}</p>
+            </div>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-8 items-start">
+          {/* Actions & Stats */}
+          <div className="xl:col-span-1 space-y-8 lg:sticky lg:top-24">
+            <div className="border border-outline-variant bg-surface p-6">
+              <h2 className="font-headline-sm uppercase tracking-tighter text-on-surface mb-2">SCHEDULE ENGINE</h2>
+              <p className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant mb-6">
+                POPULATE THE NEXT AVAILABLE FIELD SLOT WITHOUT VIOLATING CONSTRAINTS.
+              </p>
+
+              <div className="space-y-4">
+                <button 
+                  onClick={handleGenerateNext} 
+                  disabled={loading || unassignedFixtures.length === 0} 
+                  className="w-full bg-primary-container text-on-primary-container hover:bg-primary-container/90 py-4 font-headline-sm uppercase tracking-tighter transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed group"
+                >
+                  {loading ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <Play className="h-5 w-5 fill-current" />
+                  )}
+                  GENERATE NEXT FIXTURE
+                </button>
+                
+                {unassignedFixtures.length === 0 && assignments.length === 0 && (
+                  <button 
+                    onClick={handleGenerateFixtures} 
+                    disabled={loading} 
+                    className="w-full border border-primary-container text-primary-container hover:bg-primary-container/10 py-4 font-headline-sm uppercase tracking-tighter transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Zap className="h-5 w-5" />}
+                    GENERATE FIXTURES
+                  </button>
+                )}
+
+                <button
+                  onClick={() => window.open(`/admin/events/${eventId}/matches/create`, '_blank')}
+                  className="w-full border border-outline-variant text-on-surface hover:bg-surface-variant py-4 font-label-caps text-[10px] uppercase tracking-widest transition-colors flex items-center justify-center gap-2"
+                >
+                  + ADD MANUAL MATCH
+                </button>
+              </div>
+
+              <div className="mt-8 pt-8 border-t border-outline-variant">
+                <h3 className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant mb-4">BROADCASTING</h3>
+                {event?.scheduling_state !== 'LIVE' ? (
+                  <button 
+                    onClick={() => handleToggleBroadcast('LIVE')} 
+                    disabled={loading} 
+                    className="w-full bg-error text-on-error hover:bg-error/90 py-4 font-headline-sm uppercase tracking-tighter transition-colors flex items-center justify-center gap-2 animate-pulse hover:animate-none disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    START BROADCAST
+                  </button>
+                ) : (
+                  <button 
+                    onClick={() => handleToggleBroadcast('COMPLETED')} 
+                    disabled={loading} 
+                    className="w-full border border-error text-error hover:bg-error/10 py-4 font-headline-sm uppercase tracking-tighter transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    END BROADCAST
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Live Grid */}
+          <div className="xl:col-span-3">
+            <div className="border border-outline-variant bg-surface">
+              <div className="p-6 border-b border-outline-variant bg-surface-container flex items-center gap-3">
+                <Calendar className="text-on-surface" size={20} />
+                <h2 className="font-headline-sm uppercase tracking-tighter text-on-surface">LIVE ASSIGNMENT GRID</h2>
+              </div>
+              
               <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left">
-                  <thead className="bg-slate-100 dark:bg-zinc-800/50 text-slate-500 dark:text-zinc-400 font-semibold sticky top-0">
+                <table className="w-full text-left border-collapse">
+                  <thead className="bg-background border-b border-outline-variant">
                     <tr>
-                      <th className="px-6 py-4 border-b">Slot</th>
-                      <th className="px-6 py-4 border-b">Time</th>
-                      <th className="px-6 py-4 border-b">Field</th>
-                      <th className="px-6 py-4 border-b">Fixture Assignment</th>
+                      <th className="px-6 py-4 font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant border-r border-outline-variant whitespace-nowrap w-24">SLOT</th>
+                      <th className="px-6 py-4 font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant border-r border-outline-variant whitespace-nowrap">TIME</th>
+                      <th className="px-6 py-4 font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant border-r border-outline-variant whitespace-nowrap">FIELD</th>
+                      <th className="px-6 py-4 font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">FIXTURE ASSIGNMENT</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {slots.map((slot) => {
-                      const slotAssignments = assignments.filter(a => a.schedule_slot_id === slot.id);
-                      return slotAssignments.map((assignment, i) => (
-                        <tr key={assignment.id} className="hover:bg-slate-50 dark:bg-zinc-900/50/50 transition-colors group">
-                          {i === 0 && (
-                            <>
-                              <td rowSpan={slotAssignments.length} className="px-6 py-4 font-black text-slate-800 dark:text-zinc-200 text-lg align-top bg-white dark:bg-zinc-900/50">
-                                #{slot.sequence_number}
-                              </td>
-                              <td rowSpan={slotAssignments.length} className="px-6 py-4 text-slate-500 dark:text-zinc-400 font-medium align-top bg-white dark:bg-zinc-900/50 whitespace-nowrap">
-                                <div className="flex items-center gap-1.5">
-                                  <Clock className="h-4 w-4" />
+                  <tbody className="divide-y divide-outline-variant">
+                    {slots.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="px-6 py-12 text-center">
+                          <span className="font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant">NO SLOTS CONFIGURED.</span>
+                        </td>
+                      </tr>
+                    ) : (
+                      slots.map((slot) => {
+                        const slotAssignments = assignments.filter(a => a.schedule_slot_id === slot.id);
+                        if (slotAssignments.length === 0) {
+                          return (
+                            <tr key={slot.id} className="hover:bg-surface-variant/30 transition-colors">
+                              <td className="px-6 py-4 font-headline-sm uppercase tracking-tighter text-on-surface border-r border-outline-variant">#{slot.sequence_number}</td>
+                              <td className="px-6 py-4 font-mono text-sm text-on-surface border-r border-outline-variant whitespace-nowrap">
+                                <div className="flex items-center gap-2">
+                                  <Clock size={14} className="text-on-surface-variant" />
                                   {new Date(slot.scheduled_start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                 </div>
                               </td>
-                            </>
-                          )}
-                          <td className="px-6 py-4 font-medium text-slate-600 dark:text-zinc-400">
-                            {fields.find(f => f.id === assignment.venue_field_id)?.name || 'Unknown Field'}
-                          </td>
-                          <td className="px-6 py-4">
-                            {assignment.fixture_id ? (
-                              <div className="flex items-center gap-3">
-                                <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 font-semibold border border-emerald-200">
-                                  <CheckCircle2 className="h-4 w-4" />
-                                  Match Assigned ({assignment.fixture_id.substring(0, 8)})
-                                </span>
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={() => window.open(`/events/${event?.slug || eventId}/matches/${assignment.fixture_id}`, '_blank')}
-                                  className="h-8 border-emerald-200 text-emerald-700 hover:bg-emerald-50 dark:bg-emerald-950/20"
-                                >
-                                  Open Match Center
-                                </Button>
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm"
-                                  disabled={loading}
-                                  onClick={() => handleUnassignFixture(assignment.fixture_id)}
-                                  className="text-slate-400 hover:text-red-600 hover:bg-red-50 dark:bg-red-950/20"
-                                >
-                                  <XCircle className="h-4 w-4" />
-                                </Button>
-                                <div className="ml-2 flex items-center gap-2 bg-yellow-50/50 p-1 rounded border border-yellow-100">
-                                  {(matchReferees[assignment.fixture_id] || []).length > 0 ? (
-                                    <span className="text-xs font-semibold text-yellow-800 mr-2">
-                                      Refs: {(matchReferees[assignment.fixture_id] || []).map((r: any) => `${Array.isArray(r.user) ? r.user[0]?.display_name : r.user?.display_name || r.user?.username} (${r.status})`).join(', ')}
-                                    </span>
-                                  ) : (
-                                    <span className="text-xs text-yellow-600 italic mr-2">No Referee</span>
-                                  )}
-                                  
-                                  <select
-                                    className="border border-yellow-200 rounded text-xs px-2 py-1 h-7 bg-white dark:bg-zinc-900 text-yellow-800 outline-none w-32"
-                                    value={''}
-                                    onChange={(e) => {
-                                      if (e.target.value) handleInviteReferee(assignment.fixture_id, e.target.value);
-                                    }}
-                                  >
-                                    <option value="">{ (matchReferees[assignment.fixture_id] || []).length > 0 ? "Change Referee..." : "Assign Referee..."}</option>
-                                    {tournamentReferees.map((tRef: any) => {
-                                      const userObj = Array.isArray(tRef.user) ? tRef.user[0] : tRef.user;
-                                      if (!userObj) return null;
-                                      return (
-                                        <option key={tRef.id} value={userObj.unique_code}>
-                                          {userObj.display_name} ({userObj.unique_code})
-                                        </option>
-                                      );
-                                    })}
-                                    { (matchReferees[assignment.fixture_id] || []).length > 0 && <option value="CLEAR">❌ Remove Referee</option> }
-                                  </select>
-                                </div>
-                              </div>
-                            ) : (
-                              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-slate-100 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400 font-medium border border-slate-200 dark:border-zinc-800">
-                                Empty
-                              </span>
+                              <td colSpan={2} className="px-6 py-4 text-center">
+                                <span className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">NO FIELDS ASSIGNED TO THIS SLOT</span>
+                              </td>
+                            </tr>
+                          );
+                        }
+
+                        return slotAssignments.map((assignment, i) => (
+                          <tr key={assignment.id} className="hover:bg-surface-variant/30 transition-colors">
+                            {i === 0 && (
+                              <>
+                                <td rowSpan={slotAssignments.length} className="px-6 py-4 font-headline-sm uppercase tracking-tighter text-on-surface border-r border-outline-variant bg-surface align-top w-24">
+                                  #{slot.sequence_number}
+                                </td>
+                                <td rowSpan={slotAssignments.length} className="px-6 py-4 font-mono text-sm text-on-surface border-r border-outline-variant bg-surface align-top whitespace-nowrap">
+                                  <div className="flex items-center gap-2">
+                                    <Clock size={14} className="text-on-surface-variant" />
+                                    {new Date(slot.scheduled_start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  </div>
+                                </td>
+                              </>
                             )}
-                          </td>
-                        </tr>
-                      ));
-                    })}
+                            <td className="px-6 py-4 font-label-caps text-[10px] uppercase tracking-widest text-on-surface border-r border-outline-variant whitespace-nowrap">
+                              {fields.find(f => f.id === assignment.venue_field_id)?.name || 'UNKNOWN FIELD'}
+                            </td>
+                            <td className="px-6 py-4">
+                              {assignment.fixture_id ? (
+                                <div className="flex flex-wrap items-center gap-3">
+                                  <span className="inline-flex items-center gap-2 px-3 py-1 bg-primary-container/10 text-primary-container border border-primary-container/30 font-label-caps text-[10px] uppercase tracking-widest">
+                                    <CheckCircle2 size={12} />
+                                    ASSIGNED ({assignment.fixture_id.substring(0, 8)})
+                                  </span>
+                                  
+                                  <button 
+                                    onClick={() => window.open(`/events/${event?.slug || eventId}/matches/${assignment.fixture_id}`, '_blank')}
+                                    className="border border-outline-variant text-on-surface hover:bg-surface-variant px-3 py-1 font-label-caps text-[10px] uppercase tracking-widest transition-colors"
+                                  >
+                                    MATCH CENTER
+                                  </button>
+                                  
+                                  <button 
+                                    disabled={loading}
+                                    onClick={() => handleUnassignFixture(assignment.fixture_id)}
+                                    className="text-on-surface-variant hover:text-error transition-colors"
+                                    title="UNASSIGN"
+                                  >
+                                    <XCircle size={16} />
+                                  </button>
+                                  
+                                  <div className="flex items-center gap-2 bg-background border border-outline-variant px-2 py-1 ml-auto">
+                                    {(matchReferees[assignment.fixture_id] || []).length > 0 ? (
+                                      <span className="font-label-caps text-[10px] uppercase tracking-widest text-primary-container whitespace-nowrap">
+                                        REFS: {(matchReferees[assignment.fixture_id] || []).map((r: any) => `${Array.isArray(r.user) ? r.user[0]?.display_name : r.user?.display_name || r.user?.username} (${r.status})`).join(', ')}
+                                      </span>
+                                    ) : (
+                                      <span className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant italic whitespace-nowrap">NO REFEREE</span>
+                                    )}
+                                    
+                                    <select
+                                      className="bg-transparent border-l border-outline-variant pl-2 ml-2 font-label-caps text-[10px] uppercase tracking-widest text-on-surface focus:outline-none"
+                                      value={''}
+                                      onChange={(e) => {
+                                        if (e.target.value) handleInviteReferee(assignment.fixture_id, e.target.value);
+                                      }}
+                                    >
+                                      <option value="">{ (matchReferees[assignment.fixture_id] || []).length > 0 ? "CHANGE..." : "ASSIGN..."}</option>
+                                      {tournamentReferees.map((tRef: any) => {
+                                        const userObj = Array.isArray(tRef.user) ? tRef.user[0] : tRef.user;
+                                        if (!userObj) return null;
+                                        return (
+                                          <option key={tRef.id} value={userObj.unique_code}>
+                                            {userObj.display_name} ({userObj.unique_code})
+                                          </option>
+                                        );
+                                      })}
+                                      { (matchReferees[assignment.fixture_id] || []).length > 0 && <option value="CLEAR">REMOVE REFEREE</option> }
+                                    </select>
+                                  </div>
+                                </div>
+                              ) : (
+                                <span className="inline-flex items-center px-3 py-1 bg-surface-variant border border-outline-variant font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">
+                                  EMPTY
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        ));
+                      })
+                    )}
                   </tbody>
                 </table>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
     </div>

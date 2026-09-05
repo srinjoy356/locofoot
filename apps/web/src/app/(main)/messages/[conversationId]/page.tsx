@@ -109,28 +109,53 @@ export default function ChatWindow({ params }: { params: Promise<{ conversationI
   if (!userId) return <div className="p-10">Loading...</div>;
 
   return (
-    <div className="flex flex-col h-[80vh] max-w-3xl mx-auto border rounded-lg bg-slate-50 dark:bg-zinc-900/50 overflow-hidden">
-      <div className="bg-white dark:bg-zinc-900 p-4 border-b font-semibold shadow-sm">Conversation</div>
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((m) => {
-          const isMine = m.sender_id === userId;
-          return (
-            <div key={m.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[75%] rounded-2xl px-4 py-2 ${isMine ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white dark:bg-zinc-900 border text-slate-800 dark:text-zinc-200 rounded-bl-none'}`}>
-                <p>{m.body}</p>
-                <span className={`text-[10px] opacity-70 mt-1 block ${isMine ? 'text-right' : 'text-left'}`}>
-                  {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </span>
-              </div>
-            </div>
-          );
-        })}
-        <div ref={bottomRef} />
+    <div className="w-full flex flex-col bg-background text-on-surface min-h-screen pb-12">
+      {/* Header */}
+      <div className="w-full border-b border-outline-variant bg-[#0b0d0c] pt-12 pb-8 px-margin-mobile md:px-gutter shrink-0">
+        <h1 className="font-display-lg text-display-lg md:text-[64px] uppercase tracking-tighter leading-none text-on-surface">Conversation</h1>
       </div>
-      <form onSubmit={sendMessage} className="p-4 bg-white dark:bg-zinc-900 border-t flex gap-2">
-        <input type="text" className="flex-1 border rounded-full px-4 py-2 focus:outline-none focus:border-blue-500" placeholder="Type a message..." value={newMessage} onChange={(e) => setNewMessage(e.target.value)} />
-        <button type="submit" disabled={!newMessage.trim()} className="bg-blue-600 text-white rounded-full px-6 py-2 font-medium disabled:opacity-50 hover:bg-blue-700 transition-colors">Send</button>
-      </form>
+
+      <div className="w-full max-w-container-max mx-auto px-margin-mobile md:px-gutter py-8 h-[calc(100vh-200px)]">
+        <div className="flex flex-col h-full border border-outline-variant bg-surface">
+          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            {messages.map((m) => {
+              const isMine = m.sender_id === userId;
+              return (
+                <div key={m.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[85%] md:max-w-[70%] p-4 border ${
+                    isMine 
+                      ? 'bg-primary-container/10 border-primary-container text-on-surface' 
+                      : 'bg-background border-outline-variant text-on-surface-variant'
+                  }`}>
+                    <p className="font-body-md whitespace-pre-wrap">{m.body}</p>
+                    <span className={`font-label-caps text-[10px] uppercase tracking-widest mt-2 block ${isMine ? 'text-primary-container' : 'text-on-surface-variant'}`}>
+                      {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+            <div ref={bottomRef} />
+          </div>
+          
+          <form onSubmit={sendMessage} className="p-6 bg-background border-t border-outline-variant flex gap-4">
+            <input 
+              type="text" 
+              className="flex-1 bg-surface border border-outline-variant p-4 focus:outline-none focus:border-primary-container text-on-surface font-body-md placeholder:text-on-surface-variant transition-colors" 
+              placeholder="TYPE A MESSAGE..." 
+              value={newMessage} 
+              onChange={(e) => setNewMessage(e.target.value)} 
+            />
+            <button 
+              type="submit" 
+              disabled={!newMessage.trim()} 
+              className="bg-primary-container text-on-primary-container font-label-caps text-label-caps uppercase tracking-widest px-8 py-4 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary-fixed transition-colors"
+            >
+              Send
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
   );
 }

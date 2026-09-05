@@ -3,7 +3,8 @@
 import { useEffect, useState, use } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { usePresence } from '@/hooks/usePresence';
-import { AlertTriangle, Clock, MapPin, Activity } from 'lucide-react';
+import { AlertTriangle, MapPin, Activity, Radio, ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
 
 export default function CommandCentrePage({ params }: { params: Promise<{ eventId: string }> }) {
   const { eventId } = use(params);
@@ -57,7 +58,7 @@ export default function CommandCentrePage({ params }: { params: Promise<{ eventI
     e.preventDefault();
     if (!announcementMsg.trim()) return;
     
-    if (isEmergency && !window.confirm("Are you sure you want to broadcast this as an EMERGENCY announcement? This will alert all viewers globally.")) {
+    if (isEmergency && !window.confirm("ARE YOU SURE YOU WANT TO BROADCAST THIS AS AN EMERGENCY ANNOUNCEMENT? THIS WILL ALERT ALL VIEWERS GLOBALLY.")) {
       return;
     }
 
@@ -72,129 +73,162 @@ export default function CommandCentrePage({ params }: { params: Promise<{ eventI
       
       if (!res.ok) throw new Error(await res.text());
       
-      alert("Announcement broadcasted successfully!");
+      alert("ANNOUNCEMENT BROADCASTED SUCCESSFULLY!");
       setAnnouncementMsg('');
       setIsEmergency(false);
     } catch (err: any) {
-      alert("Error broadcasting: " + err.message);
+      alert("ERROR BROADCASTING: " + err.message);
     } finally {
       setIsBroadcasting(false);
     }
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold dark:text-zinc-100">Matchday Command Centre</h1>
-          <p className="text-sm text-slate-500 dark:text-zinc-400">Live operational overview for the organizer.</p>
-        </div>
-        <div className="bg-white dark:bg-zinc-900 border dark:border-zinc-800 px-4 py-2 rounded flex items-center gap-3 shadow-sm">
-          <Activity className="text-green-500 w-5 h-5 animate-pulse" />
-          <div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Live Viewers</p>
-            <p className="text-xl font-bold dark:text-zinc-100">{viewerCount}</p>
+    <div className="w-full bg-background min-h-[calc(100vh-64px)] text-on-surface">
+      
+      {/* Top Bar */}
+      <div className="border-b border-outline-variant bg-surface sticky top-0 z-10">
+        <div className="max-w-container-max mx-auto px-margin-mobile md:px-gutter h-14 flex items-center justify-between">
+          <Link href={`/admin/events/${eventId}`} className="flex items-center gap-2 text-on-surface-variant hover:text-on-surface transition-colors">
+            <ArrowLeft size={16} />
+            <span className="font-label-caps text-label-caps uppercase tracking-widest">EVENT DASHBOARD</span>
+          </Link>
+          
+          <div className="flex items-center gap-2 border border-outline-variant px-3 py-1 bg-background">
+            <Activity size={12} className="text-primary-container animate-pulse" />
+            <span className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">
+              LIVE VIEWERS: <span className="text-on-surface">{viewerCount}</span>
+            </span>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column: Live Matches */}
-        <div className="lg:col-span-2 space-y-4">
-          <h2 className="text-xl font-bold dark:text-zinc-100">Live & Upcoming Matches</h2>
-          {matches.length === 0 ? (
-            <div className="bg-white dark:bg-zinc-900 p-8 text-center rounded border dark:border-zinc-800">
-              <p className="text-gray-500 dark:text-zinc-400">No active matches at the moment.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {matches.map(m => {
-                const venueName = Array.isArray(m.schedule_slots) 
-                  ? m.schedule_slots[0]?.venues?.name 
-                  : m.schedule_slots?.venues?.name;
-                  
-                return (
-                  <div key={m.id} className="bg-white dark:bg-zinc-900 border dark:border-zinc-800 rounded p-4 relative overflow-hidden">
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
-                        <MapPin className="w-3 h-3" />
-                        <span>{venueName || 'Unassigned Field'}</span>
-                      </div>
-                      <span className={`text-xs font-bold px-2 py-1 rounded ${
-                        ['FIRST_HALF', 'SECOND_HALF', 'EXTRA_TIME_1', 'EXTRA_TIME_2'].includes(m.match_state) 
-                          ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 animate-pulse'
-                          : 'bg-gray-100 text-gray-800 dark:bg-zinc-800 dark:text-zinc-300'
-                      }`}>
-                        {m.match_state.replace('_', ' ')}
-                      </span>
-                    </div>
-                    
-                    <div className="flex justify-between items-center text-center mt-4">
-                      <div className="flex-1">
-                        <p className="font-bold truncate dark:text-zinc-200" title={m.home_team?.team_name || 'TBD'}>
-                          {m.home_team?.team_name || 'TBD'}
-                        </p>
-                      </div>
-                      <div className="px-4">
-                        <div className="text-2xl font-black bg-gray-100 dark:bg-zinc-800 px-3 py-1 rounded dark:text-zinc-100">
-                          {m.home_score || 0} - {m.away_score || 0}
-                        </div>
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-bold truncate dark:text-zinc-200" title={m.away_team?.team_name || 'TBD'}>
-                          {m.away_team?.team_name || 'TBD'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+      <div className="max-w-[1400px] mx-auto px-margin-mobile md:px-gutter py-8 space-y-12">
+        <div>
+          <h1 className="font-display-lg text-display-lg md:text-[56px] uppercase tracking-tighter leading-none text-on-surface">
+            COMMAND CENTRE
+          </h1>
         </div>
 
-        {/* Right Column: Broadcast */}
-        <div className="space-y-4">
-          <h2 className="text-xl font-bold dark:text-zinc-100">Broadcast Announcer</h2>
-          <form onSubmit={handleBroadcast} className="bg-white dark:bg-zinc-900 border dark:border-zinc-800 rounded p-4 space-y-4 shadow-sm">
-            <div>
-              <label className="block text-sm font-medium mb-1 dark:text-zinc-300">Message</label>
-              <textarea 
-                className="w-full border dark:border-zinc-700 p-2 rounded dark:bg-zinc-800 dark:text-white"
-                rows={4}
-                placeholder="Type an announcement to broadcast..."
-                value={announcementMsg}
-                onChange={e => setAnnouncementMsg(e.target.value)}
-                required
-              />
-            </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+          {/* Left Column: Live Matches */}
+          <div className="lg:col-span-2 space-y-6">
+            <h2 className="font-headline-sm uppercase tracking-tighter text-on-surface flex items-center gap-2">
+              <span className="w-2 h-2 bg-primary-container inline-block"></span>
+              LIVE & UPCOMING MATCHES
+            </h2>
             
-            <div className="flex items-center gap-2">
-              <input 
-                type="checkbox" 
-                id="isEmergency" 
-                className="w-4 h-4 text-red-600"
-                checked={isEmergency}
-                onChange={e => setIsEmergency(e.target.checked)}
-              />
-              <label htmlFor="isEmergency" className="text-sm font-bold text-red-600 flex items-center gap-1 cursor-pointer">
-                <AlertTriangle className="w-4 h-4" /> Emergency Broadcast
+            {matches.length === 0 ? (
+              <div className="border border-outline-variant bg-surface p-12 text-center">
+                <span className="font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant">
+                  NO ACTIVE MATCHES AT THE MOMENT.
+                </span>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                {matches.map(m => {
+                  const venueName = Array.isArray(m.schedule_slots) 
+                    ? m.schedule_slots[0]?.venues?.name 
+                    : m.schedule_slots?.venues?.name;
+                    
+                  const isLive = ['FIRST_HALF', 'SECOND_HALF', 'EXTRA_TIME_1', 'EXTRA_TIME_2', 'PENALTIES'].includes(m.match_state);
+                    
+                  return (
+                    <div key={m.id} className={`bg-surface border relative transition-colors ${isLive ? 'border-primary-container' : 'border-outline-variant'}`}>
+                      {/* Match Header */}
+                      <div className={`p-3 flex justify-between items-center border-b ${isLive ? 'border-primary-container bg-primary-container/10' : 'border-outline-variant bg-surface-container'}`}>
+                        <div className="flex items-center gap-1 font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">
+                          <MapPin size={10} />
+                          <span>{venueName || 'UNASSIGNED FIELD'}</span>
+                        </div>
+                        <span className={`font-label-caps text-[10px] uppercase tracking-widest px-2 py-0.5 border ${
+                          isLive 
+                            ? 'bg-primary-container text-on-primary-container border-primary-container animate-pulse'
+                            : 'bg-surface-variant text-on-surface-variant border-outline-variant'
+                        }`}>
+                          {m.match_state.replace(/_/g, ' ')}
+                        </span>
+                      </div>
+                      
+                      {/* Scoreboard */}
+                      <div className="p-6">
+                        <div className="grid grid-cols-3 items-center text-center gap-4">
+                          <div className="font-headline-sm uppercase tracking-tighter text-on-surface truncate" title={m.home_team?.team_name || 'TBD'}>
+                            {m.home_team?.team_name || 'TBD'}
+                          </div>
+                          
+                          <div className="flex justify-center">
+                            <div className="bg-background border border-outline-variant px-4 py-2 font-display-md text-[32px] tracking-tighter text-on-surface tabular-nums leading-none">
+                              {m.home_score || 0} - {m.away_score || 0}
+                            </div>
+                          </div>
+                          
+                          <div className="font-headline-sm uppercase tracking-tighter text-on-surface truncate" title={m.away_team?.team_name || 'TBD'}>
+                            {m.away_team?.team_name || 'TBD'}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Right Column: Broadcast */}
+          <div className="space-y-6 lg:sticky lg:top-24">
+            <h2 className="font-headline-sm uppercase tracking-tighter text-on-surface flex items-center gap-2">
+              <Radio size={16} />
+              BROADCAST ANNOUNCER
+            </h2>
+            
+            <form onSubmit={handleBroadcast} className="border border-outline-variant bg-surface p-6 space-y-6">
+              <div>
+                <label className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant block mb-2">Message</label>
+                <textarea 
+                  className="w-full bg-background border border-outline-variant text-on-surface font-body-md p-4 rounded-none focus:outline-none focus:border-primary-container transition-colors resize-none placeholder:text-on-surface-variant/50"
+                  rows={5}
+                  placeholder="TYPE AN ANNOUNCEMENT TO BROADCAST..."
+                  value={announcementMsg}
+                  onChange={e => setAnnouncementMsg(e.target.value)}
+                  required
+                />
+              </div>
+              
+              <label className="flex items-center gap-3 cursor-pointer group p-3 border border-outline-variant bg-background hover:border-error transition-colors">
+                <div className="relative flex items-center justify-center w-5 h-5 border border-outline-variant bg-background group-hover:border-error transition-colors">
+                  <input 
+                    type="checkbox" 
+                    className="opacity-0 absolute inset-0 cursor-pointer"
+                    checked={isEmergency}
+                    onChange={e => setIsEmergency(e.target.checked)}
+                  />
+                  {isEmergency && <div className="w-3 h-3 bg-error"></div>}
+                </div>
+                <AlertTriangle size={14} className={isEmergency ? "text-error" : "text-on-surface-variant group-hover:text-error transition-colors"} />
+                <span className={`font-label-caps text-[10px] uppercase tracking-widest ${isEmergency ? "text-error" : "text-on-surface group-hover:text-error transition-colors"}`}>
+                  EMERGENCY BROADCAST
+                </span>
               </label>
-            </div>
-            
-            <button 
-              type="submit" 
-              disabled={isBroadcasting}
-              className={`w-full font-bold py-2 rounded text-white shadow-lg flex items-center justify-center gap-2 transition ${
-                isEmergency ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'
-              } disabled:opacity-50`}
-            >
-              {isBroadcasting ? 'Broadcasting...' : 'Broadcast Now'}
-            </button>
-            <p className="text-xs text-gray-500 text-center">
-              Pushes live immediately via Supabase Realtime to all viewers without polling.
-            </p>
-          </form>
+              
+              <div className="pt-2 border-t border-outline-variant space-y-4">
+                <button 
+                  type="submit" 
+                  disabled={isBroadcasting || !announcementMsg.trim()}
+                  className={`w-full font-headline-sm uppercase tracking-tighter py-4 flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                    isEmergency 
+                      ? 'bg-error text-on-error hover:bg-error/90' 
+                      : 'bg-primary-container text-on-primary-container hover:bg-primary-container/90'
+                  }`}
+                >
+                  {isBroadcasting ? 'BROADCASTING...' : 'BROADCAST NOW'}
+                </button>
+                <p className="font-label-caps text-[10px] uppercase tracking-widest text-center text-on-surface-variant">
+                  PUSHES LIVE VIA SUPABASE REALTIME.
+                </p>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
     </div>

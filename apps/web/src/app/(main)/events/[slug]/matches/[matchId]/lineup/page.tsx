@@ -188,14 +188,21 @@ export default function LineupPage({ params }: { params: Promise<{ slug: string,
     }
   };
 
-  if (isLoading) return <div className="p-12 text-center">Loading lineup builder...</div>;
+  if (isLoading) return (
+    <div className="w-full flex items-center justify-center min-h-[50vh] bg-background">
+      <div className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest animate-pulse">LOADING LINEUP BUILDER...</div>
+    </div>
+  );
+
   if (!teamRegistrationId) return (
-    <div className="p-12 text-center">
-      <h2 className="text-2xl font-bold text-red-600 mb-4">Access Denied</h2>
-      <p>You are not authorized to manage lineups for this match.</p>
-      <pre className="text-left mt-8 p-4 bg-slate-900 text-slate-300 text-xs rounded overflow-auto">
-        {JSON.stringify(debug, null, 2)}
-      </pre>
+    <div className="w-full flex items-center justify-center min-h-[50vh] bg-background">
+      <div className="text-center p-6 border border-error bg-error/10">
+        <h2 className="font-headline-sm uppercase tracking-tighter text-error mb-2">ACCESS DENIED</h2>
+        <p className="font-body-md text-on-surface-variant mb-6">You are not authorized to manage lineups for this match.</p>
+        <pre className="text-left p-4 bg-surface-variant text-on-surface-variant font-mono text-[10px] uppercase">
+          {JSON.stringify(debug, null, 2)}
+        </pre>
+      </div>
     </div>
   );
 
@@ -207,82 +214,97 @@ export default function LineupPage({ params }: { params: Promise<{ slug: string,
   const teamName = isHome ? matchData.home?.team_name : matchData.away?.team_name;
 
   return (
-    <div className="max-w-2xl mx-auto p-4 md:p-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="mb-8">
-        <button onClick={() => router.back()} className="text-indigo-600 dark:text-indigo-400 font-bold mb-4 flex items-center gap-1 hover:underline">
-          &larr; Back to Match Center
-        </button>
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-black text-slate-800 dark:text-slate-100">{teamName} Lineup</h1>
+    <div className="w-full bg-background min-h-screen text-on-surface">
+      <div className="border-b border-outline-variant bg-surface sticky top-0 z-10">
+        <div className="max-w-container-max mx-auto px-margin-mobile md:px-gutter h-14 flex items-center justify-between">
+          <button onClick={() => router.back()} className="flex items-center gap-2 text-on-surface-variant hover:text-on-surface transition-colors">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+            <span className="font-label-caps text-label-caps uppercase tracking-widest">BACK TO MATCH CENTER</span>
+          </button>
+          
           {lineupStatus && (
-            <span className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider ${lineupStatus === 'CONFIRMED' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'}`}>
-              Status: {lineupStatus}
-            </span>
-          )}
-        </div>
-      </div>
-
-      <div className="bg-slate-50 dark:bg-zinc-900/50 border border-slate-200 dark:border-zinc-800 rounded-3xl p-6 md:p-8 mb-8 shadow-sm relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Select Starters</h2>
-            <p className="text-slate-500 text-sm mt-1">
-              Select exactly {requiredCount} players for the starting format.
-            </p>
-          </div>
-          <div className="text-right">
-            <span className={`text-3xl font-black tracking-tighter ${isValid ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-300'}`}>
-              {currentCount} <span className="text-slate-400 text-xl">/ {requiredCount}</span>
-            </span>
-          </div>
-        </div>
-
-        <div className="space-y-3 mt-8">
-          {players.map(p => {
-            const isSelected = selectedPlayerIds.has(p.id);
-            const disabled = lineupStatus === 'CONFIRMED';
-            return (
-              <button
-                key={p.id}
-                onClick={() => togglePlayer(p.id)}
-                disabled={disabled}
-                className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all text-left ${isSelected ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950/30 ring-1 ring-indigo-500/50 shadow-sm' : 'border-slate-200 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700 bg-white dark:bg-zinc-950'} ${disabled ? 'opacity-75 cursor-not-allowed' : ''}`}
-              >
-                <div className="flex items-center gap-4">
-                  <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 ${isSelected ? 'border-indigo-600 bg-indigo-600' : 'border-slate-300 dark:border-zinc-700'}`}>
-                    {isSelected && <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
-                  </div>
-                  <div>
-                    <div className={`font-bold ${isSelected ? 'text-indigo-900 dark:text-indigo-300' : 'text-slate-800 dark:text-slate-200'}`}>{p.users?.display_name || 'Unknown Player'}</div>
-                    {(p.jersey_number || p.position) && (
-                      <div className="text-xs text-slate-500 mt-1 flex gap-2 font-medium">
-                        {p.jersey_number && <span>#{p.jersey_number}</span>}
-                        {p.position && <span>{p.position}</span>}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                {isSelected && <span className="text-[10px] font-black uppercase tracking-widest text-indigo-700 dark:text-indigo-400 bg-indigo-100 dark:bg-indigo-900/50 px-2.5 py-1 rounded-md">Starter</span>}
-              </button>
-            );
-          })}
-          {players.length === 0 && (
-            <div className="text-center p-8 text-slate-500 font-medium border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl">
-              No approved players found for this team.
+            <div className={`font-label-caps text-[10px] uppercase tracking-widest px-2 py-1 border ${lineupStatus === 'CONFIRMED' ? 'bg-primary-container/20 border-primary-container text-primary-container' : 'bg-surface-variant border-outline-variant text-on-surface-variant'}`}>
+              STATUS: {lineupStatus}
             </div>
           )}
         </div>
       </div>
 
-      <div className="flex justify-end pt-4 border-t border-slate-200 dark:border-slate-800">
-        <button
-          onClick={submitLineup}
-          disabled={!isValid || isSubmitting || lineupStatus === 'CONFIRMED'}
-          className={`px-10 py-4 rounded-xl font-bold transition-all shadow-md ${!isValid || lineupStatus === 'CONFIRMED' ? 'bg-slate-200 text-slate-400 dark:bg-zinc-800 dark:text-zinc-500 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 text-white hover:shadow-xl hover:-translate-y-0.5'}`}
-        >
-          {isSubmitting ? 'Submitting...' : (lineupStatus === 'CONFIRMED' ? 'Lineup Locked' : (lineupStatus ? 'Update Lineup' : 'Submit Lineup'))}
-        </button>
+      <div className="max-w-3xl mx-auto px-margin-mobile md:px-gutter py-12 md:py-16">
+        <div className="mb-12">
+          <h1 className="font-display-lg text-display-lg md:text-[56px] uppercase tracking-tighter leading-none text-on-surface mb-2">
+            {teamName} LINEUP
+          </h1>
+        </div>
+
+        <div className="border border-outline-variant bg-surface relative">
+          {/* Header */}
+          <div className="p-6 border-b border-outline-variant bg-surface-container flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h2 className="font-headline-sm uppercase tracking-tighter text-on-surface">SELECT STARTERS</h2>
+              <p className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant mt-1">
+                SELECT EXACTLY {requiredCount} PLAYERS FOR THE STARTING FORMAT.
+              </p>
+            </div>
+            <div className="text-right">
+              <span className={`font-display-md text-[32px] uppercase tracking-tighter ${isValid ? 'text-primary-container' : 'text-on-surface'}`}>
+                {currentCount} <span className="text-on-surface-variant text-xl">/ {requiredCount}</span>
+              </span>
+            </div>
+          </div>
+
+          {/* Player List */}
+          <div className="divide-y divide-outline-variant">
+            {players.map(p => {
+              const isSelected = selectedPlayerIds.has(p.id);
+              const disabled = lineupStatus === 'CONFIRMED';
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => togglePlayer(p.id)}
+                  disabled={disabled}
+                  className={`w-full flex items-center justify-between p-4 md:p-6 transition-colors text-left ${isSelected ? 'bg-primary-container/10' : 'bg-surface hover:bg-surface-variant/50'} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  <div className="flex items-center gap-6">
+                    <div className={`w-6 h-6 border flex items-center justify-center shrink-0 rounded-none transition-colors ${isSelected ? 'border-primary-container bg-primary-container' : 'border-outline-variant bg-background'}`}>
+                      {isSelected && <svg className="w-4 h-4 text-on-primary-container" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}
+                    </div>
+                    <div>
+                      <div className="font-headline-sm uppercase tracking-tighter text-on-surface">{p.users?.display_name || 'UNKNOWN PLAYER'}</div>
+                      <div className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant mt-1 flex gap-3">
+                        {p.jersey_number && <span>#{p.jersey_number}</span>}
+                        {p.position && <span>{p.position}</span>}
+                      </div>
+                    </div>
+                  </div>
+                  {isSelected && (
+                    <div className="font-label-caps text-[10px] uppercase tracking-widest text-primary-container border border-primary-container px-2 py-1">
+                      STARTER
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+            
+            {players.length === 0 && (
+              <div className="text-center p-12 bg-background">
+                <span className="font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant">
+                  NO APPROVED PLAYERS FOUND FOR THIS TEAM.
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-8 flex justify-end">
+          <button
+            onClick={submitLineup}
+            disabled={!isValid || isSubmitting || lineupStatus === 'CONFIRMED'}
+            className={`w-full md:w-auto px-10 py-4 font-headline-sm uppercase tracking-tighter transition-colors ${!isValid || lineupStatus === 'CONFIRMED' ? 'bg-surface-variant text-on-surface-variant cursor-not-allowed' : 'bg-primary-container text-on-primary-container hover:bg-primary-container/90'}`}
+          >
+            {isSubmitting ? 'SUBMITTING...' : (lineupStatus === 'CONFIRMED' ? 'LINEUP LOCKED' : (lineupStatus ? 'UPDATE LINEUP' : 'SUBMIT LINEUP'))}
+          </button>
+        </div>
       </div>
     </div>
   );

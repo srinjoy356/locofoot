@@ -111,133 +111,159 @@ export default function FriendsPage() {
   if (!currentUser) return <div className="p-10">Loading...</div>;
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold mb-4">Friends</h1>
-        
-        <form onSubmit={handleSearch} className="flex gap-2 mb-6">
-          <input 
-            className="border p-2 rounded flex-1" 
-            placeholder="Search by exact unique code (e.g. FTB-X8K29Q)..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Search</button>
-        </form>
+    <div className="w-full flex flex-col bg-background text-on-surface min-h-screen pb-12">
+      {/* Header */}
+      <div className="w-full border-b border-outline-variant bg-[#0b0d0c] pt-12 pb-8 px-margin-mobile md:px-gutter shrink-0">
+        <h1 className="font-display-lg text-display-lg md:text-[64px] uppercase tracking-tighter leading-none text-on-surface">Friends</h1>
+      </div>
 
-        {searchResults.length > 0 && (
-          <div className="mb-8 p-4 border rounded bg-slate-50 dark:bg-zinc-900/50">
-            <h2 className="font-semibold mb-2">Search Results</h2>
-            <ul className="space-y-2">
-              {searchResults.map(u => (
-                <li key={u.id} className="flex justify-between items-center bg-white dark:bg-zinc-900 p-2 border rounded">
-                  <span>{u.display_name || u.username || u.unique_code}</span>
-                  <div className="flex gap-2">
-                    <button 
-                      onClick={() => sendRequest(u.id)}
-                      className="text-sm bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
-                    >
-                      Add Friend
+      <div className="w-full max-w-container-max mx-auto px-margin-mobile md:px-gutter py-8 space-y-12">
+        {/* Search */}
+        <div className="border border-outline-variant bg-surface p-6">
+          <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4">
+            <input 
+              className="bg-background border border-outline-variant p-4 flex-1 focus:outline-none focus:border-primary-container text-on-surface font-mono placeholder:text-on-surface-variant transition-colors" 
+              placeholder="SEARCH BY EXACT CODE (E.G. FTB-X8K29Q)"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <button type="submit" className="bg-on-surface text-surface hover:bg-primary-container hover:text-on-primary-container px-8 py-4 font-label-caps text-label-caps uppercase tracking-widest transition-colors whitespace-nowrap">
+              Search
+            </button>
+          </form>
+
+          {searchResults.length > 0 && (
+            <div className="mt-8">
+              <h2 className="font-headline-sm uppercase tracking-tighter mb-4 text-on-surface">Search Results</h2>
+              <ul className="grid grid-cols-1 border border-outline-variant divide-y divide-outline-variant">
+                {searchResults.map(u => (
+                  <li key={u.id} className="flex flex-col md:flex-row justify-between items-start md:items-center p-4 bg-background hover:bg-surface-variant transition-colors gap-4">
+                    <span className="font-headline-sm uppercase">{u.display_name || u.username || u.unique_code}</span>
+                    <div className="flex gap-2 w-full md:w-auto">
+                      <button 
+                        onClick={() => sendRequest(u.id)}
+                        className="flex-1 md:flex-none border border-primary-container bg-primary-container/10 hover:bg-primary-container/20 text-primary-container px-4 py-2 font-label-caps text-[10px] uppercase tracking-widest transition-colors"
+                      >
+                        Add Friend
+                      </button>
+                      <button 
+                        onClick={() => handleBlock(u.id)}
+                        className="flex-1 md:flex-none border border-error bg-error/10 hover:bg-error/20 text-error px-4 py-2 font-label-caps text-[10px] uppercase tracking-widest transition-colors"
+                      >
+                        Block
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* My Friends */}
+          <div className="border border-outline-variant bg-surface p-6">
+            <h2 className="font-headline-lg-mobile uppercase tracking-tighter text-on-surface border-b border-outline-variant pb-2 mb-4">My Friends</h2>
+            <ul className="grid grid-cols-1 border border-outline-variant divide-y divide-outline-variant">
+              {friendships.filter(f => f.status === 'ACCEPTED').map(f => {
+                const friend = f.requester_id === currentUser.id ? f.addressee : f.requester;
+                return (
+                  <li key={f.id} className="flex flex-col md:flex-row justify-between items-start md:items-center p-4 bg-background hover:bg-surface-variant transition-colors gap-4">
+                    <span className="font-headline-sm uppercase">{friend.display_name || friend.username || friend.unique_code}</span>
+                    <div className="flex gap-2 w-full md:w-auto flex-wrap">
+                      <button onClick={() => handleMessage(friend.id)} className="border border-outline-variant bg-surface hover:border-primary-container hover:text-primary-container text-on-surface px-4 py-2 font-label-caps text-[10px] uppercase tracking-widest transition-colors">
+                        Message
+                      </button>
+                      <button onClick={() => updateStatus(f.id, FriendshipStatus.CANCELLED)} className="border border-outline-variant bg-surface hover:border-error hover:text-error text-on-surface px-4 py-2 font-label-caps text-[10px] uppercase tracking-widest transition-colors">
+                        Remove
+                      </button>
+                      <button onClick={() => handleBlock(friend.id)} className="border border-outline-variant bg-surface hover:bg-error hover:text-on-error text-error px-4 py-2 font-label-caps text-[10px] uppercase tracking-widest transition-colors">
+                        Block
+                      </button>
+                    </div>
+                  </li>
+                )
+              })}
+              {friendships.filter(f => f.status === 'ACCEPTED').length === 0 && (
+                <li className="p-4 text-on-surface-variant font-body-md">No friends yet.</li>
+              )}
+            </ul>
+          </div>
+
+          {/* Pending Requests */}
+          <div className="border border-outline-variant bg-surface p-6">
+            <h2 className="font-headline-lg-mobile uppercase tracking-tighter text-on-surface border-b border-outline-variant pb-2 mb-4">Pending Requests</h2>
+            
+            <h3 className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest mb-2 mt-4">Incoming</h3>
+            <ul className="grid grid-cols-1 border border-outline-variant divide-y divide-outline-variant mb-6 bg-background">
+              {friendships.filter(f => f.status === 'PENDING' && f.addressee_id === currentUser.id).map(f => (
+                <li key={f.id} className="flex flex-col md:flex-row justify-between items-start md:items-center p-4 hover:bg-surface-variant transition-colors gap-4 border-l-2 border-l-primary-container">
+                  <span className="font-headline-sm uppercase">{f.requester.display_name || f.requester.username || f.requester.unique_code}</span>
+                  <div className="flex gap-2 w-full md:w-auto">
+                    <button onClick={() => updateStatus(f.id, FriendshipStatus.ACCEPTED)} className="flex-1 md:flex-none border border-primary-container bg-primary-container/10 hover:bg-primary-container/20 text-primary-container px-4 py-2 font-label-caps text-[10px] uppercase tracking-widest transition-colors">
+                      Accept
                     </button>
-                    <button 
-                      onClick={() => handleBlock(u.id)}
-                      className="text-sm bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
-                    >
-                      Block
+                    <button onClick={() => updateStatus(f.id, FriendshipStatus.REJECTED)} className="flex-1 md:flex-none border border-error bg-error/10 hover:bg-error/20 text-error px-4 py-2 font-label-caps text-[10px] uppercase tracking-widest transition-colors">
+                      Reject
                     </button>
                   </div>
                 </li>
               ))}
+              {friendships.filter(f => f.status === 'PENDING' && f.addressee_id === currentUser.id).length === 0 && (
+                <li className="p-4 text-on-surface-variant font-body-md">No incoming requests.</li>
+              )}
+            </ul>
+
+            <h3 className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest mb-2">Outgoing</h3>
+            <ul className="grid grid-cols-1 border border-outline-variant divide-y divide-outline-variant bg-background">
+              {friendships.filter(f => f.status === 'PENDING' && f.requester_id === currentUser.id).map(f => (
+                <li key={f.id} className="flex flex-col md:flex-row justify-between items-start md:items-center p-4 hover:bg-surface-variant transition-colors gap-4">
+                  <span className="font-headline-sm uppercase">{f.addressee.display_name || f.addressee.username || f.addressee.unique_code}</span>
+                  <button onClick={() => updateStatus(f.id, FriendshipStatus.CANCELLED)} className="border border-outline-variant bg-surface hover:border-error hover:text-error text-on-surface-variant px-4 py-2 font-label-caps text-[10px] uppercase tracking-widest transition-colors w-full md:w-auto">
+                    Cancel
+                  </button>
+                </li>
+              ))}
+              {friendships.filter(f => f.status === 'PENDING' && f.requester_id === currentUser.id).length === 0 && (
+                <li className="p-4 text-on-surface-variant font-body-md">No outgoing requests.</li>
+              )}
             </ul>
           </div>
-        )}
-      </div>
+        </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div>
-          <h2 className="text-xl font-semibold mb-4 border-b pb-2">My Friends</h2>
-          <ul className="space-y-2">
-            {friendships.filter(f => f.status === 'ACCEPTED').map(f => {
-              const friend = f.requester_id === currentUser.id ? f.addressee : f.requester;
+        {/* Blocked Users */}
+        <div className="border border-error/50 bg-error/5 p-6">
+          <h2 className="font-headline-lg-mobile uppercase tracking-tighter text-error border-b border-error/50 pb-2 mb-4">Blocked Users</h2>
+          <ul className="grid grid-cols-1 border border-error/50 divide-y divide-error/50 max-w-md bg-background">
+            {blockedUsers.map(b => {
               return (
-                <li key={f.id} className="flex justify-between items-center border p-3 rounded">
-                  <span>{friend.display_name || friend.username || friend.unique_code}</span>
-                  <div className="flex gap-2">
-                    <button onClick={() => handleMessage(friend.id)} className="text-blue-600 text-sm hover:underline font-semibold border border-blue-600 rounded px-2">Message</button>
-                    <button onClick={() => updateStatus(f.id, FriendshipStatus.CANCELLED)} className="text-red-500 text-sm hover:underline">Remove</button>
-                    <button onClick={() => handleBlock(friend.id)} className="text-red-700 text-sm hover:underline ml-2">Block</button>
-                  </div>
+                <li key={b.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 hover:bg-error/10 transition-colors gap-4">
+                  <span className="font-headline-sm uppercase line-through text-on-surface-variant">{b.blocked.display_name || b.blocked.username || b.blocked.unique_code}</span>
+                  <button 
+                    onClick={async () => {
+                      if (!confirm("Unblock this user?")) return;
+                      await supabase.from("blocks").delete().eq("id", b.id);
+                      const { data: fData } = await supabase.from("friendships")
+                        .select("id")
+                        .or(`requester_id.eq.${b.blocked_id},addressee_id.eq.${b.blocked_id}`)
+                        .single();
+                      if (fData) {
+                        await supabase.from("friendships").update({ status: 'CANCELLED' }).eq("id", fData.id);
+                      }
+                      loadData();
+                    }} 
+                    className="border border-error bg-error/10 hover:bg-error text-error hover:text-on-error px-4 py-2 font-label-caps text-[10px] uppercase tracking-widest transition-colors w-full sm:w-auto"
+                  >
+                    Unblock
+                  </button>
                 </li>
               )
             })}
+            {blockedUsers.length === 0 && (
+              <li className="p-4 text-on-surface-variant font-body-md">No blocked users.</li>
+            )}
           </ul>
         </div>
-
-        <div>
-          <h2 className="text-xl font-semibold mb-4 border-b pb-2">Pending Requests</h2>
-          <h3 className="font-semibold text-slate-600 dark:text-zinc-400 mt-4 mb-2">Incoming</h3>
-          <ul className="space-y-2 mb-4">
-            {friendships.filter(f => f.status === 'PENDING' && f.addressee_id === currentUser.id).map(f => (
-              <li key={f.id} className="flex justify-between items-center border p-3 rounded bg-blue-50 dark:bg-blue-950/20">
-                <span>{f.requester.display_name || f.requester.username || f.requester.unique_code}</span>
-                <div className="flex gap-2">
-                  <button onClick={() => updateStatus(f.id, FriendshipStatus.ACCEPTED)} className="text-green-600 text-sm font-semibold">Accept</button>
-                  <button onClick={() => updateStatus(f.id, FriendshipStatus.REJECTED)} className="text-red-600 text-sm font-semibold">Reject</button>
-                </div>
-              </li>
-            ))}
-          </ul>
-          <h3 className="font-semibold text-slate-600 dark:text-zinc-400 mb-2">Outgoing</h3>
-          <ul className="space-y-2">
-            {friendships.filter(f => f.status === 'PENDING' && f.requester_id === currentUser.id).map(f => (
-              <li key={f.id} className="flex justify-between items-center border p-3 rounded">
-                <span>{f.addressee.display_name || f.addressee.username || f.addressee.unique_code}</span>
-                <button onClick={() => updateStatus(f.id, FriendshipStatus.CANCELLED)} className="text-slate-500 dark:text-zinc-400 text-sm hover:underline">Cancel</button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-
-      <div className="mt-8 pt-4 border-t">
-        <h2 className="text-xl font-semibold mb-4 text-red-700">Blocked Users</h2>
-        <ul className="space-y-2 max-w-md">
-          {blockedUsers.map(b => {
-            return (
-              <li key={b.id} className="flex justify-between items-center border p-3 rounded bg-red-50 dark:bg-red-950/20">
-                <span>{b.blocked.display_name || b.blocked.username || b.blocked.unique_code}</span>
-                <button 
-                  onClick={async () => {
-                    if (!confirm("Unblock this user?")) return;
-                    
-                    // Delete the block 
-                    await supabase.from("blocks").delete().eq("id", b.id);
-
-                    // We also need to restore the friendship status if one existed between them.
-                    // Instead of blindly canceling, we could let them remain BLOCKED or CANCELLED, 
-                    // but the safest default when unblocking is moving it to CANCELLED so they can request again.
-                    const { data: fData } = await supabase.from("friendships")
-                      .select("id")
-                      .or(`requester_id.eq.${b.blocked_id},addressee_id.eq.${b.blocked_id}`)
-                      .single();
-                      
-                    if (fData) {
-                      await supabase.from("friendships").update({ status: 'CANCELLED' }).eq("id", fData.id);
-                    }
-                    
-                    loadData();
-                  }} 
-                  className="text-slate-600 dark:text-zinc-400 text-sm hover:underline"
-                >
-                  Unblock
-                </button>
-              </li>
-            )
-          })}
-          {blockedUsers.length === 0 && (
-            <p className="text-slate-500 dark:text-zinc-400 text-sm">No blocked users.</p>
-          )}
-        </ul>
       </div>
     </div>
   );

@@ -142,136 +142,172 @@ export default function TeamSettingsPage({ params }: { params: Promise<{ slug: s
     }
   };
 
-  if (loading) return <div className="p-10 max-w-4xl mx-auto flex items-center gap-2"><RefreshCw className="animate-spin" /> Loading Settings...</div>;
-  if (!team) return <div className="p-10 max-w-4xl mx-auto">Team not found.</div>;
+  if (loading) return (
+    <div className="w-full flex items-center justify-center min-h-[50vh] bg-background">
+      <div className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest flex items-center gap-2">
+        <RefreshCw size={16} className="animate-spin" />
+        LOADING SETTINGS...
+      </div>
+    </div>
+  );
+  
+  if (!team) return (
+    <div className="w-full flex items-center justify-center min-h-[50vh] bg-background">
+      <div className="font-label-caps text-label-caps text-error uppercase tracking-widest">TEAM NOT FOUND.</div>
+    </div>
+  );
 
   return (
-    <div className="max-w-4xl mx-auto p-4 md:p-8 space-y-8">
-      <div className="flex items-center gap-4">
-        <Link href={`/events/${slug}/teams/${regId}`} className="text-slate-500 hover:text-black">
-          <ArrowLeft />
-        </Link>
-        <h1 className="text-2xl font-bold">Edit Team: {team.name}</h1>
+    <div className="w-full bg-background min-h-screen text-on-surface">
+      <div className="border-b border-outline-variant bg-surface sticky top-0 z-10">
+        <div className="max-w-container-max mx-auto px-margin-mobile md:px-gutter h-14 flex items-center">
+          <Link href={`/events/${slug}/teams/${regId}`} className="flex items-center gap-2 text-on-surface-variant hover:text-on-surface transition-colors">
+            <ArrowLeft size={16} />
+            <span className="font-label-caps text-label-caps uppercase tracking-widest">BACK TO TEAM</span>
+          </Link>
+        </div>
       </div>
 
-      {/* Team Details Form */}
-      <form onSubmit={handleSaveTeam} className="bg-white dark:bg-zinc-900 p-6 rounded-xl shadow border dark:border-zinc-800 space-y-6">
-        <h2 className="text-xl font-bold border-b pb-2">Team Details</h2>
-        
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Description</label>
-            <textarea 
-              value={team.description || ''} 
-              onChange={e => setTeam({...team, description: e.target.value})}
-              rows={3}
-              placeholder="About your team..."
-              className="w-full p-2 border rounded dark:bg-zinc-800 dark:border-zinc-700" 
-            />
+      <div className="max-w-4xl mx-auto px-margin-mobile md:px-gutter py-8 space-y-12">
+        <div>
+          <h1 className="font-display-lg text-display-lg md:text-[56px] uppercase tracking-tighter leading-none text-on-surface mb-2">
+            EDIT TEAM
+          </h1>
+          <p className="font-headline-sm uppercase tracking-tighter text-on-surface-variant">{team.name}</p>
+        </div>
+
+        {/* Team Details Form */}
+        <form onSubmit={handleSaveTeam} className="border border-outline-variant bg-surface p-6 md:p-8 space-y-8">
+          <div className="border-b border-outline-variant pb-4 mb-6">
+            <h2 className="font-headline-sm uppercase tracking-tighter text-on-surface">TEAM DETAILS</h2>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium mb-1">Instagram URL</label>
-              <input 
-                type="url" 
-                value={team.instagram_url || ''} 
-                onChange={e => setTeam({...team, instagram_url: e.target.value})}
-                placeholder="https://instagram.com/..."
-                className="w-full p-2 border rounded dark:bg-zinc-800 dark:border-zinc-700" 
+              <label className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant block mb-2">Description</label>
+              <textarea 
+                value={team.description || ''} 
+                onChange={e => setTeam({...team, description: e.target.value})}
+                rows={3}
+                placeholder="ABOUT YOUR TEAM..."
+                className="w-full bg-background border border-outline-variant text-on-surface font-body-md p-4 rounded-none focus:outline-none focus:border-primary-container transition-colors resize-none placeholder:text-on-surface-variant/50"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Website URL</label>
-              <input 
-                type="url" 
-                value={team.website_url || ''} 
-                onChange={e => setTeam({...team, website_url: e.target.value})}
-                placeholder="https://..."
-                className="w-full p-2 border rounded dark:bg-zinc-800 dark:border-zinc-700" 
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Primary Color (Hex)</label>
-              <input 
-                type="text" 
-                value={team.primary_color || ''} 
-                onChange={e => setTeam({...team, primary_color: e.target.value})}
-                placeholder="#000000"
-                className="w-full p-2 border rounded dark:bg-zinc-800 dark:border-zinc-700" 
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Secondary Color (Hex)</label>
-              <input 
-                type="text" 
-                value={team.secondary_color || ''} 
-                onChange={e => setTeam({...team, secondary_color: e.target.value})}
-                placeholder="#FFFFFF"
-                className="w-full p-2 border rounded dark:bg-zinc-800 dark:border-zinc-700" 
-              />
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant block mb-2">Instagram URL</label>
+                <input 
+                  type="url" 
+                  value={team.instagram_url || ''} 
+                  onChange={e => setTeam({...team, instagram_url: e.target.value})}
+                  placeholder="HTTPS://INSTAGRAM.COM/..."
+                  className="w-full bg-background border border-outline-variant text-on-surface font-body-md p-4 rounded-none focus:outline-none focus:border-primary-container transition-colors placeholder:text-on-surface-variant/50"
+                />
+              </div>
+              <div>
+                <label className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant block mb-2">Website URL</label>
+                <input 
+                  type="url" 
+                  value={team.website_url || ''} 
+                  onChange={e => setTeam({...team, website_url: e.target.value})}
+                  placeholder="HTTPS://..."
+                  className="w-full bg-background border border-outline-variant text-on-surface font-body-md p-4 rounded-none focus:outline-none focus:border-primary-container transition-colors placeholder:text-on-surface-variant/50"
+                />
+              </div>
+              <div>
+                <label className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant block mb-2">Primary Color (Hex)</label>
+                <input 
+                  type="text" 
+                  value={team.primary_color || ''} 
+                  onChange={e => setTeam({...team, primary_color: e.target.value})}
+                  placeholder="#000000"
+                  className="w-full bg-background border border-outline-variant text-on-surface font-mono p-4 rounded-none focus:outline-none focus:border-primary-container transition-colors uppercase placeholder:text-on-surface-variant/50"
+                />
+              </div>
+              <div>
+                <label className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant block mb-2">Secondary Color (Hex)</label>
+                <input 
+                  type="text" 
+                  value={team.secondary_color || ''} 
+                  onChange={e => setTeam({...team, secondary_color: e.target.value})}
+                  placeholder="#FFFFFF"
+                  className="w-full bg-background border border-outline-variant text-on-surface font-mono p-4 rounded-none focus:outline-none focus:border-primary-container transition-colors uppercase placeholder:text-on-surface-variant/50"
+                />
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="flex justify-end">
-          <button type="submit" disabled={saving} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded font-bold flex items-center gap-2">
-            <Save size={16} /> Save Team Details
-          </button>
-        </div>
-      </form>
+          <div className="pt-4 border-t border-outline-variant">
+            <button type="submit" disabled={saving} className="w-full md:w-auto bg-primary-container text-on-primary-container hover:bg-primary-container/90 px-8 py-4 font-headline-sm uppercase tracking-tighter disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2">
+              {saving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
+              {saving ? "SAVING..." : "SAVE TEAM DETAILS"}
+            </button>
+          </div>
+        </form>
 
-      {/* Roster Form */}
-      <div className="bg-white dark:bg-zinc-900 p-6 rounded-xl shadow border dark:border-zinc-800 space-y-6">
-        <div className="flex items-center justify-between border-b pb-2">
-          <h2 className="text-xl font-bold flex items-center gap-2"><Users size={20} /> Event Roster</h2>
-          <button onClick={handleSaveRoster} disabled={saving} className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-bold flex items-center gap-2 text-sm">
-            <Save size={16} /> Save Roster
-          </button>
-        </div>
+        {/* Roster Form */}
+        <div className="border border-outline-variant bg-surface">
+          <div className="flex items-center justify-between p-6 border-b border-outline-variant bg-surface-container">
+            <h2 className="font-headline-sm uppercase tracking-tighter text-on-surface flex items-center gap-2">
+              <Users size={16} /> EVENT ROSTER
+            </h2>
+            <button onClick={handleSaveRoster} disabled={saving} className="bg-primary-container text-on-primary-container hover:bg-primary-container/90 px-4 py-2 font-label-caps text-[10px] uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2">
+              {saving ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />}
+              SAVE ROSTER
+            </button>
+          </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="border-b dark:border-zinc-700 text-sm">
-                <th className="pb-2">Player</th>
-                <th className="pb-2">Jersey #</th>
-                <th className="pb-2">Position</th>
-              </tr>
-            </thead>
-            <tbody>
-              {roster.map((player, idx) => (
-                <tr key={player.id} className="border-b dark:border-zinc-800 last:border-0">
-                  <td className="py-3">
-                    <div className="font-semibold">{player.users?.display_name}</div>
-                    <div className="text-xs text-slate-500">{player.users?.unique_code}</div>
-                  </td>
-                  <td className="py-3 pr-4">
-                    <input 
-                      type="number" 
-                      value={player.jersey_number || ''}
-                      onChange={e => updateRosterPlayer(idx, 'jersey_number', e.target.value)}
-                      className="w-20 p-1 border rounded text-center dark:bg-zinc-800 dark:border-zinc-700"
-                      placeholder="-"
-                    />
-                  </td>
-                  <td className="py-3">
-                    <select 
-                      value={player.position || ''}
-                      onChange={e => updateRosterPlayer(idx, 'position', e.target.value)}
-                      className="w-full p-1 border rounded dark:bg-zinc-800 dark:border-zinc-700"
-                    >
-                      <option value="">-</option>
-                      <option value="GK">GK</option>
-                      <option value="DEF">DEF</option>
-                      <option value="MID">MID</option>
-                      <option value="FWD">FWD</option>
-                    </select>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="border-b border-outline-variant bg-surface">
+                  <th className="p-4 font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">Player</th>
+                  <th className="p-4 font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">Jersey #</th>
+                  <th className="p-4 font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">Position</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-outline-variant">
+                {roster.map((player, idx) => (
+                  <tr key={player.id} className="bg-surface hover:bg-surface-variant/50 transition-colors">
+                    <td className="p-4">
+                      <div className="font-headline-sm uppercase tracking-tighter text-on-surface">{player.users?.display_name}</div>
+                      <div className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">{player.users?.unique_code}</div>
+                    </td>
+                    <td className="p-4 w-32">
+                      <input 
+                        type="number" 
+                        value={player.jersey_number || ''}
+                        onChange={e => updateRosterPlayer(idx, 'jersey_number', e.target.value)}
+                        className="w-full bg-background border border-outline-variant text-on-surface font-mono p-3 text-center focus:outline-none focus:border-primary-container transition-colors rounded-none placeholder:text-on-surface-variant/50"
+                        placeholder="-"
+                      />
+                    </td>
+                    <td className="p-4 w-40">
+                      <select 
+                        value={player.position || ''}
+                        onChange={e => updateRosterPlayer(idx, 'position', e.target.value)}
+                        className="w-full bg-background border border-outline-variant text-on-surface font-label-caps text-[10px] uppercase tracking-widest p-3 focus:outline-none focus:border-primary-container transition-colors rounded-none"
+                      >
+                        <option value="">-</option>
+                        <option value="GK">GK</option>
+                        <option value="DEF">DEF</option>
+                        <option value="MID">MID</option>
+                        <option value="FWD">FWD</option>
+                      </select>
+                    </td>
+                  </tr>
+                ))}
+                {roster.length === 0 && (
+                  <tr>
+                    <td colSpan={3} className="p-8 text-center text-on-surface-variant font-label-caps text-[10px] uppercase tracking-widest">
+                      NO PLAYERS IN ROSTER.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

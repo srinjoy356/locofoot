@@ -3,12 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
-import { Loader2, Calendar, Clock, CheckCircle2, AlertCircle, X, Calculator, Edit, Save } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Loader2, Calendar, Clock, CheckCircle2, AlertCircle, X, Calculator, Edit, Save, ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
 
 export default function AdminSlotsPage() {
   const params = useParams();
@@ -100,7 +96,7 @@ export default function AdminSlotsPage() {
 
   const handleGenerateBatch = () => {
     if (!batchStart) {
-      setError('Please provide start time.');
+      setError('PLEASE PROVIDE START TIME.');
       return;
     }
     
@@ -109,7 +105,7 @@ export default function AdminSlotsPage() {
     const totalMatchMins = (half * 2) + breakTime;
     
     if (totalMatchMins === 0) {
-      setError('Invalid match times.');
+      setError('INVALID MATCH TIMES.');
       return;
     }
 
@@ -170,7 +166,7 @@ export default function AdminSlotsPage() {
 
   const handleSaveSlot = (index: number) => {
     if (!editStart) {
-      setError('Please provide a valid start time for the slot.');
+      setError('PLEASE PROVIDE A VALID START TIME FOR THE SLOT.');
       return;
     }
     
@@ -183,12 +179,12 @@ export default function AdminSlotsPage() {
     
     if (slots[index].isCustom) {
       if (!editEnd) {
-        setError('Please provide a valid end time for the custom slot.');
+        setError('PLEASE PROVIDE A VALID END TIME FOR THE CUSTOM SLOT.');
         return;
       }
       newEnd = new Date(editEnd).getTime();
       if (newEnd <= newStart) {
-        setError('End time must be after start time.');
+        setError('END TIME MUST BE AFTER START TIME.');
         return;
       }
     } else {
@@ -203,7 +199,7 @@ export default function AdminSlotsPage() {
     });
     
     if (hasConflict) {
-      setError('This slot conflicts with an existing slot.');
+      setError('THIS SLOT CONFLICTS WITH AN EXISTING SLOT.');
       return;
     }
     
@@ -260,7 +256,7 @@ export default function AdminSlotsPage() {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.detail || 'Failed to finalize slots');
+        throw new Error(data.detail || 'FAILED TO FINALIZE SLOTS');
       }
 
       router.push(`/admin/events/${eventId}/scheduling-live`);
@@ -272,228 +268,251 @@ export default function AdminSlotsPage() {
   };
 
   return (
-    <div className="container max-w-6xl py-10 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent drop-shadow-sm">Slot Configurator</h1>
-          <p className="text-muted-foreground mt-2 text-lg font-medium">Design the timeblocks for your tournament fields before live scheduling.</p>
+    <div className="w-full bg-background min-h-[calc(100vh-64px)] text-on-surface">
+      {/* Top Bar */}
+      <div className="border-b border-outline-variant bg-surface sticky top-0 z-10">
+        <div className="max-w-container-max mx-auto px-margin-mobile md:px-gutter h-14 flex items-center justify-between">
+          <Link href={`/admin/events/${eventId}`} className="flex items-center gap-2 text-on-surface-variant hover:text-on-surface transition-colors">
+            <ArrowLeft size={16} />
+            <span className="font-label-caps text-label-caps uppercase tracking-widest">EVENT DASHBOARD</span>
+          </Link>
         </div>
       </div>
 
-      {error && (
-        <Alert variant="destructive" className="border-red-500/50 bg-red-50 dark:bg-red-950/200/10 text-red-600 shadow-sm">
-          <AlertCircle className="h-5 w-5" />
-          <AlertTitle className="font-bold text-base">Error</AlertTitle>
-          <AlertDescription className="text-sm font-medium">{error}</AlertDescription>
-        </Alert>
-      )}
+      <div className="max-w-[1000px] mx-auto px-margin-mobile md:px-gutter py-8 space-y-12">
+        <div>
+          <h1 className="font-display-lg text-display-lg md:text-[56px] uppercase tracking-tighter leading-none text-on-surface">
+            SLOT CONFIGURATOR
+          </h1>
+          <p className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant mt-4 max-w-xl">
+            DESIGN THE TIMEBLOCKS FOR YOUR TOURNAMENT FIELDS BEFORE LIVE SCHEDULING.
+          </p>
+        </div>
 
-      <div className="grid gap-8 lg:grid-cols-1 max-w-4xl mx-auto">
-        <Card className="border-slate-200 dark:border-zinc-800/60 shadow-lg shadow-indigo-100/50 backdrop-blur-xl bg-white dark:bg-zinc-900/70 overflow-hidden transition-all duration-300 hover:shadow-indigo-200/50">
-          <div className="h-2 w-full bg-gradient-to-r from-orange-400 to-red-500" />
-          <CardHeader className="pb-4">
-            <CardTitle className="text-2xl flex items-center gap-2">
-              <Calculator className="h-6 w-6 text-red-500" />
-              Batch Slot Generator
-            </CardTitle>
-            <CardDescription className="text-base">
-              Calculate slots based on match duration, breaks, and buffers.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700 dark:text-zinc-300">First Match Start Time</label>
-              <Input
-                type="datetime-local"
-                value={batchStart}
-                onChange={(e) => setBatchStart(e.target.value)}
-                className="w-full"
-              />
-            </div>
-            
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700 dark:text-zinc-300">Match Half (mins)</label>
-                <Input
-                  type="number"
-                  value={matchHalf}
-                  onChange={(e) => setMatchHalf(e.target.value)}
-                  className="w-full"
-                  min="1"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700 dark:text-zinc-300">Half Time (mins)</label>
-                <Input
-                  type="number"
-                  value={halfTime}
-                  onChange={(e) => setHalfTime(e.target.value)}
-                  className="w-full"
-                  min="0"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700 dark:text-zinc-300">Buffer (mins)</label>
-                <Input
-                  type="number"
-                  value={bufferMins}
-                  onChange={(e) => setBufferMins(e.target.value)}
-                  className="w-full"
-                  min="0"
-                />
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <label className="text-sm font-semibold text-slate-700 dark:text-zinc-300">Total Matches</label>
-                  <span className="text-xs text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded">Auto-calculated</span>
-                </div>
-                <Input
-                  type="number"
-                  value={totalMatches}
-                  onChange={(e) => setTotalMatches(parseInt(e.target.value) || 0)}
-                  className="w-full bg-slate-50 dark:bg-zinc-900/50"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700 dark:text-zinc-300">Fields Available</label>
-                <Input
-                  type="number"
-                  value={fieldsCount}
-                  onChange={(e) => setFieldsCount(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-zinc-900/50"
-                  min="1"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2 pt-2 border-t border-slate-100">
-              <div className="flex justify-between items-center">
-                <label className="text-sm font-bold text-slate-900 dark:text-zinc-100">Final Slots to Generate</label>
-                <span className="text-xs text-slate-500 dark:text-zinc-400">Matches ÷ Fields</span>
-              </div>
-              <Input
-                type="number"
-                value={numSlots}
-                onChange={(e) => setNumSlots(e.target.value)}
-                className="w-full font-bold text-lg border-slate-300 dark:border-zinc-700"
-                min="1"
-              />
-            </div>
-
-            <Button 
-              onClick={handleGenerateBatch} 
-              disabled={loading || !batchStart} 
-              className="w-full bg-slate-800 hover:bg-slate-900 text-white shadow-md hover:shadow-lg transition-all h-12 text-base font-semibold rounded-xl mt-2"
-            >
-              Generate Batch
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid gap-8 lg:grid-cols-1 mt-8">
-
-        <Card className="border-slate-200 dark:border-zinc-800/60 shadow-lg shadow-indigo-100/50 backdrop-blur-xl bg-white dark:bg-zinc-900/70 flex flex-col h-full overflow-hidden transition-all duration-300 hover:shadow-indigo-200/50 max-w-4xl mx-auto w-full">
-          <div className="h-2 w-full bg-gradient-to-r from-teal-400 to-emerald-500" />
-          <CardHeader className="pb-4 flex flex-row items-center justify-between">
+        {error && (
+          <div className="border border-error bg-error/10 p-4 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-error flex-shrink-0 mt-0.5" />
             <div>
-              <CardTitle className="text-2xl flex items-center gap-2">
-                <Calendar className="h-6 w-6 text-emerald-500" />
-                Generated Slots
-              </CardTitle>
-              <CardDescription className="text-base mt-1">
-                Review and finalize the generated timeblocks. Once finalized, you can proceed to the live scheduling command center.
-              </CardDescription>
+              <h3 className="font-headline-sm uppercase tracking-tighter text-error">ERROR</h3>
+              <p className="font-body-sm text-error mt-1">{error}</p>
             </div>
-            <Button onClick={handleAddCustomSlot} variant="outline" className="border-indigo-200 hover:bg-indigo-50 text-indigo-700">
-              + Add Custom Slot
-            </Button>
-          </CardHeader>
-          <CardContent className="flex-1 overflow-auto p-0">
-            {slots.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full min-h-[250px] text-slate-400 space-y-3 p-6 bg-slate-50 dark:bg-zinc-900/50/30 m-6 rounded-2xl border border-dashed border-slate-200 dark:border-zinc-800">
-                <Clock className="h-12 w-12 text-slate-300 mb-2" />
-                <p className="text-lg font-medium text-slate-500 dark:text-zinc-400">No slots generated yet.</p>
-                <p className="text-sm text-center">Use the AI generator to create a slot sequence based on your event settings.</p>
+          </div>
+        )}
+
+        <div className="grid gap-12 lg:grid-cols-1">
+          <div className="border border-outline-variant bg-surface">
+            <div className="p-6 border-b border-outline-variant bg-surface-container flex flex-col md:flex-row md:items-center gap-4 justify-between">
+              <div className="flex items-center gap-3">
+                <Calculator className="text-on-surface" size={20} />
+                <div>
+                  <h2 className="font-headline-sm uppercase tracking-tighter text-on-surface">BATCH SLOT GENERATOR</h2>
+                  <p className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">CALCULATE SLOTS BASED ON MATCH DURATION, BREAKS, AND BUFFERS.</p>
+                </div>
               </div>
-            ) : (
-              <div className="space-y-3 p-6 pt-2">
-                {slots.map((slot, idx) => (
-                  <div key={idx} className="flex flex-col p-4 rounded-xl border border-slate-200 dark:border-zinc-800/60 bg-white dark:bg-zinc-900 shadow-sm hover:shadow-md transition-shadow group">
-                    {editingSlotIndex === idx ? (
-                      <div className="flex flex-col gap-3 w-full">
-                        <div className="flex items-center gap-4">
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-indigo-700 font-bold">
+            </div>
+            
+            <div className="p-6 space-y-6">
+              <div>
+                <label className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant block mb-2">FIRST MATCH START TIME</label>
+                <input
+                  type="datetime-local"
+                  value={batchStart}
+                  onChange={(e) => setBatchStart(e.target.value)}
+                  className="w-full bg-background border border-outline-variant text-on-surface font-mono p-3 rounded-none focus:outline-none focus:border-primary-container transition-colors"
+                />
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <label className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant block mb-2">MATCH HALF (MINS)</label>
+                  <input
+                    type="number"
+                    value={matchHalf}
+                    onChange={(e) => setMatchHalf(e.target.value)}
+                    className="w-full bg-background border border-outline-variant text-on-surface font-mono p-3 rounded-none focus:outline-none focus:border-primary-container transition-colors"
+                    min="1"
+                  />
+                </div>
+                <div>
+                  <label className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant block mb-2">HALF TIME (MINS)</label>
+                  <input
+                    type="number"
+                    value={halfTime}
+                    onChange={(e) => setHalfTime(e.target.value)}
+                    className="w-full bg-background border border-outline-variant text-on-surface font-mono p-3 rounded-none focus:outline-none focus:border-primary-container transition-colors"
+                    min="0"
+                  />
+                </div>
+                <div>
+                  <label className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant block mb-2">BUFFER (MINS)</label>
+                  <input
+                    type="number"
+                    value={bufferMins}
+                    onChange={(e) => setBufferMins(e.target.value)}
+                    className="w-full bg-background border border-outline-variant text-on-surface font-mono p-3 rounded-none focus:outline-none focus:border-primary-container transition-colors"
+                    min="0"
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-outline-variant">
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">TOTAL MATCHES</label>
+                    <span className="font-label-caps text-[8px] uppercase tracking-widest px-2 py-0.5 bg-surface-variant text-on-surface border border-outline-variant">AUTO-CALCULATED</span>
+                  </div>
+                  <input
+                    type="number"
+                    value={totalMatches}
+                    onChange={(e) => setTotalMatches(parseInt(e.target.value) || 0)}
+                    className="w-full bg-surface-variant border border-outline-variant text-on-surface font-mono p-3 rounded-none focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant block mb-2">FIELDS AVAILABLE</label>
+                  <input
+                    type="number"
+                    value={fieldsCount}
+                    onChange={(e) => setFieldsCount(e.target.value)}
+                    className="w-full bg-surface-variant border border-outline-variant text-on-surface font-mono p-3 rounded-none focus:outline-none"
+                    min="1"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-outline-variant space-y-4">
+                <div className="flex justify-between items-center bg-background border border-outline-variant p-4">
+                  <div>
+                    <label className="font-headline-sm uppercase tracking-tighter text-on-surface">FINAL SLOTS TO GENERATE</label>
+                    <p className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">MATCHES ÷ FIELDS</p>
+                  </div>
+                  <input
+                    type="number"
+                    value={numSlots}
+                    onChange={(e) => setNumSlots(e.target.value)}
+                    className="w-24 bg-transparent border-none text-right font-display-md text-3xl tracking-tighter text-on-surface focus:outline-none"
+                    min="1"
+                  />
+                </div>
+                
+                <button 
+                  onClick={handleGenerateBatch} 
+                  disabled={loading || !batchStart} 
+                  className="w-full bg-on-surface text-surface hover:bg-on-surface-variant py-4 font-headline-sm uppercase tracking-tighter transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  GENERATE BATCH
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="border border-outline-variant bg-surface">
+            <div className="p-6 border-b border-outline-variant bg-surface-container flex flex-col md:flex-row md:items-center gap-4 justify-between">
+              <div className="flex items-center gap-3">
+                <Calendar className="text-on-surface" size={20} />
+                <div>
+                  <h2 className="font-headline-sm uppercase tracking-tighter text-on-surface">GENERATED SLOTS</h2>
+                  <p className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">REVIEW AND FINALIZE THE GENERATED TIMEBLOCKS.</p>
+                </div>
+              </div>
+              <button 
+                onClick={handleAddCustomSlot} 
+                className="border border-outline-variant bg-background text-on-surface hover:bg-surface-variant px-4 py-2 font-label-caps text-[10px] uppercase tracking-widest transition-colors flex-shrink-0"
+              >
+                + ADD CUSTOM SLOT
+              </button>
+            </div>
+            
+            <div className="p-0">
+              {slots.length === 0 ? (
+                <div className="p-12 text-center bg-background">
+                  <Clock className="w-8 h-8 text-on-surface-variant mx-auto mb-4" />
+                  <p className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">NO SLOTS GENERATED YET.</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-outline-variant">
+                  {slots.map((slot, idx) => (
+                    <div key={idx} className="p-4 hover:bg-surface-variant/30 transition-colors">
+                      {editingSlotIndex === idx ? (
+                        <div className="flex flex-col md:flex-row items-center gap-4">
+                          <div className="flex items-center justify-center w-12 h-12 border border-outline-variant bg-background font-headline-sm uppercase tracking-tighter text-on-surface">
                             {slot.sequence}
                           </div>
-                          <div className="flex-1 grid grid-cols-2 gap-4 items-center">
-                            <Input type="datetime-local" value={editStart} onChange={e => setEditStart(e.target.value)} />
+                          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                            <input 
+                              type="datetime-local" 
+                              value={editStart} 
+                              onChange={e => setEditStart(e.target.value)} 
+                              className="bg-background border border-outline-variant p-3 font-mono text-sm focus:outline-none focus:border-primary-container"
+                            />
                             {slot.isCustom ? (
-                              <Input type="datetime-local" value={editEnd} onChange={e => setEditEnd(e.target.value)} />
+                              <input 
+                                type="datetime-local" 
+                                value={editEnd} 
+                                onChange={e => setEditEnd(e.target.value)} 
+                                className="bg-background border border-outline-variant p-3 font-mono text-sm focus:outline-none focus:border-primary-container"
+                              />
                             ) : (
-                              <div className="text-sm font-medium text-slate-600 dark:text-zinc-400 bg-slate-50 dark:bg-zinc-900/50 border border-slate-200 dark:border-zinc-800 rounded-md px-3 py-2 flex items-center h-10 shadow-inner">
-                                Ends at: {editStart ? new Date(new Date(editStart).getTime() + ((parseInt(matchHalf) || 0) * 2 + (parseInt(halfTime) || 0)) * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+                              <div className="flex items-center bg-surface-variant border border-outline-variant p-3 font-mono text-sm text-on-surface-variant h-full">
+                                ENDS AT: {editStart ? new Date(new Date(editStart).getTime() + ((parseInt(matchHalf) || 0) * 2 + (parseInt(halfTime) || 0)) * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
                               </div>
                             )}
                           </div>
                           <div className="flex gap-2">
-                            <Button variant="default" size="icon" onClick={() => handleSaveSlot(idx)} className="bg-emerald-600 hover:bg-emerald-700 text-white">
-                              <Save className="h-4 w-4" />
-                            </Button>
-                            <Button variant="outline" size="icon" onClick={handleCancelEdit}>
-                              <X className="h-4 w-4" />
-                            </Button>
+                            <button onClick={() => handleSaveSlot(idx)} className="bg-primary-container text-on-primary-container p-3 hover:bg-primary-container/90 transition-colors">
+                              <Save size={18} />
+                            </button>
+                            <button onClick={handleCancelEdit} className="border border-outline-variant bg-background p-3 text-on-surface hover:bg-surface-variant transition-colors">
+                              <X size={18} />
+                            </button>
                           </div>
                         </div>
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-between w-full">
-                        <div className="flex items-center gap-4">
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-indigo-700 font-bold">
-                            {slot.sequence}
+                      ) : (
+                        <div className="flex items-center justify-between w-full">
+                          <div className="flex items-center gap-4">
+                            <div className="flex items-center justify-center w-12 h-12 border border-outline-variant bg-background font-headline-sm uppercase tracking-tighter text-on-surface">
+                              {slot.sequence}
+                            </div>
+                            <div className="font-mono text-base text-on-surface flex items-center gap-2">
+                              {new Date(slot.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} 
+                              <span className="text-on-surface-variant">→</span> 
+                              {new Date(slot.end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </div>
                           </div>
-                          <div className="space-y-1">
-                            <p className="font-semibold text-slate-800 dark:text-zinc-200 flex items-center gap-2">
-                              <Clock className="h-4 w-4 text-slate-400" />
-                              {new Date(slot.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(slot.end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </p>
+                          <div className="flex gap-2">
+                            <button onClick={() => handleEditSlot(idx)} className="text-on-surface-variant hover:text-primary-container p-2 transition-colors">
+                              <Edit size={16} />
+                            </button>
+                            <button onClick={() => handleRemoveSlot(idx)} className="text-on-surface-variant hover:text-error p-2 transition-colors">
+                              <X size={16} />
+                            </button>
                           </div>
                         </div>
-                        <div className="flex gap-2">
-                          <Button variant="ghost" size="icon" onClick={() => handleEditSlot(idx)} className="text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:bg-blue-950/20">
-                            <Edit className="h-5 w-5" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleRemoveSlot(idx)} className="text-slate-400 hover:text-red-500 hover:bg-red-50 dark:bg-red-950/20">
-                            <X className="h-5 w-5" />
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            {slots.length > 0 && (
+              <div className="p-6 border-t border-outline-variant bg-background">
+                <button 
+                  onClick={handleFinalize} 
+                  disabled={loading} 
+                  className="w-full bg-primary-container text-on-primary-container hover:bg-primary-container/90 py-4 font-headline-sm uppercase tracking-tighter transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? (
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  ) : (
+                    <CheckCircle2 className="mr-2 h-5 w-5" />
+                  )}
+                  FINALIZE STRUCTURE & PROCEED TO SCHEDULING
+                </button>
               </div>
             )}
-          </CardContent>
-          {slots.length > 0 && (
-            <CardFooter className="pt-4 border-t bg-slate-50 dark:bg-zinc-900/50/50 p-6">
-              <Button 
-                onClick={handleFinalize} 
-                disabled={loading} 
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-md hover:shadow-lg transition-all h-12 text-base font-semibold rounded-xl"
-              >
-                {loading ? (
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                ) : (
-                  <CheckCircle2 className="mr-2 h-5 w-5" />
-                )}
-                Finalize Structure & Proceed
-              </Button>
-            </CardFooter>
-          )}
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );
