@@ -697,7 +697,7 @@ async def get_granular_playmaking(
 ):
     """Get granular playmaking leaderboards."""
     res = await supabase.table("tournament_player_stats_view").select(
-        "event_player_id, player_name, team_name, player_unique_code, matches_played, key_passes, through_balls, crosses, big_chances_created, ankle_breakers, nutmegs"
+        "event_player_id, player_name, team_name, player_unique_code, matches_played, key_passes, through_balls, crosses, ankle_breakers, nutmegs"
     ).eq("event_id", str(event_id)).execute()
     
     # Python-side sort to return multiple leaderboards
@@ -718,7 +718,7 @@ async def get_granular_goalkeeping(
 ):
     """Get granular goalkeeping leaderboards."""
     res = await supabase.table("tournament_player_stats_view").select(
-        "event_player_id, player_name, team_name, player_unique_code, matches_played, saves, shots_on_target, penalty_saves, saves_1v1, aerial_claims, sweeper_actions"
+        "event_player_id, player_name, team_name, player_unique_code, matches_played, saves, shots_on_target, penalty_saves, saves_1v1"
     ).eq("event_id", str(event_id)).execute()
     
     # Calculate save percentage
