@@ -165,7 +165,7 @@ export function Navigation({
       />
 
       {/* Side Navigation (Desktop + Mobile Drawer) */}
-      <nav className={`flex flex-col h-screen py-6 px-3 bg-surface-container border-r border-outline-variant fixed left-0 top-0 w-64 z-[60] justify-between shrink-0 transform transition-transform duration-300 ease-out ${isMobileMenuOpen || isSidebarOpen ? 'translate-x-0 shadow-2xl md:shadow-none' : '-translate-x-full'}`}>
+      <nav className={`flex flex-col h-screen py-6 px-3 bg-surface-container border-r border-outline-variant fixed left-0 top-0 w-64 z-[60] justify-between shrink-0 transform transition-transform duration-300 ease-out ${isMobileMenuOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'} ${isSidebarOpen ? 'md:translate-x-0 md:shadow-none' : 'md:-translate-x-full'}`}>
         <div className="flex flex-col gap-8 min-h-0">
           {/* Brand */}
           <div className="flex items-center justify-between px-2">
