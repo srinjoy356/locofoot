@@ -2,7 +2,7 @@
 
 import { useEffect, useState, use } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { FileWarning, CheckCircle, Clock } from 'lucide-react';
+import { FileWarning, CheckCircle, Clock, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
 export default function DisputesDashboardPage({ params }: { params: Promise<{ eventId: string }> }) {
@@ -69,161 +69,185 @@ export default function DisputesDashboardPage({ params }: { params: Promise<{ ev
   };
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold dark:text-zinc-100 flex items-center gap-2">
-          <FileWarning className="text-purple-500" /> Disputes & Reports
-        </h1>
-        <p className="text-sm text-slate-500 dark:text-zinc-400">Review and resolve official disputes and referee/player reports.</p>
+    <div className="w-full bg-background min-h-[calc(100vh-64px)] text-on-surface">
+      {/* Top Bar */}
+      <div className="border-b border-outline-variant bg-surface sticky top-0 z-10">
+        <div className="max-w-container-max mx-auto px-margin-mobile md:px-gutter h-14 flex items-center justify-between">
+          <Link href={`/admin/events/${eventId}`} className="flex items-center gap-2 text-on-surface-variant hover:text-on-surface transition-colors">
+            <ArrowLeft size={16} />
+            <span className="font-label-caps text-label-caps uppercase tracking-widest">EVENT DASHBOARD</span>
+          </Link>
+        </div>
       </div>
 
-      <div className="space-y-4">
-        <h2 className="text-xl font-bold dark:text-zinc-100 border-b dark:border-zinc-800 pb-2">Active Disputes</h2>
-        {disputes.length === 0 ? (
-          <p className="text-gray-500 dark:text-zinc-500 italic text-sm">No disputes filed for this event.</p>
-        ) : (
-          <div className="grid gap-4">
-            {disputes.map(dispute => (
-              <div key={dispute.id} className="bg-white dark:bg-zinc-900 border dark:border-zinc-800 rounded p-4 shadow-sm flex flex-col md:flex-row gap-4 justify-between items-start">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className={`text-xs font-bold px-2 py-1 rounded ${
-                      dispute.status === 'OPEN' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
-                      dispute.status === 'UNDER_REVIEW' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
-                      'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                    }`}>
-                      {dispute.status}
-                    </span>
-                    <span className="text-sm font-semibold dark:text-zinc-300 uppercase tracking-wider">{dispute.target_type} DISPUTE</span>
-                    <span className="text-xs text-gray-400">{new Date(dispute.created_at).toLocaleString()}</span>
-                  </div>
-                  
-                  <h3 className="font-bold text-lg dark:text-zinc-100">{dispute.reason}</h3>
-                  <p className="text-sm text-gray-600 dark:text-zinc-400 mt-1">{dispute.description}</p>
-                  
-                  {dispute.target_type === 'MATCH' && dispute.match_id && (
-                    <div className="mt-3 text-sm bg-gray-50 dark:bg-zinc-800 p-2 rounded">
-                      <span className="font-semibold text-gray-700 dark:text-zinc-300">Match in Question:</span> 
-                      {' '}{dispute.matches?.home_team?.team_name || 'TBD'} vs {dispute.matches?.away_team?.team_name || 'TBD'}
-                      <div className="mt-2 flex gap-4">
-                        <Link href={`/admin/events/${eventId}/matches/${dispute.match_id}/recorder`} className="text-blue-600 dark:text-blue-400 hover:underline font-medium">
-                          Open Match Recorder &rarr;
-                        </Link>
-                        {dispute.status === 'APPROVED' && dispute.matches?.match_state !== 'PAUSED' && (
-                          <button 
-                            onClick={async () => {
-                              if (!confirm("Are you sure you want to reopen this match? This will change the match state to PAUSED, allowing the recorder to be used again.")) return;
-                              const { data: { session } } = await supabase.auth.getSession();
-                              const res = await fetch(`/api/v1/events/${eventId}/matches/${dispute.match_id}/referee/state`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
-                                body: JSON.stringify({ idempotency_key: crypto.randomUUID(), new_state: 'PAUSED' })
-                              });
-                              if (res.ok) {
-                                alert("Match reopened successfully! You can now edit events in the recorder.");
-                                setDisputes(prev => prev.map(d => d.id === dispute.id ? { ...d, matches: { ...d.matches, match_state: 'PAUSED' } } : d));
-                              }
-                              else alert("Failed to reopen match.");
-                            }} 
-                            className="text-amber-600 dark:text-amber-500 hover:underline font-medium"
-                          >
-                            Reopen Match &rarr;
-                          </button>
-                        )}
-                        {dispute.status === 'APPROVED' && dispute.matches?.match_state === 'PAUSED' && (
-                          <button 
-                            onClick={async () => {
-                              if (!confirm("Are you sure you want to finalize this match and close the dispute?")) return;
-                              const { data: { session } } = await supabase.auth.getSession();
-                              
-                              // First update match to COMPLETED
-                              const matchRes = await fetch(`/api/v1/events/${eventId}/matches/${dispute.match_id}/referee/state`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
-                                body: JSON.stringify({ idempotency_key: crypto.randomUUID(), new_state: 'COMPLETED' })
-                              });
-                              
-                              if (matchRes.ok) {
-                                // Then close dispute as MODIFIED
-                                await updateDisputeStatus(dispute.id, 'MODIFIED');
-                                alert("Match finalized and dispute closed successfully!");
-                              } else {
-                                alert("Failed to finalize match.");
-                              }
-                            }} 
-                            className="text-green-600 dark:text-green-500 hover:underline font-medium flex items-center gap-1"
-                          >
-                            <CheckCircle className="w-4 h-4" /> Finalize Match & Close Dispute
-                          </button>
-                        )}
-                      </div>
+      <div className="max-w-container-max mx-auto px-margin-mobile md:px-gutter py-8 space-y-12">
+        <div className="relative overflow-hidden border border-outline-variant bg-[#151816]">
+          <div className="absolute inset-0 z-0">
+            <img alt="" aria-hidden="true" className="w-full h-full object-cover object-center  opacity-25 " src="/turf/stadium.jpg" />
+            <div className="absolute inset-0 bg-gradient-to-r from-background via-background/85 to-background/40 z-10" />
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent z-10" />
+          </div>
+          <div className="relative z-20 p-6 md:p-8">
+            <span className="mb-3 flex items-center gap-2 font-label-caps text-label-caps text-primary-container uppercase tracking-widest">
+              <FileWarning size={14} /> Event Operations
+            </span>
+            <h1 className="font-display-lg text-display-lg md:text-[56px] uppercase tracking-tighter leading-none text-on-surface">
+              Disputes & Reports
+            </h1>
+            <p className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant mt-4 max-w-xl">
+              Review and resolve official disputes and referee/player reports.
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <h2 className="font-headline-sm uppercase tracking-tighter text-on-surface border-b border-outline-variant pb-2">Active Disputes</h2>
+          {disputes.length === 0 ? (
+            <p className="font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant">No disputes filed for this event.</p>
+          ) : (
+            <div className="grid gap-4">
+              {disputes.map(dispute => (
+                <div key={dispute.id} className="bg-surface border border-outline-variant p-4 flex flex-col md:flex-row gap-4 justify-between items-start">
+                  <div className="flex-1">
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
+                      <span className={`font-label-caps text-[10px] uppercase tracking-widest px-2 py-1 border ${
+                        dispute.status === 'OPEN' ? 'border-error bg-error/10 text-error' :
+                        dispute.status === 'UNDER_REVIEW' ? 'border-yellow-400 bg-yellow-400/10 text-yellow-400' :
+                        'border-primary-container bg-primary-container/10 text-primary-container'
+                      }`}>
+                        {dispute.status}
+                      </span>
+                      <span className="font-label-caps text-[10px] text-on-surface uppercase tracking-widest">{dispute.target_type} DISPUTE</span>
+                      <span className="font-mono text-[10px] text-on-surface-variant">{new Date(dispute.created_at).toLocaleString()}</span>
                     </div>
-                  )}
-                </div>
-                
-                <div className="flex md:flex-col gap-2 w-full md:w-auto">
-                  {dispute.status === 'OPEN' && (
-                    <button onClick={() => updateDisputeStatus(dispute.id, 'UNDER_REVIEW')} className="flex-1 bg-amber-600 text-white px-3 py-1.5 text-sm rounded shadow-sm hover:bg-amber-700 flex justify-center items-center gap-1">
-                      <Clock className="w-4 h-4" /> Review
-                    </button>
-                  )}
-                  {(dispute.status === 'OPEN' || dispute.status === 'UNDER_REVIEW') && (
-                    <>
-                      <button onClick={() => updateDisputeStatus(dispute.id, 'APPROVED')} className="flex-1 bg-green-600 text-white px-3 py-1.5 text-sm rounded shadow-sm hover:bg-green-700 flex justify-center items-center gap-1">
-                        <CheckCircle className="w-4 h-4" /> Approve
-                      </button>
-                      <button onClick={() => updateDisputeStatus(dispute.id, 'REJECTED')} className="flex-1 bg-gray-600 text-white px-3 py-1.5 text-sm rounded shadow-sm hover:bg-gray-700 flex justify-center items-center gap-1">
-                        Reject
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
 
-      <div className="space-y-4">
-        <h2 className="text-xl font-bold dark:text-zinc-100 border-b dark:border-zinc-800 pb-2">Incident Reports</h2>
-        {reports.length === 0 ? (
-          <p className="text-gray-500 dark:text-zinc-500 italic text-sm">No reports filed for this event.</p>
-        ) : (
-          <div className="grid gap-4">
-            {reports.map(report => (
-              <div key={report.id} className="bg-white dark:bg-zinc-900 border dark:border-zinc-800 rounded p-4 shadow-sm flex flex-col md:flex-row gap-4 justify-between items-start">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className={`text-xs font-bold px-2 py-1 rounded ${
-                      report.status === 'OPEN' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
-                      'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                    }`}>
-                      {report.status}
-                    </span>
-                    <span className="text-sm font-semibold dark:text-zinc-300 uppercase tracking-wider">{report.target_type} REPORT</span>
-                    <span className="text-xs text-gray-400">{new Date(report.created_at).toLocaleString()}</span>
+                    <h3 className="font-headline-sm uppercase tracking-tighter text-on-surface">{dispute.reason}</h3>
+                    <p className="font-body-sm text-on-surface-variant mt-1">{dispute.description}</p>
+
+                    {dispute.target_type === 'MATCH' && dispute.match_id && (
+                      <div className="mt-3 border border-outline-variant bg-background p-3 font-body-sm text-on-surface">
+                        <span className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">Match in Question:</span>
+                        {' '}{dispute.matches?.home_team?.team_name || 'TBD'} vs {dispute.matches?.away_team?.team_name || 'TBD'}
+                        <div className="mt-2 flex flex-wrap gap-4">
+                          <Link href={`/admin/events/${eventId}/matches/${dispute.match_id}/recorder`} className="text-primary-container hover:text-primary-fixed font-label-caps text-[10px] uppercase tracking-widest transition-colors">
+                            Open Match Recorder &rarr;
+                          </Link>
+                          {dispute.status === 'APPROVED' && dispute.matches?.match_state !== 'PAUSED' && (
+                            <button
+                              onClick={async () => {
+                                if (!confirm("Are you sure you want to reopen this match? This will change the match state to PAUSED, allowing the recorder to be used again.")) return;
+                                const { data: { session } } = await supabase.auth.getSession();
+                                const res = await fetch(`/api/v1/events/${eventId}/matches/${dispute.match_id}/referee/state`, {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
+                                  body: JSON.stringify({ idempotency_key: crypto.randomUUID(), new_state: 'PAUSED' })
+                                });
+                                if (res.ok) {
+                                  alert("Match reopened successfully! You can now edit events in the recorder.");
+                                  setDisputes(prev => prev.map(d => d.id === dispute.id ? { ...d, matches: { ...d.matches, match_state: 'PAUSED' } } : d));
+                                }
+                                else alert("Failed to reopen match.");
+                              }}
+                              className="text-yellow-400 hover:text-yellow-400/80 font-label-caps text-[10px] uppercase tracking-widest transition-colors"
+                            >
+                              Reopen Match &rarr;
+                            </button>
+                          )}
+                          {dispute.status === 'APPROVED' && dispute.matches?.match_state === 'PAUSED' && (
+                            <button
+                              onClick={async () => {
+                                if (!confirm("Are you sure you want to finalize this match and close the dispute?")) return;
+                                const { data: { session } } = await supabase.auth.getSession();
+
+                                // First update match to COMPLETED
+                                const matchRes = await fetch(`/api/v1/events/${eventId}/matches/${dispute.match_id}/referee/state`, {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
+                                  body: JSON.stringify({ idempotency_key: crypto.randomUUID(), new_state: 'COMPLETED' })
+                                });
+
+                                if (matchRes.ok) {
+                                  // Then close dispute as MODIFIED
+                                  await updateDisputeStatus(dispute.id, 'MODIFIED');
+                                  alert("Match finalized and dispute closed successfully!");
+                                } else {
+                                  alert("Failed to finalize match.");
+                                }
+                              }}
+                              className="text-primary-container hover:text-primary-fixed font-label-caps text-[10px] uppercase tracking-widest flex items-center gap-1 transition-colors"
+                            >
+                              <CheckCircle className="w-4 h-4" /> Finalize Match & Close Dispute
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  
-                  <h3 className="font-bold text-lg dark:text-zinc-100">{report.reason}</h3>
-                  <p className="text-sm text-gray-600 dark:text-zinc-400 mt-1">{report.description}</p>
-                </div>
-                
-                <div className="flex md:flex-col gap-2 w-full md:w-auto">
-                  {report.status === 'OPEN' && (
-                    <>
-                      <button onClick={() => updateReportStatus(report.id, 'ACTIONED')} className="flex-1 bg-green-600 text-white px-3 py-1.5 text-sm rounded shadow-sm hover:bg-green-700 flex justify-center items-center gap-1">
-                        <CheckCircle className="w-4 h-4" /> Actioned
+
+                  <div className="flex md:flex-col gap-2 w-full md:w-auto">
+                    {dispute.status === 'OPEN' && (
+                      <button onClick={() => updateDisputeStatus(dispute.id, 'UNDER_REVIEW')} className="flex-1 border border-yellow-400 text-yellow-400 px-3 py-1.5 font-label-caps text-[10px] uppercase tracking-widest hover:bg-yellow-400/10 flex justify-center items-center gap-1 transition-colors">
+                        <Clock className="w-4 h-4" /> Review
                       </button>
-                      <button onClick={() => updateReportStatus(report.id, 'DISMISSED')} className="flex-1 bg-gray-600 text-white px-3 py-1.5 text-sm rounded shadow-sm hover:bg-gray-700 flex justify-center items-center gap-1">
-                        Dismiss
-                      </button>
-                    </>
-                  )}
+                    )}
+                    {(dispute.status === 'OPEN' || dispute.status === 'UNDER_REVIEW') && (
+                      <>
+                        <button onClick={() => updateDisputeStatus(dispute.id, 'APPROVED')} className="flex-1 bg-primary-container text-on-primary-container px-3 py-1.5 font-label-caps text-[10px] uppercase tracking-widest hover:bg-primary-fixed flex justify-center items-center gap-1 transition-colors">
+                          <CheckCircle className="w-4 h-4" /> Approve
+                        </button>
+                        <button onClick={() => updateDisputeStatus(dispute.id, 'REJECTED')} className="flex-1 border border-outline-variant text-on-surface px-3 py-1.5 font-label-caps text-[10px] uppercase tracking-widest hover:bg-surface-variant flex justify-center items-center gap-1 transition-colors">
+                          Reject
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-4">
+          <h2 className="font-headline-sm uppercase tracking-tighter text-on-surface border-b border-outline-variant pb-2">Incident Reports</h2>
+          {reports.length === 0 ? (
+            <p className="font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant">No reports filed for this event.</p>
+          ) : (
+            <div className="grid gap-4">
+              {reports.map(report => (
+                <div key={report.id} className="bg-surface border border-outline-variant p-4 flex flex-col md:flex-row gap-4 justify-between items-start">
+                  <div className="flex-1">
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
+                      <span className={`font-label-caps text-[10px] uppercase tracking-widest px-2 py-1 border ${
+                        report.status === 'OPEN' ? 'border-error bg-error/10 text-error' :
+                        'border-primary-container bg-primary-container/10 text-primary-container'
+                      }`}>
+                        {report.status}
+                      </span>
+                      <span className="font-label-caps text-[10px] text-on-surface uppercase tracking-widest">{report.target_type} REPORT</span>
+                      <span className="font-mono text-[10px] text-on-surface-variant">{new Date(report.created_at).toLocaleString()}</span>
+                    </div>
+
+                    <h3 className="font-headline-sm uppercase tracking-tighter text-on-surface">{report.reason}</h3>
+                    <p className="font-body-sm text-on-surface-variant mt-1">{report.description}</p>
+                  </div>
+
+                  <div className="flex md:flex-col gap-2 w-full md:w-auto">
+                    {report.status === 'OPEN' && (
+                      <>
+                        <button onClick={() => updateReportStatus(report.id, 'ACTIONED')} className="flex-1 bg-primary-container text-on-primary-container px-3 py-1.5 font-label-caps text-[10px] uppercase tracking-widest hover:bg-primary-fixed flex justify-center items-center gap-1 transition-colors">
+                          <CheckCircle className="w-4 h-4" /> Actioned
+                        </button>
+                        <button onClick={() => updateReportStatus(report.id, 'DISMISSED')} className="flex-1 border border-outline-variant text-on-surface px-3 py-1.5 font-label-caps text-[10px] uppercase tracking-widest hover:bg-surface-variant flex justify-center items-center gap-1 transition-colors">
+                          Dismiss
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -42,7 +42,7 @@ export function PlayersClientTable({ players, eventSlug }: { players: any[], eve
 
   const SortIcon = ({ column }: { column: SortKey }) => {
     if (sortKey !== column) return <ArrowUpDown className="w-3 h-3 ml-1 opacity-20" />;
-    return sortDir === 'asc' ? <ArrowUp className="w-3 h-3 ml-1 text-locofoot-500" /> : <ArrowDown className="w-3 h-3 ml-1 text-locofoot-500" />;
+    return sortDir === 'asc' ? <ArrowUp className="w-3 h-3 ml-1 text-primary-container" /> : <ArrowDown className="w-3 h-3 ml-1 text-primary-container" />;
   };
 
   const Th = ({ label, column }: { label: string, column: SortKey }) => (

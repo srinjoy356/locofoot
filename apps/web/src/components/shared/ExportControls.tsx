@@ -14,13 +14,13 @@ export function ExportControls({ filename, data, columns }: Props) {
     <div className="flex gap-2 print:hidden">
       <button 
         onClick={() => exportToCSV(filename, data, columns)}
-        className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 text-xs font-semibold rounded transition-colors border dark:border-zinc-700"
+        className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container hover:bg-surface-variant text-on-surface text-xs font-semibold transition-colors border border-outline-variant"
       >
         <Download size={14} /> CSV
       </button>
       <button 
         onClick={() => window.print()}
-        className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 text-xs font-semibold rounded transition-colors border dark:border-zinc-700"
+        className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container hover:bg-surface-variant text-on-surface text-xs font-semibold transition-colors border border-outline-variant"
       >
         <Printer size={14} /> PDF
       </button>

@@ -42,6 +42,7 @@ class EventUpdate(BaseModel):
     slug: Optional[str] = None
     logo_media_id: Optional[str] = None
     banner_media_id: Optional[str] = None
+    rules: Optional[str] = None
     venue_id: Optional[str] = None
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None

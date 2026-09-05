@@ -280,13 +280,23 @@ export default function AdminSlotsPage() {
       </div>
 
       <div className="max-w-[1000px] mx-auto px-margin-mobile md:px-gutter py-8 space-y-12">
-        <div>
-          <h1 className="font-display-lg text-display-lg md:text-[56px] uppercase tracking-tighter leading-none text-on-surface">
-            SLOT CONFIGURATOR
-          </h1>
-          <p className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant mt-4 max-w-xl">
-            DESIGN THE TIMEBLOCKS FOR YOUR TOURNAMENT FIELDS BEFORE LIVE SCHEDULING.
-          </p>
+        <div className="relative overflow-hidden border border-outline-variant bg-[#151816]">
+          <div className="absolute inset-0 z-0">
+            <img alt="" aria-hidden="true" className="w-full h-full object-cover object-center  opacity-25 " src="/turf/pitch-lines.jpg" />
+            <div className="absolute inset-0 bg-gradient-to-r from-background via-background/85 to-background/40 z-10" />
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent z-10" />
+          </div>
+          <div className="relative z-20 p-6 md:p-8">
+            <span className="mb-3 block font-label-caps text-label-caps text-primary-container uppercase tracking-widest">
+              Pre-Match Setup
+            </span>
+            <h1 className="font-display-lg text-display-lg md:text-[56px] uppercase tracking-tighter leading-none text-on-surface">
+              SLOT CONFIGURATOR
+            </h1>
+            <p className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant mt-4 max-w-xl">
+              DESIGN THE TIMEBLOCKS FOR YOUR TOURNAMENT FIELDS BEFORE LIVE SCHEDULING.
+            </p>
+          </div>
         </div>
 
         {error && (
@@ -390,7 +400,7 @@ export default function AdminSlotsPage() {
                     type="number"
                     value={numSlots}
                     onChange={(e) => setNumSlots(e.target.value)}
-                    className="w-24 bg-transparent border-none text-right font-display-md text-3xl tracking-tighter text-on-surface focus:outline-none"
+                    className="w-24 bg-transparent border-none text-right font-display-lg text-3xl tracking-tighter text-on-surface focus:outline-none"
                     min="1"
                   />
                 </div>

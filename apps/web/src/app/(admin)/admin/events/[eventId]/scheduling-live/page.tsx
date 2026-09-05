@@ -279,14 +279,25 @@ export default function SchedulingLivePage() {
       </div>
 
       <div className="max-w-container-max mx-auto px-margin-mobile md:px-gutter py-8 space-y-8">
-        <div>
-          <h1 className="font-display-lg text-display-lg md:text-[56px] uppercase tracking-tighter leading-none text-on-surface flex items-center gap-4">
-            <Zap className="h-10 w-10 text-primary-container hidden md:block" />
-            LIVE SCHEDULING
-          </h1>
-          <p className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant mt-4 max-w-xl">
-            ASSIGN FIXTURES DYNAMICALLY INTO AVAILABLE SLOTS WHILE BROADCASTING LIVE.
-          </p>
+        <div className="relative overflow-hidden border border-outline-variant bg-[#151816]">
+          <div className="absolute inset-0 z-0">
+            <img alt="" aria-hidden="true" className="w-full h-full object-cover object-center  opacity-25 " src="/turf/stadium.jpg" />
+            <div className="absolute inset-0 bg-gradient-to-r from-background via-background/85 to-background/40 z-10" />
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent z-10" />
+          </div>
+          <div className="relative z-20 p-6 md:p-8">
+            <span className="flex items-center gap-2 mb-3 font-label-caps text-label-caps text-primary-container uppercase tracking-widest">
+              <span className="w-2 h-2 rounded-full bg-primary-container animate-pulse shadow-[0_0_8px_rgba(57,255,106,0.8)]" />
+              Live Ops
+            </span>
+            <h1 className="font-display-lg text-display-lg md:text-[56px] uppercase tracking-tighter leading-none text-on-surface flex items-center gap-4">
+              <Zap className="h-10 w-10 text-primary-container hidden md:block" />
+              LIVE SCHEDULING
+            </h1>
+            <p className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant mt-4 max-w-xl">
+              ASSIGN FIXTURES DYNAMICALLY INTO AVAILABLE SLOTS WHILE BROADCASTING LIVE.
+            </p>
+          </div>
         </div>
 
         {error && (

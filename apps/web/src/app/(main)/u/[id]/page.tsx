@@ -7,6 +7,30 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 export default async function PublicProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   
+  let targetId = id;
+
+  const supabase = await createServerSupabaseClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  const currentUser = session?.user || null;
+
+  if (targetId === "me") {
+    if (!currentUser) {
+      return (
+        <div className="w-full flex items-center justify-center min-h-[50vh] bg-background">
+          <div className="text-center space-y-6 p-8 border border-outline-variant bg-surface max-w-md">
+            <span className="material-symbols-outlined text-4xl text-on-surface-variant">person_off</span>
+            <h1 className="font-headline-sm uppercase tracking-tighter text-on-surface">Not Logged In</h1>
+            <p className="font-body-md text-on-surface-variant">You must be logged in to view your own profile.</p>
+            <Link href="/login" className="inline-block border border-outline-variant bg-background hover:bg-surface-variant px-6 py-3 font-label-caps text-[10px] text-on-surface uppercase tracking-widest transition-colors">
+              Go to Login
+            </Link>
+          </div>
+        </div>
+      );
+    }
+    targetId = currentUser.id;
+  }
+
   // Use service role to bypass RLS for public profile data
   const supabaseAdmin = createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -16,37 +40,37 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
   const { data: pData } = await supabaseAdmin
     .from("users")
     .select("*, media_assets(*)")
-    .eq("id", id)
+    .eq("id", targetId)
     .single();
 
   const { data: privacyData } = await supabaseAdmin
     .from("user_privacy_settings")
     .select("*")
-    .eq("user_id", id)
+    .eq("user_id", targetId)
     .single();
 
   if (!pData || !privacyData) {
-    return <div className="p-10 text-center text-slate-500 dark:text-zinc-400">Profile not found.</div>;
+    return <div className="p-10 text-center text-on-surface-variant">Profile not found.</div>;
   }
 
   const profile = pData as unknown as User;
   const avatar = pData.media_assets as MediaAsset | null;
 
-  // Get current user session
-  const supabase = await createServerSupabaseClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  const currentUser = session?.user || null;
-
   return (
     <div className="w-full flex flex-col bg-background text-on-surface min-h-screen pb-12">
       {/* Header Profile Section */}
-      <div className="w-full border-b border-outline-variant bg-[#0b0d0c] pt-12 pb-8 px-margin-mobile md:px-gutter shrink-0">
-        <div className="max-w-container-max mx-auto flex flex-col md:flex-row items-center md:items-end gap-6">
+      <div className="relative w-full overflow-hidden border-b border-outline-variant bg-[#151816] pt-16 pb-8 px-margin-mobile md:px-gutter shrink-0">
+        <div className="absolute inset-0 z-0">
+          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/85 to-background/40 z-10" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent z-10" />
+          <img alt="" aria-hidden="true" className="w-full h-full object-cover  opacity-40 " src="/turf/turf-closeup.jpg" />
+        </div>
+        <div className="relative z-20 max-w-container-max mx-auto flex flex-col md:flex-row items-center md:items-end gap-6">
           <div className="w-32 h-32 md:w-48 md:h-48 border border-outline-variant bg-surface flex items-center justify-center relative shrink-0 overflow-hidden">
             {avatar ? (
               <Image src={avatar.secure_url} alt="Avatar" fill className="object-cover" unoptimized />
             ) : (
-              <span className="text-on-surface-variant font-display-md text-display-md uppercase">
+              <span className="text-on-surface-variant font-display-lg text-display-lg uppercase">
                 {profile.display_name ? profile.display_name.charAt(0) : '?'}
               </span>
             )}

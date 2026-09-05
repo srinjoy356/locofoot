@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { TeamsClientTable } from '@/components/TeamsClientTable';
-import { Shield } from 'lucide-react';
+import { TurfHero } from '@/components/shared/TurfHero';
 
 export default async function TournamentTeamsHubPage({ params }: { params: Promise<{ slug: string }> }) {
   const supabase = await createClient();
@@ -28,23 +28,21 @@ export default async function TournamentTeamsHubPage({ params }: { params: Promi
   const items = res.ok ? await res.json() : [];
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 p-4">
-      <div>
-         <Link href={`/events/${slug}/stats`} className="text-sm text-zinc-400 hover:text-white flex items-center gap-2 w-fit mb-4">
-            ← Back to Overview
-         </Link>
-         <div className="flex items-center gap-3">
-           <div className="w-10 h-10 rounded-xl bg-locofoot-500/20 flex items-center justify-center">
-             <Shield className="w-5 h-5 text-locofoot-400" />
-           </div>
-           <div>
-             <h1 className="text-2xl font-bold text-white tracking-tight">Teams Hub</h1>
-             <p className="text-sm text-zinc-400">{eventData.name}</p>
-           </div>
-         </div>
-      </div>
+    <div className="w-full flex flex-col bg-background text-on-surface min-h-screen">
+      <TurfHero
+        eyebrow={eventData.name}
+        title={<>Teams <span className="text-primary-container">Hub</span></>}
+        image="/turf/aerial-goal.jpg"
+        size="sm"
+      />
 
-      <TeamsClientTable teams={items} eventSlug={slug} />
+      <div className="w-full max-w-container-max mx-auto px-margin-mobile md:px-gutter py-8 space-y-6">
+        <Link href={`/events/${slug}/stats`} className="inline-flex items-center gap-2 w-fit font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant hover:text-primary-container transition-colors">
+          <span className="material-symbols-outlined text-base">arrow_back</span> Back to Overview
+        </Link>
+
+        <TeamsClientTable teams={items} eventSlug={slug} />
+      </div>
     </div>
   );
 }

@@ -36,6 +36,24 @@ export default async function ExplorePage() {
     .order("created_at", { ascending: false })
     .limit(100);
 
+  // Fetch recent matches for the ticker
+  const { data: matchesData } = await supabase
+    .from("matches")
+    .select(`
+      id,
+      status,
+      home_score,
+      away_score,
+      match_started_at,
+      venue_fields ( name ),
+      home_registration:event_team_registrations!matches_home_registration_id_fkey ( team:teams(name) ),
+      away_registration:event_team_registrations!matches_away_registration_id_fkey ( team:teams(name) ),
+      event:events(slug, name)
+    `)
+    .in("status", ["LIVE", "SCHEDULED", "COMPLETED"])
+    .order("created_at", { ascending: false })
+    .limit(10);
+
   // Normalize data for the client
   const events = (eventsData || []).map((e: any) => ({
     id: e.id,
@@ -53,9 +71,21 @@ export default async function ExplorePage() {
     avatar: p.media_assets?.secure_url || null,
   }));
 
+  const matches = (matchesData || []).map((m: any) => ({
+    id: m.id,
+    status: m.status,
+    homeScore: m.home_score,
+    awayScore: m.away_score,
+    homeTeam: m.home_registration?.team?.name || 'TBD',
+    awayTeam: m.away_registration?.team?.name || 'TBD',
+    arena: m.venue_fields?.name || 'TBD',
+    matchStartedAt: m.match_started_at,
+    eventSlug: m.event?.slug || m.event?.name || '',
+  }));
+
   return (
     <div className="w-full h-full flex flex-col md:flex-row">
-      <ExploreClient initialEvents={events} initialPlayers={players} />
+      <ExploreClient initialEvents={events} initialPlayers={players} initialMatches={matches} />
     </div>
   );
 }

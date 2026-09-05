@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { User, FriendshipStatus } from "@locofoot/shared-types";
+import { TurfHero } from "@/components/shared/TurfHero";
 
 export default function FriendsPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -113,9 +114,13 @@ export default function FriendsPage() {
   return (
     <div className="w-full flex flex-col bg-background text-on-surface min-h-screen pb-12">
       {/* Header */}
-      <div className="w-full border-b border-outline-variant bg-[#0b0d0c] pt-12 pb-8 px-margin-mobile md:px-gutter shrink-0">
-        <h1 className="font-display-lg text-display-lg md:text-[64px] uppercase tracking-tighter leading-none text-on-surface">Friends</h1>
-      </div>
+      <TurfHero
+        eyebrow="Your Squad"
+        title="Friends"
+        subtitle="Find players by code, manage requests, and build your network."
+        image="/turf/turf-closeup.jpg"
+        size="sm"
+      />
 
       <div className="w-full max-w-container-max mx-auto px-margin-mobile md:px-gutter py-8 space-y-12">
         {/* Search */}

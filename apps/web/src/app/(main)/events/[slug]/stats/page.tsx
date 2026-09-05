@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { LeaderboardTable } from '@/components/LeaderboardTable';
 import { Card, CardContent } from '@/components/ui/card';
 import { ExportControls } from '@/components/shared/ExportControls';
+import { TurfHero } from '@/components/shared/TurfHero';
 
 export default async function TournamentStatsPage({ params }: { params: Promise<{ slug: string }> }) {
   const supabase = await createClient();
@@ -55,12 +56,17 @@ export default async function TournamentStatsPage({ params }: { params: Promise<
   return (
     <div className="w-full flex flex-col bg-background text-on-surface h-full min-h-screen">
       {/* HEADER */}
-      <div className="w-full border-b border-outline-variant bg-[#0b0d0c] pt-12 pb-0 px-margin-mobile md:px-gutter print:hidden shrink-0">
-        <div className="max-w-container-max mx-auto">
-          <h1 className="font-display-lg text-display-lg md:text-[64px] uppercase tracking-tighter leading-none text-on-surface mb-2">{eventData.name} Statistics</h1>
-          {eventData.format && <div className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">{eventData.format} Format</div>}
-          
-          <div className="flex gap-0 mt-12 overflow-x-auto no-scrollbar border-b border-outline-variant">
+      <div className="print:hidden shrink-0">
+        <TurfHero
+          eyebrow={eventData.name}
+          title={<>Tournament <span className="text-primary-container">Statistics</span></>}
+          subtitle={eventData.format ? `${eventData.format} Format` : undefined}
+          image="/turf/stadium.jpg"
+          size="sm"
+        />
+        <div className="w-full bg-[#0b0d0c] px-margin-mobile md:px-gutter">
+          <div className="max-w-container-max mx-auto">
+            <div className="flex gap-0 overflow-x-auto no-scrollbar border-b border-outline-variant">
             <Link href={`/events/${slug}/stats`} className="px-6 py-4 font-label-caps text-label-caps uppercase tracking-widest bg-surface-variant text-on-surface border-b-2 border-primary-container whitespace-nowrap">Overview</Link>
             <Link href={`/events/${slug}/stats/players`} className="px-6 py-4 font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant hover:bg-surface hover:text-on-surface transition-colors whitespace-nowrap">Players</Link>
             <Link href={`/events/${slug}/stats/teams`} className="px-6 py-4 font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant hover:bg-surface hover:text-on-surface transition-colors whitespace-nowrap">Teams</Link>
@@ -68,6 +74,7 @@ export default async function TournamentStatsPage({ params }: { params: Promise<
             <Link href={`/events/${slug}/stats/form`} className="px-6 py-4 font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant hover:bg-surface hover:text-on-surface transition-colors whitespace-nowrap">Form</Link>
             <Link href={`/events/${slug}/stats/advanced`} className="px-6 py-4 font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant hover:bg-surface hover:text-on-surface transition-colors whitespace-nowrap">Advanced</Link>
             <Link href={`/events/${slug}/stats/granular`} className="px-6 py-4 font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant hover:bg-surface hover:text-on-surface transition-colors whitespace-nowrap flex items-center gap-2">Granular <span className="bg-primary-container text-on-primary-container text-[9px] px-1.5 py-0.5 rounded-none font-black">NEW</span></Link>
+          </div>
           </div>
         </div>
       </div>

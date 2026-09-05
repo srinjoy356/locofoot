@@ -246,8 +246,11 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
       
       {/* Scoreboard */}
       <div className="w-full bg-[#0b0d0c] border-b border-outline-variant relative shrink-0 overflow-hidden min-h-[300px] flex flex-col justify-center py-12 px-margin-mobile md:px-gutter">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#0b0d0c]/80 z-10 pointer-events-none"></div>
-        
+        <div className="absolute inset-0 z-0">
+          <img alt="" aria-hidden="true" className="w-full h-full object-cover object-center  opacity-30 " src="/turf/stadium.jpg" />
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0b0d0c]/70 via-[#0b0d0c]/40 to-[#0b0d0c]/90 z-10 pointer-events-none"></div>
+
         <div className="relative z-20 max-w-container-max mx-auto w-full">
           <div className="flex justify-between items-center mb-12">
             <div className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest flex items-center gap-2">
@@ -312,16 +315,16 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
 
       {/* Dispute Modal */}
       {showDisputeModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
-          <div className="bg-white dark:bg-zinc-900 border dark:border-zinc-800 p-6 rounded-2xl w-full max-w-md shadow-2xl">
-            <h2 className="text-xl font-black text-slate-800 dark:text-zinc-100 mb-4 flex items-center gap-2">
-              <ShieldAlert className="text-red-500" /> Dispute Match Result
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="bg-surface-container border border-outline-variant p-6 md:p-8 w-full max-w-md shadow-2xl">
+            <h2 className="font-headline-lg-mobile text-headline-lg-mobile uppercase tracking-tighter text-on-surface mb-6 flex items-center gap-3 border-b border-outline-variant pb-4">
+              <ShieldAlert className="text-error" /> Dispute Result
             </h2>
-            <form onSubmit={handleDisputeSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-bold text-slate-700 dark:text-zinc-300 mb-1">Reason</label>
-                <select 
-                  className="w-full border border-slate-300 dark:border-zinc-700 p-3 rounded-lg dark:bg-zinc-800 dark:text-white"
+            <form onSubmit={handleDisputeSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <label className="block font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant">Reason</label>
+                <select
+                  className="w-full border border-outline-variant p-4 bg-background text-on-surface font-body-md focus:outline-none focus:border-primary-container transition-colors"
                   value={disputeReason}
                   onChange={e => setDisputeReason(e.target.value)}
                   required
@@ -334,10 +337,10 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
                   <option value="Other">Other</option>
                 </select>
               </div>
-              <div>
-                <label className="block text-sm font-bold text-slate-700 dark:text-zinc-300 mb-1">Details</label>
-                <textarea 
-                  className="w-full border border-slate-300 dark:border-zinc-700 p-3 rounded-lg dark:bg-zinc-800 dark:text-white"
+              <div className="space-y-2">
+                <label className="block font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant">Details</label>
+                <textarea
+                  className="w-full border border-outline-variant p-4 bg-background text-on-surface font-body-md focus:outline-none focus:border-primary-container transition-colors resize-y"
                   rows={4}
                   placeholder="Provide details and evidence for the dispute..."
                   value={disputeDescription}
@@ -346,8 +349,8 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
                 />
               </div>
               <div className="flex justify-end gap-3 pt-2">
-                <button type="button" onClick={() => setShowDisputeModal(false)} className="px-4 py-2 text-slate-600 dark:text-zinc-400 font-bold hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-lg">Cancel</button>
-                <button type="submit" disabled={isSubmittingDispute} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg disabled:opacity-50">
+                <button type="button" onClick={() => setShowDisputeModal(false)} className="px-6 py-3 text-on-surface-variant font-label-caps text-label-caps uppercase tracking-widest hover:bg-surface-variant transition-colors">Cancel</button>
+                <button type="submit" disabled={isSubmittingDispute} className="px-6 py-3 bg-error text-on-error font-label-caps text-label-caps uppercase tracking-widest hover:opacity-90 transition-opacity disabled:opacity-50">
                   {isSubmittingDispute ? 'Submitting...' : 'Submit Dispute'}
                 </button>
               </div>

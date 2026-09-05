@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { TurfHero } from "@/components/shared/TurfHero";
 
 export default function EventsListPage() {
   const [events, setEvents] = useState<any[]>([]);
@@ -17,20 +18,50 @@ export default function EventsListPage() {
   }, [supabase]);
 
   return (
-    <div className="p-8 max-w-4xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold mb-6">Explore Events</h1>
-      <div className="grid gap-4">
-        {events.map(ev => (
-          <Link key={ev.id} href={`/events/${ev.slug || ev.id}`} className="block border p-4 rounded bg-white dark:bg-zinc-900 hover:border-black transition">
-            <h2 className="text-xl font-semibold">{ev.name}</h2>
-            <p className="text-slate-500 dark:text-zinc-400 mt-1 line-clamp-2">{ev.description}</p>
-            <div className="mt-4">
-              <span className="bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 text-xs px-2 py-1 rounded font-medium">Status: {ev.status}</span>
-            </div>
-          </Link>
-        ))}
-        {events.length === 0 && <p className="text-slate-500 dark:text-zinc-400">No events found.</p>}
-      </div>
+    <div className="w-full flex flex-col">
+      <TurfHero
+        eyebrow="Fixtures & Tournaments"
+        title={<>Explore <span className="text-primary-container">Events</span></>}
+        subtitle="Browse live fixtures, upcoming tournaments, and open registrations across every arena."
+        image="/turf/aerial-goal.jpg"
+        size="md"
+      />
+
+      <section className="w-full max-w-container-max mx-auto px-margin-mobile md:px-gutter py-12">
+        {events.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-24 opacity-50 text-center">
+            <span className="material-symbols-outlined text-6xl text-outline-variant mb-4">stadium</span>
+            <h3 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface-variant uppercase tracking-widest">No events found</h3>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {events.map(ev => (
+              <Link
+                key={ev.id}
+                href={`/events/${ev.slug || ev.id}`}
+                className="group bg-[#151816] border border-outline-variant p-6 flex flex-col hover:border-primary-container transition-colors"
+              >
+                <div className="flex justify-between items-start mb-6">
+                  <span className="material-symbols-outlined text-primary-container">stadium</span>
+                  <span className={`font-label-caps text-label-caps px-2 py-1 uppercase border ${ev.status === 'LIVE' ? 'text-primary-container border-primary-container/30 bg-primary-container/10' : 'text-on-surface-variant border-outline-variant'}`}>
+                    {ev.status}
+                  </span>
+                </div>
+                <h2 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface uppercase mb-2 group-hover:text-primary-container transition-colors line-clamp-2">
+                  {ev.name}
+                </h2>
+                {ev.description && (
+                  <p className="font-body-md text-on-surface-variant line-clamp-2 mb-6">{ev.description}</p>
+                )}
+                <div className="mt-auto pt-6 border-t border-outline-variant flex justify-between items-center">
+                  <span className="font-label-caps text-label-caps text-on-surface-variant uppercase">Details</span>
+                  <span className="font-label-caps text-label-caps text-primary-container uppercase group-hover:underline">VIEW &rarr;</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { TurfHero } from "@/components/shared/TurfHero";
 
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -65,9 +66,13 @@ export default function NotificationsPage() {
   return (
     <div className="w-full flex flex-col bg-background text-on-surface min-h-screen pb-12">
       {/* Header */}
-      <div className="w-full border-b border-outline-variant bg-[#0b0d0c] pt-12 pb-8 px-margin-mobile md:px-gutter shrink-0">
-        <h1 className="font-display-lg text-display-lg md:text-[64px] uppercase tracking-tighter leading-none text-on-surface">Notifications</h1>
-      </div>
+      <TurfHero
+        eyebrow="Activity Feed"
+        title="Notifications"
+        subtitle="Invites, referee assignments, and match updates in one place."
+        image="/turf/aerial-field.jpg"
+        size="sm"
+      />
 
       <div className="w-full max-w-container-max mx-auto px-margin-mobile md:px-gutter py-8">
         <div className="border border-outline-variant bg-surface">

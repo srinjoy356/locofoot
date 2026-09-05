@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { TurfHero } from "@/components/shared/TurfHero";
 
 export default function CreateEventPage() {
   const [name, setName] = useState("");
@@ -49,11 +50,15 @@ export default function CreateEventPage() {
   }
 
   return (
-    <div className="w-full bg-background min-h-[calc(100vh-64px)] text-on-surface py-12 md:py-24">
-      <div className="max-w-[600px] mx-auto px-margin-mobile md:px-gutter">
-        <h1 className="font-display-lg text-display-lg md:text-[56px] uppercase tracking-tighter leading-none mb-8 text-on-surface">
-          CREATE EVENT
-        </h1>
+    <div className="w-full flex flex-col bg-background min-h-screen text-on-surface pb-12">
+      <TurfHero
+        eyebrow="Organizer"
+        title={<>Create <span className="text-primary-container">Event</span></>}
+        subtitle="Set up a new tournament or competition."
+        image="/turf/turf-closeup.jpg"
+        size="sm"
+      />
+      <div className="w-full max-w-[600px] mx-auto px-margin-mobile md:px-gutter py-8 md:py-12">
 
         {error && (
           <div className="border border-error bg-error/10 p-4 mb-8">

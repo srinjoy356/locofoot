@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { ArrowLeft, Save, Users, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { TurfHero } from "@/components/shared/TurfHero";
 
 export default function TeamSettingsPage({ params }: { params: Promise<{ slug: string, teamId: string }> }) {
   const [slug, setSlug] = useState("");
@@ -168,14 +169,15 @@ export default function TeamSettingsPage({ params }: { params: Promise<{ slug: s
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-margin-mobile md:px-gutter py-8 space-y-12">
-        <div>
-          <h1 className="font-display-lg text-display-lg md:text-[56px] uppercase tracking-tighter leading-none text-on-surface mb-2">
-            EDIT TEAM
-          </h1>
-          <p className="font-headline-sm uppercase tracking-tighter text-on-surface-variant">{team.name}</p>
-        </div>
+      <TurfHero
+        eyebrow="Team Settings"
+        title="Edit Team"
+        subtitle={team.name}
+        image="/turf/pitch-corner.jpg"
+        size="sm"
+      />
 
+      <div className="max-w-4xl mx-auto px-margin-mobile md:px-gutter py-8 space-y-12">
         {/* Team Details Form */}
         <form onSubmit={handleSaveTeam} className="border border-outline-variant bg-surface p-6 md:p-8 space-y-8">
           <div className="border-b border-outline-variant pb-4 mb-6">
@@ -190,7 +192,7 @@ export default function TeamSettingsPage({ params }: { params: Promise<{ slug: s
                 onChange={e => setTeam({...team, description: e.target.value})}
                 rows={3}
                 placeholder="ABOUT YOUR TEAM..."
-                className="w-full bg-background border border-outline-variant text-on-surface font-body-md p-4 rounded-none focus:outline-none focus:border-primary-container transition-colors resize-none placeholder:text-on-surface-variant/50"
+                className="w-full bg-background border border-outline-variant text-on-surface font-body-md p-4 focus:outline-none focus:border-primary-container transition-colors resize-none placeholder:text-on-surface-variant/50"
               />
             </div>
             
@@ -202,7 +204,7 @@ export default function TeamSettingsPage({ params }: { params: Promise<{ slug: s
                   value={team.instagram_url || ''} 
                   onChange={e => setTeam({...team, instagram_url: e.target.value})}
                   placeholder="HTTPS://INSTAGRAM.COM/..."
-                  className="w-full bg-background border border-outline-variant text-on-surface font-body-md p-4 rounded-none focus:outline-none focus:border-primary-container transition-colors placeholder:text-on-surface-variant/50"
+                  className="w-full bg-background border border-outline-variant text-on-surface font-body-md p-4 focus:outline-none focus:border-primary-container transition-colors placeholder:text-on-surface-variant/50"
                 />
               </div>
               <div>
@@ -212,7 +214,7 @@ export default function TeamSettingsPage({ params }: { params: Promise<{ slug: s
                   value={team.website_url || ''} 
                   onChange={e => setTeam({...team, website_url: e.target.value})}
                   placeholder="HTTPS://..."
-                  className="w-full bg-background border border-outline-variant text-on-surface font-body-md p-4 rounded-none focus:outline-none focus:border-primary-container transition-colors placeholder:text-on-surface-variant/50"
+                  className="w-full bg-background border border-outline-variant text-on-surface font-body-md p-4 focus:outline-none focus:border-primary-container transition-colors placeholder:text-on-surface-variant/50"
                 />
               </div>
               <div>
@@ -222,7 +224,7 @@ export default function TeamSettingsPage({ params }: { params: Promise<{ slug: s
                   value={team.primary_color || ''} 
                   onChange={e => setTeam({...team, primary_color: e.target.value})}
                   placeholder="#000000"
-                  className="w-full bg-background border border-outline-variant text-on-surface font-mono p-4 rounded-none focus:outline-none focus:border-primary-container transition-colors uppercase placeholder:text-on-surface-variant/50"
+                  className="w-full bg-background border border-outline-variant text-on-surface font-mono p-4 focus:outline-none focus:border-primary-container transition-colors uppercase placeholder:text-on-surface-variant/50"
                 />
               </div>
               <div>
@@ -232,7 +234,7 @@ export default function TeamSettingsPage({ params }: { params: Promise<{ slug: s
                   value={team.secondary_color || ''} 
                   onChange={e => setTeam({...team, secondary_color: e.target.value})}
                   placeholder="#FFFFFF"
-                  className="w-full bg-background border border-outline-variant text-on-surface font-mono p-4 rounded-none focus:outline-none focus:border-primary-container transition-colors uppercase placeholder:text-on-surface-variant/50"
+                  className="w-full bg-background border border-outline-variant text-on-surface font-mono p-4 focus:outline-none focus:border-primary-container transition-colors uppercase placeholder:text-on-surface-variant/50"
                 />
               </div>
             </div>
@@ -279,7 +281,7 @@ export default function TeamSettingsPage({ params }: { params: Promise<{ slug: s
                         type="number" 
                         value={player.jersey_number || ''}
                         onChange={e => updateRosterPlayer(idx, 'jersey_number', e.target.value)}
-                        className="w-full bg-background border border-outline-variant text-on-surface font-mono p-3 text-center focus:outline-none focus:border-primary-container transition-colors rounded-none placeholder:text-on-surface-variant/50"
+                        className="w-full bg-background border border-outline-variant text-on-surface font-mono p-3 text-center focus:outline-none focus:border-primary-container transition-colors placeholder:text-on-surface-variant/50"
                         placeholder="-"
                       />
                     </td>
@@ -287,7 +289,7 @@ export default function TeamSettingsPage({ params }: { params: Promise<{ slug: s
                       <select 
                         value={player.position || ''}
                         onChange={e => updateRosterPlayer(idx, 'position', e.target.value)}
-                        className="w-full bg-background border border-outline-variant text-on-surface font-label-caps text-[10px] uppercase tracking-widest p-3 focus:outline-none focus:border-primary-container transition-colors rounded-none"
+                        className="w-full bg-background border border-outline-variant text-on-surface font-label-caps text-[10px] uppercase tracking-widest p-3 focus:outline-none focus:border-primary-container transition-colors"
                       >
                         <option value="">-</option>
                         <option value="GK">GK</option>

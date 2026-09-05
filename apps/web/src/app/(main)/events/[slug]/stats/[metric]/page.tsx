@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { LeaderboardTable } from '@/components/LeaderboardTable';
+import { TurfHero } from '@/components/shared/TurfHero';
 
 const categories = [
   {
@@ -70,42 +71,52 @@ export default async function LeaderboardPage({ params }: { params: Promise<{ sl
   const items = res.ok ? (await res.json()).data : [];
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 p-4 text-zinc-100">
-      <div>
-         <Link href={`/events/${slug}/stats`} className="text-sm text-zinc-400 hover:text-white flex items-center gap-2 w-fit mb-4">
-            ← Back to Overview
-         </Link>
-      </div>
-      
-      <div className="flex flex-col md:flex-row gap-8">
-        <div className="w-full md:w-64 flex-shrink-0 space-y-6">
-          {categories.map((cat) => (
-            <div key={cat.name}>
-              <div className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2 px-3">{cat.name}</div>
-              <div className="space-y-1">
-                {cat.metrics.map(m => (
-                  <Link 
-                    key={m.id} 
-                    href={`/events/${slug}/stats/${m.id}`}
-                    className={`block px-3 py-2 rounded-lg text-sm font-medium transition-colors ${metric === m.id ? 'bg-zinc-800 text-white' : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-300'}`}
-                  >
-                    {m.title}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          ))}
+    <div className="w-full flex flex-col bg-background text-on-surface min-h-screen">
+      <TurfHero
+        eyebrow="Leaderboard"
+        title={mConfig.title}
+        subtitle={`Ranked by ${mConfig.colLabel}`}
+        image="/turf/aerial-goal.jpg"
+        size="sm"
+      />
+
+      <div className="max-w-6xl mx-auto w-full space-y-6 p-4">
+        <div>
+           <Link href={`/events/${slug}/stats`} className="font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant hover:text-on-surface flex items-center gap-2 w-fit mb-4">
+              ← Back to Overview
+           </Link>
         </div>
 
-        <div className="flex-1">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden p-1">
-            <LeaderboardTable 
-              title={mConfig.title}
-              metricLabel={mConfig.colLabel}
-              data={items} 
-              loading={false} 
-              eventSlug={slug}
-            />
+        <div className="flex flex-col md:flex-row gap-8">
+          <div className="w-full md:w-64 flex-shrink-0 space-y-6">
+            {categories.map((cat) => (
+              <div key={cat.name}>
+                <div className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest mb-2 px-3">{cat.name}</div>
+                <div className="space-y-1">
+                  {cat.metrics.map(m => (
+                    <Link
+                      key={m.id}
+                      href={`/events/${slug}/stats/${m.id}`}
+                      className={`block px-3 py-2 font-body-md transition-colors ${metric === m.id ? 'bg-surface-variant text-on-surface' : 'text-on-surface-variant hover:bg-surface hover:text-on-surface'}`}
+                    >
+                      {m.title}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex-1">
+            <div className="bg-surface border border-outline-variant overflow-hidden">
+              <LeaderboardTable
+                title={mConfig.title}
+                metricLabel={mConfig.colLabel}
+                data={items}
+                loading={false}
+                eventSlug={slug}
+              />
+            </div>
           </div>
         </div>
       </div>

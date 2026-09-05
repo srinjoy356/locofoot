@@ -104,10 +104,24 @@ export default function CommandCentrePage({ params }: { params: Promise<{ eventI
       </div>
 
       <div className="max-w-[1400px] mx-auto px-margin-mobile md:px-gutter py-8 space-y-12">
-        <div>
-          <h1 className="font-display-lg text-display-lg md:text-[56px] uppercase tracking-tighter leading-none text-on-surface">
-            COMMAND CENTRE
-          </h1>
+        <div className="relative overflow-hidden border border-outline-variant bg-[#151816]">
+          <div className="absolute inset-0 z-0">
+            <img alt="" aria-hidden="true" className="w-full h-full object-cover object-center  opacity-25 " src="/turf/aerial-goal.jpg" />
+            <div className="absolute inset-0 bg-gradient-to-r from-background via-background/85 to-background/40 z-10" />
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent z-10" />
+          </div>
+          <div className="relative z-20 p-6 md:p-8">
+            <span className="mb-3 flex items-center gap-2 font-label-caps text-label-caps text-primary-container uppercase tracking-widest">
+              <span className="w-2 h-2 rounded-full bg-primary-container animate-pulse shadow-[0_0_8px_rgba(57,255,106,0.8)]" />
+              Live Operations
+            </span>
+            <h1 className="font-display-lg text-display-lg md:text-[56px] uppercase tracking-tighter leading-none text-on-surface">
+              COMMAND CENTRE
+            </h1>
+            <p className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant mt-4 max-w-xl">
+              MONITOR LIVE MATCHES AND BROADCAST ANNOUNCEMENTS ACROSS THE TOURNAMENT.
+            </p>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
@@ -158,7 +172,7 @@ export default function CommandCentrePage({ params }: { params: Promise<{ eventI
                           </div>
                           
                           <div className="flex justify-center">
-                            <div className="bg-background border border-outline-variant px-4 py-2 font-display-md text-[32px] tracking-tighter text-on-surface tabular-nums leading-none">
+                            <div className="bg-background border border-outline-variant px-4 py-2 font-display-sm text-[32px] tracking-tighter text-on-surface tabular-nums leading-none">
                               {m.home_score || 0} - {m.away_score || 0}
                             </div>
                           </div>

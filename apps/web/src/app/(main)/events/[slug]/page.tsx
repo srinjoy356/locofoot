@@ -144,8 +144,12 @@ export default function PublicEventPage({ params }: { params: Promise<{ slug: st
       )}
 
       {/* Hero Header */}
-      <div className="w-full bg-[#0b0d0c] border-b border-outline-variant relative shrink-0 overflow-hidden min-h-[250px] flex flex-col justify-end pt-24 pb-12 px-margin-mobile md:px-gutter text-center">
+      <div className="w-full bg-[#151816] border-b border-outline-variant relative shrink-0 overflow-hidden min-h-[320px] flex flex-col justify-end pt-24 pb-12 px-margin-mobile md:px-gutter text-center">
+        <div className="absolute inset-0 z-0">
+          <img alt="" aria-hidden="true" className="w-full h-full object-cover  opacity-45 " src="/turf/aerial-goal.jpg" />
+        </div>
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent z-10 pointer-events-none"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-transparent to-transparent z-10 pointer-events-none"></div>
         <div className="absolute top-4 right-4 z-20">
           <ShareButton url={eventUrl} title="Share Event" />
         </div>
@@ -208,6 +212,15 @@ export default function PublicEventPage({ params }: { params: Promise<{ slug: st
             <Link href={`/admin/events/${event.id}`} className="border border-yellow-500/50 hover:bg-yellow-500/10 text-yellow-500 px-4 py-2 font-label-caps text-label-caps uppercase tracking-widest transition-colors">
               Admin Dashboard
             </Link>
+          </div>
+        )}
+
+        {event.rules && (
+          <div className="border-t border-outline-variant pt-8">
+            <h2 className="font-headline-lg-mobile text-headline-lg-mobile uppercase tracking-tighter text-on-surface mb-6">Tournament Rules</h2>
+            <div className="bg-surface border border-outline-variant p-6">
+              <p className="font-body-md text-on-surface-variant whitespace-pre-wrap">{event.rules}</p>
+            </div>
           </div>
         )}
 

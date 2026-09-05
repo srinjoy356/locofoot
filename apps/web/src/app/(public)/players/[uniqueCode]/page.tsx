@@ -109,12 +109,11 @@ export default async function PlayerProfilePage({ params }: { params: Promise<{ 
     <div className="w-full h-full flex flex-col bg-background text-on-surface print:bg-white print:text-black">
       
       {/* Header Profile Section */}
-      <div className="w-full bg-[#0b0d0c] border-b border-outline-variant relative shrink-0 overflow-hidden min-h-[300px] flex flex-col justify-end pt-24 pb-12 px-margin-mobile md:px-gutter">
+      <div className="w-full bg-[#151816] border-b border-outline-variant relative shrink-0 overflow-hidden min-h-[300px] flex flex-col justify-end pt-24 pb-12 px-margin-mobile md:px-gutter">
         <div className="absolute inset-0 z-0">
+          <img alt="" aria-hidden="true" className="w-full h-full object-cover  opacity-40 " src="/turf/turf-closeup.jpg" />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent z-10"></div>
-          {avatarUrl && (
-            <Image src={avatarUrl} alt="Avatar" fill className="object-cover filter grayscale opacity-40 mix-blend-luminosity" unoptimized />
-          )}
+          <div className="absolute inset-0 bg-gradient-to-r from-background/70 via-transparent to-transparent z-10"></div>
         </div>
         
         <div className="relative z-20 max-w-container-max mx-auto w-full flex flex-col md:flex-row md:items-end justify-between gap-6">

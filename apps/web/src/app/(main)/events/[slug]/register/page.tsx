@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
+import { TurfHero } from "@/components/shared/TurfHero";
 
 export default function EventRegistrationPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
@@ -99,11 +100,15 @@ export default function EventRegistrationPage({ params }: { params: Promise<{ sl
         </div>
       </div>
 
-      <div className="max-w-[600px] mx-auto px-margin-mobile md:px-gutter py-12 md:py-24">
-        <h1 className="font-display-lg text-display-lg md:text-[56px] uppercase tracking-tighter leading-none mb-8 text-on-surface">
-          REGISTER TEAM
-        </h1>
-        
+      <TurfHero
+        eyebrow={event.name}
+        title={<>Team <span className="text-primary-container">Registration</span></>}
+        subtitle="Name your squad and send invites to build your roster."
+        image="/turf/aerial-field.jpg"
+        size="sm"
+      />
+
+      <div className="max-w-[600px] mx-auto px-margin-mobile md:px-gutter py-12 md:py-16">
         {error && (
           <div className="border border-error bg-error/10 p-4 mb-8">
             <span className="font-label-caps text-[10px] uppercase tracking-widest text-error block mb-1">Error</span>
@@ -120,7 +125,7 @@ export default function EventRegistrationPage({ params }: { params: Promise<{ sl
               <input
                 required
                 type="text"
-                className="w-full bg-background border border-outline-variant text-on-surface font-headline-sm uppercase tracking-tighter p-4 rounded-none focus:outline-none focus:border-primary-container transition-colors placeholder:text-on-surface-variant/50"
+                className="w-full bg-background border border-outline-variant text-on-surface font-headline-sm uppercase tracking-tighter p-4 focus:outline-none focus:border-primary-container transition-colors placeholder:text-on-surface-variant/50"
                 value={teamName}
                 onChange={e => setTeamName(e.target.value)}
                 placeholder="E.G. LOCOFOOT UNITED"
@@ -132,7 +137,7 @@ export default function EventRegistrationPage({ params }: { params: Promise<{ sl
               </label>
               <input
                 type="text"
-                className="w-full bg-background border border-outline-variant text-on-surface font-headline-sm uppercase tracking-tighter p-4 rounded-none focus:outline-none focus:border-primary-container transition-colors placeholder:text-on-surface-variant/50"
+                className="w-full bg-background border border-outline-variant text-on-surface font-headline-sm uppercase tracking-tighter p-4 focus:outline-none focus:border-primary-container transition-colors placeholder:text-on-surface-variant/50"
                 value={teamShortName}
                 onChange={e => setTeamShortName(e.target.value)}
                 placeholder="E.G. LFU"

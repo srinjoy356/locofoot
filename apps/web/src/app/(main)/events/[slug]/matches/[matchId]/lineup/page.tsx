@@ -3,6 +3,7 @@
 import { useState, useEffect, use } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { TurfHero } from '@/components/shared/TurfHero';
 
 export default function LineupPage({ params }: { params: Promise<{ slug: string, matchId: string }> }) {
   const { slug, matchId } = use(params);
@@ -230,13 +231,15 @@ export default function LineupPage({ params }: { params: Promise<{ slug: string,
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-margin-mobile md:px-gutter py-12 md:py-16">
-        <div className="mb-12">
-          <h1 className="font-display-lg text-display-lg md:text-[56px] uppercase tracking-tighter leading-none text-on-surface mb-2">
-            {teamName} LINEUP
-          </h1>
-        </div>
+      <TurfHero
+        eyebrow="Match Lineup"
+        title={teamName ? `${teamName} Lineup` : "Team Lineup"}
+        subtitle="Confirm the starting lineup for this match."
+        image="/turf/pitch-lines.jpg"
+        size="sm"
+      />
 
+      <div className="max-w-3xl mx-auto px-margin-mobile md:px-gutter py-12 md:py-16">
         <div className="border border-outline-variant bg-surface relative">
           {/* Header */}
           <div className="p-6 border-b border-outline-variant bg-surface-container flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -247,7 +250,7 @@ export default function LineupPage({ params }: { params: Promise<{ slug: string,
               </p>
             </div>
             <div className="text-right">
-              <span className={`font-display-md text-[32px] uppercase tracking-tighter ${isValid ? 'text-primary-container' : 'text-on-surface'}`}>
+              <span className={`font-display-lg text-[32px] uppercase tracking-tighter ${isValid ? 'text-primary-container' : 'text-on-surface'}`}>
                 {currentCount} <span className="text-on-surface-variant text-xl">/ {requiredCount}</span>
               </span>
             </div>
@@ -266,7 +269,7 @@ export default function LineupPage({ params }: { params: Promise<{ slug: string,
                   className={`w-full flex items-center justify-between p-4 md:p-6 transition-colors text-left ${isSelected ? 'bg-primary-container/10' : 'bg-surface hover:bg-surface-variant/50'} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   <div className="flex items-center gap-6">
-                    <div className={`w-6 h-6 border flex items-center justify-center shrink-0 rounded-none transition-colors ${isSelected ? 'border-primary-container bg-primary-container' : 'border-outline-variant bg-background'}`}>
+                    <div className={`w-6 h-6 border flex items-center justify-center shrink-0 transition-colors ${isSelected ? 'border-primary-container bg-primary-container' : 'border-outline-variant bg-background'}`}>
                       {isSelected && <svg className="w-4 h-4 text-on-primary-container" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}
                     </div>
                     <div>

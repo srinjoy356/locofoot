@@ -13,7 +13,7 @@ export default async function PublicEventLayout({
   // Actually, the locofoot structure uses slug = event_id in many places, let's use slug as eventId.
   
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col">
       <EmergencyBanner eventId={slug} />
       {children}
     </div>

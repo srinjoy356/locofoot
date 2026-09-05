@@ -44,11 +44,16 @@ async function TeamStatsContent({ slug, teamId }: { slug: string, teamId: string
   return (
     <div className="w-full bg-background min-h-screen text-on-surface">
       {/* Header Profile Section */}
-      <div className="w-full border-b border-outline-variant bg-[#0b0d0c] pt-12 pb-8 px-margin-mobile md:px-gutter shrink-0">
-        <div className="max-w-container-max mx-auto flex flex-col md:flex-row items-center md:items-start justify-between gap-6">
+      <div className="w-full border-b border-outline-variant bg-[#151816] relative overflow-hidden shrink-0 min-h-[280px] flex flex-col justify-end pt-16 pb-10 px-margin-mobile md:px-gutter">
+        <div className="absolute inset-0 z-0">
+          <img alt="" aria-hidden="true" className="w-full h-full object-cover  opacity-45 " src="/turf/stadium.jpg" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent z-10"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-background/70 via-transparent to-transparent z-10"></div>
+        </div>
+        <div className="relative z-20 max-w-container-max mx-auto w-full flex flex-col md:flex-row items-center md:items-end justify-between gap-6">
           <div className="flex flex-col md:flex-row items-center md:items-end gap-6 flex-1">
             <div className="w-32 h-32 border border-outline-variant bg-surface flex items-center justify-center relative shrink-0">
-              <span className="text-on-surface-variant font-display-md text-display-md uppercase">
+              <span className="text-on-surface-variant font-display-lg text-display-lg uppercase">
                 {stats.team_name.charAt(0)}
               </span>
             </div>
@@ -62,7 +67,7 @@ async function TeamStatsContent({ slug, teamId }: { slug: string, teamId: string
               </h1>
             </div>
           </div>
-          
+
           <div className="print:hidden flex flex-col md:flex-row items-center gap-4 shrink-0">
             {isCaptain && (
               <Link href={`/events/${slug}/teams/${teamId}/settings`} className="border border-primary-container bg-primary-container/10 text-primary-container hover:bg-primary-container/20 px-4 py-2 flex items-center gap-2 font-label-caps text-[10px] uppercase tracking-widest transition-colors">
@@ -81,36 +86,36 @@ async function TeamStatsContent({ slug, teamId }: { slug: string, teamId: string
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="border border-outline-variant bg-surface p-6 flex flex-col gap-2">
             <span className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">Matches</span>
-            <span className="font-display-md text-display-md text-on-surface">{stats.matches_played}</span>
+            <span className="font-display-lg text-display-sm text-on-surface">{stats.matches_played}</span>
           </div>
           <div className="border border-outline-variant bg-surface p-6 flex flex-col gap-2">
             <span className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">Wins</span>
-            <span className="font-display-md text-display-md text-primary-container">{stats.wins}</span>
+            <span className="font-display-lg text-display-sm text-primary-container">{stats.wins}</span>
           </div>
           <div className="border border-outline-variant bg-surface p-6 flex flex-col gap-2">
             <span className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">Draws</span>
-            <span className="font-display-md text-display-md text-yellow-500">{stats.draws}</span>
+            <span className="font-display-lg text-display-sm text-yellow-500">{stats.draws}</span>
           </div>
           <div className="border border-outline-variant bg-surface p-6 flex flex-col gap-2">
             <span className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">Losses</span>
-            <span className="font-display-md text-display-md text-error">{stats.losses}</span>
+            <span className="font-display-lg text-display-sm text-error">{stats.losses}</span>
           </div>
           
           <div className="border border-outline-variant bg-surface p-6 flex flex-col gap-2">
             <span className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">Points</span>
-            <span className="font-display-md text-display-md text-on-surface">{stats.points}</span>
+            <span className="font-display-lg text-display-sm text-on-surface">{stats.points}</span>
           </div>
           <div className="border border-outline-variant bg-surface p-6 flex flex-col gap-2">
             <span className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">Goals For</span>
-            <span className="font-display-md text-display-md text-on-surface">{stats.goals_for}</span>
+            <span className="font-display-lg text-display-sm text-on-surface">{stats.goals_for}</span>
           </div>
           <div className="border border-outline-variant bg-surface p-6 flex flex-col gap-2">
             <span className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">Goals Against</span>
-            <span className="font-display-md text-display-md text-on-surface">{stats.goals_against}</span>
+            <span className="font-display-lg text-display-sm text-on-surface">{stats.goals_against}</span>
           </div>
           <div className="border border-outline-variant bg-surface p-6 flex flex-col gap-2">
             <span className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">Goal Diff</span>
-            <span className={`font-display-md text-display-md ${stats.goal_difference > 0 ? 'text-primary-container' : stats.goal_difference < 0 ? 'text-error' : 'text-on-surface'}`}>
+            <span className={`font-display-lg text-display-sm ${stats.goal_difference > 0 ? 'text-primary-container' : stats.goal_difference < 0 ? 'text-error' : 'text-on-surface'}`}>
               {stats.goal_difference > 0 ? '+' : ''}{stats.goal_difference}
             </span>
           </div>
@@ -168,8 +173,18 @@ async function TeamStatsContent({ slug, teamId }: { slug: string, teamId: string
 export default async function TeamStatsPage({ params }: { params: Promise<{ slug: string, teamId: string }> }) {
   const { slug, teamId } = await params;
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6">
-      <Suspense fallback={<div className="animate-pulse space-y-6"><div className="h-8 bg-slate-200 dark:bg-zinc-800 rounded w-1/4"></div><div className="grid grid-cols-4 gap-4"><div className="h-24 bg-slate-200 dark:bg-zinc-800 rounded-xl"></div><div className="h-24 bg-slate-200 dark:bg-zinc-800 rounded-xl"></div><div className="h-24 bg-slate-200 dark:bg-zinc-800 rounded-xl"></div><div className="h-24 bg-slate-200 dark:bg-zinc-800 rounded-xl"></div></div></div>}>
+    <div className="w-full">
+      <Suspense fallback={
+        <div className="w-full max-w-container-max mx-auto px-margin-mobile md:px-gutter py-12 animate-pulse space-y-6">
+          <div className="h-8 bg-surface-variant w-1/4"></div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="h-24 bg-surface-variant"></div>
+            <div className="h-24 bg-surface-variant"></div>
+            <div className="h-24 bg-surface-variant"></div>
+            <div className="h-24 bg-surface-variant"></div>
+          </div>
+        </div>
+      }>
         <TeamStatsContent slug={slug} teamId={teamId} />
       </Suspense>
     </div>

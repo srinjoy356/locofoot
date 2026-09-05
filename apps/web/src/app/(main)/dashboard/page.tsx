@@ -8,6 +8,7 @@ import { User, MediaAsset } from "@locofoot/shared-types";
 import { User as SupabaseAuthUser } from "@supabase/supabase-js";
 import Image from "next/image";
 import { ShareButton } from "@/components/shared/ShareButton";
+import { TurfHero } from "@/components/shared/TurfHero";
 
 export default function DashboardPage() {
   const [user, setUser] = useState<SupabaseAuthUser | null>(null);
@@ -87,17 +88,14 @@ export default function DashboardPage() {
   return (
     <div className="w-full flex flex-col bg-background text-on-surface min-h-screen pb-12">
       {/* Header */}
-      <div className="w-full border-b border-outline-variant bg-[#0b0d0c] pt-12 pb-8 px-margin-mobile md:px-gutter shrink-0 flex justify-between items-end">
-        <div>
-          <h1 className="font-display-lg text-display-lg md:text-[64px] uppercase tracking-tighter leading-none text-on-surface">Dashboard</h1>
-          <p className="font-body-md text-on-surface-variant mt-2 max-w-xl">Manage your profile, view your active assignments, and update your settings.</p>
-        </div>
-        {profileUrl && (
-          <div className="hidden md:block">
-            <ShareButton url={profileUrl} title="Share Profile" />
-          </div>
-        )}
-      </div>
+      <TurfHero
+        eyebrow="Your Command Hub"
+        title={profile?.display_name ? <>Welcome, <span className="text-primary-container">{profile.display_name}</span></> : "Dashboard"}
+        subtitle="Manage your profile, view your active assignments, and update your settings."
+        image="/turf/stadium.jpg"
+        size="md"
+        actions={profileUrl ? <ShareButton url={profileUrl} title="Share Profile" /> : undefined}
+      />
 
       <div className="w-full max-w-container-max mx-auto px-margin-mobile md:px-gutter py-8 space-y-12">
         {/* Profile Section */}

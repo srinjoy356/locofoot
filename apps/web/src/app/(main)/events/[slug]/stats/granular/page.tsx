@@ -2,8 +2,8 @@ import React from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { GranularDashboard } from '@/components/analytics/GranularDashboard';
-import { Target } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
+import { TurfHero } from '@/components/shared/TurfHero';
 
 async function GranularAnalyticsContent({ slug }: { slug: string }) {
   const supabase = await createClient();
@@ -34,28 +34,29 @@ async function GranularAnalyticsContent({ slug }: { slug: string }) {
   const goalkeeping = goalkeepingRes.ok ? await goalkeepingRes.json() : {};
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 p-4">
-      <div>
-         <Link href={`/events/${slug}/stats`} className="text-sm text-zinc-400 hover:text-white flex items-center gap-2 w-fit mb-4">
-            ← Back to Overview
-         </Link>
-         <div className="flex items-center gap-3">
-           <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center">
-             <Target className="w-5 h-5 text-orange-400" />
-           </div>
-           <div>
-             <h1 className="text-2xl font-bold text-white tracking-tight">Granular Event Analytics</h1>
-             <p className="text-sm text-zinc-400">{eventData.name}</p>
-           </div>
-         </div>
-      </div>
-
-      <GranularDashboard 
-        shotMap={shotMap || []} 
-        playmaking={playmaking || {}} 
-        goalkeeping={goalkeeping || {}} 
-        eventSlug={slug}
+    <div className="w-full flex flex-col bg-background text-on-surface min-h-screen">
+      <TurfHero
+        eyebrow="Analytics"
+        title="Granular Event Analytics"
+        subtitle={eventData.name}
+        image="/turf/turf-closeup.jpg"
+        size="sm"
       />
+
+      <div className="max-w-6xl mx-auto w-full space-y-6 p-4">
+        <div>
+           <Link href={`/events/${slug}/stats`} className="font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant hover:text-on-surface flex items-center gap-2 w-fit">
+              ← Back to Overview
+           </Link>
+        </div>
+
+        <GranularDashboard
+          shotMap={shotMap || []}
+          playmaking={playmaking || {}}
+          goalkeeping={goalkeeping || {}}
+          eventSlug={slug}
+        />
+      </div>
     </div>
   );
 }

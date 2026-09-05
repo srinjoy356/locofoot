@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'; // We won't use this but keep import for now, or just remove it.
 import { Clock, CalendarDays, MapPin } from 'lucide-react';
 import { format } from 'date-fns';
+import { TurfHero } from '@/components/shared/TurfHero';
 export default function PublicSchedulePage() {
   const params = useParams();
   const slug = params.slug as string;
@@ -68,16 +70,12 @@ export default function PublicSchedulePage() {
   return (
     <div className="w-full h-full flex flex-col bg-background text-on-surface">
       {/* Header */}
-      <div className="w-full bg-surface-container border-b border-outline-variant px-margin-mobile md:px-gutter py-8 md:py-12">
-        <div className="max-w-container-max mx-auto">
-          <span className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest mb-2 block">
-            {event.name}
-          </span>
-          <h1 className="font-display-lg text-display-lg md:text-[64px] uppercase tracking-tighter leading-none">
-            Tournament <span className="text-primary-container">Schedule</span>
-          </h1>
-        </div>
-      </div>
+      <TurfHero
+        eyebrow={event.name}
+        title={<>Tournament <span className="text-primary-container">Schedule</span></>}
+        image="/turf/aerial-field.jpg"
+        size="sm"
+      />
 
       {/* Main Content */}
       <div className="flex-1 w-full bg-background px-margin-mobile md:px-gutter py-8">
@@ -95,9 +93,10 @@ export default function PublicSchedulePage() {
           ) : (
             <div className="flex flex-col border border-outline-variant bg-[#151816]">
               {schedule.map((match, index) => (
-                <div 
+                <Link 
+                  href={`/events/${slug}/matches/${match.id}`}
                   key={match.id} 
-                  className={`flex flex-col md:flex-row md:items-stretch w-full group transition-colors hover:bg-surface-variant cursor-pointer ${
+                  className={`flex flex-col md:flex-row md:items-stretch w-full group transition-colors hover:bg-surface-variant cursor-pointer block ${
                     index !== schedule.length - 1 ? 'border-b border-outline-variant' : ''
                   }`}
                 >
@@ -156,7 +155,7 @@ export default function PublicSchedulePage() {
                       </div>
                     </div>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           )}

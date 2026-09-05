@@ -2,7 +2,8 @@
 
 import { useEffect, useState, use } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { AlertTriangle, UserX, UserMinus } from 'lucide-react';
+import { AlertTriangle, UserX, UserMinus, ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
 
 export default function DisciplinaryDashboardPage({ params }: { params: Promise<{ eventId: string }> }) {
   const { eventId } = use(params);
@@ -44,75 +45,99 @@ export default function DisciplinaryDashboardPage({ params }: { params: Promise<
   }, [eventId, supabase]);
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold dark:text-zinc-100 flex items-center gap-2">
-          <AlertTriangle className="text-amber-500" /> Disciplinary Dashboard
-        </h1>
-        <p className="text-sm text-slate-500 dark:text-zinc-400">Track player infractions, suspensions, and card accumulations.</p>
+    <div className="w-full bg-background min-h-[calc(100vh-64px)] text-on-surface">
+      {/* Top Bar */}
+      <div className="border-b border-outline-variant bg-surface sticky top-0 z-10">
+        <div className="max-w-container-max mx-auto px-margin-mobile md:px-gutter h-14 flex items-center justify-between">
+          <Link href={`/admin/events/${eventId}`} className="flex items-center gap-2 text-on-surface-variant hover:text-on-surface transition-colors">
+            <ArrowLeft size={16} />
+            <span className="font-label-caps text-label-caps uppercase tracking-widest">EVENT DASHBOARD</span>
+          </Link>
+        </div>
       </div>
 
-      <div className="bg-white dark:bg-zinc-900 border dark:border-zinc-800 rounded shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-gray-50 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300">
-              <tr>
-                <th className="p-4 font-semibold">Player</th>
-                <th className="p-4 font-semibold">Team</th>
-                <th className="p-4 font-semibold text-center">Yellow Cards</th>
-                <th className="p-4 font-semibold text-center">Red Cards</th>
-                <th className="p-4 font-semibold text-center">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-zinc-800">
-              {disciplinaryStats.length === 0 ? (
+      <div className="max-w-container-max mx-auto px-margin-mobile md:px-gutter py-8 space-y-12">
+        <div className="relative overflow-hidden border border-outline-variant bg-[#151816]">
+          <div className="absolute inset-0 z-0">
+            <img alt="" aria-hidden="true" className="w-full h-full object-cover object-center  opacity-25 " src="/turf/turf-closeup.jpg" />
+            <div className="absolute inset-0 bg-gradient-to-r from-background via-background/85 to-background/40 z-10" />
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent z-10" />
+          </div>
+          <div className="relative z-20 p-6 md:p-8">
+            <span className="mb-3 flex items-center gap-2 font-label-caps text-label-caps text-primary-container uppercase tracking-widest">
+              <AlertTriangle size={14} /> Event Operations
+            </span>
+            <h1 className="font-display-lg text-display-lg md:text-[56px] uppercase tracking-tighter leading-none text-on-surface">
+              Disciplinary Dashboard
+            </h1>
+            <p className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant mt-4 max-w-xl">
+              Track player infractions, suspensions, and card accumulations.
+            </p>
+          </div>
+        </div>
+
+        <div className="border border-outline-variant bg-surface">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead className="bg-surface-container border-b border-outline-variant">
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-gray-500 dark:text-zinc-500 italic">
-                    No disciplinary records found for this tournament yet.
-                  </td>
+                  <th className="p-4 font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">Player</th>
+                  <th className="p-4 font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">Team</th>
+                  <th className="p-4 font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant text-center">Yellow Cards</th>
+                  <th className="p-4 font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant text-center">Red Cards</th>
+                  <th className="p-4 font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant text-center">Status</th>
                 </tr>
-              ) : (
-                disciplinaryStats.map(stat => {
-                  const isSuspended = stat.red_cards > 0 || stat.yellow_cards >= 3;
-                  return (
-                    <tr key={stat.playerId} className="hover:bg-gray-50 dark:hover:bg-zinc-800/50">
-                      <td className="p-4 font-medium dark:text-zinc-200">{stat.playerName}</td>
-                      <td className="p-4 text-gray-600 dark:text-zinc-400">{stat.teamName}</td>
-                      <td className="p-4 text-center">
-                        {stat.yellow_cards > 0 ? (
-                          <span className="inline-flex items-center justify-center w-6 h-8 bg-yellow-400 text-yellow-900 font-bold rounded-sm border border-yellow-500 shadow-sm">
-                            {stat.yellow_cards}
-                          </span>
-                        ) : '-'}
-                      </td>
-                      <td className="p-4 text-center">
-                        {stat.red_cards > 0 ? (
-                          <span className="inline-flex items-center justify-center w-6 h-8 bg-red-600 text-white font-bold rounded-sm border border-red-700 shadow-sm">
-                            {stat.red_cards}
-                          </span>
-                        ) : '-'}
-                      </td>
-                      <td className="p-4 text-center">
-                        {isSuspended ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 text-xs font-bold rounded">
-                            <UserX className="w-3 h-3" /> Suspended
-                          </span>
-                        ) : stat.yellow_cards >= 2 ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 text-xs font-bold rounded">
-                            <UserMinus className="w-3 h-3" /> Warning (1 away)
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-xs font-bold rounded">
-                            Active
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  )
-                })
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-outline-variant">
+                {disciplinaryStats.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="p-8 text-center font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant">
+                      No disciplinary records found for this tournament yet.
+                    </td>
+                  </tr>
+                ) : (
+                  disciplinaryStats.map(stat => {
+                    const isSuspended = stat.red_cards > 0 || stat.yellow_cards >= 3;
+                    return (
+                      <tr key={stat.playerId} className="hover:bg-surface-variant transition-colors">
+                        <td className="p-4 font-body-md text-on-surface">{stat.playerName}</td>
+                        <td className="p-4 font-body-sm text-on-surface-variant">{stat.teamName}</td>
+                        <td className="p-4 text-center">
+                          {stat.yellow_cards > 0 ? (
+                            <span className="inline-flex items-center justify-center w-6 h-8 bg-yellow-400 text-background font-bold border border-outline-variant">
+                              {stat.yellow_cards}
+                            </span>
+                          ) : '-'}
+                        </td>
+                        <td className="p-4 text-center">
+                          {stat.red_cards > 0 ? (
+                            <span className="inline-flex items-center justify-center w-6 h-8 bg-error text-on-error font-bold border border-outline-variant">
+                              {stat.red_cards}
+                            </span>
+                          ) : '-'}
+                        </td>
+                        <td className="p-4 text-center">
+                          {isSuspended ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 border border-error bg-error/10 text-error font-label-caps text-[10px] uppercase tracking-widest">
+                              <UserX className="w-3 h-3" /> Suspended
+                            </span>
+                          ) : stat.yellow_cards >= 2 ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 border border-yellow-400 bg-yellow-400/10 text-yellow-400 font-label-caps text-[10px] uppercase tracking-widest">
+                              <UserMinus className="w-3 h-3" /> Warning (1 away)
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 border border-primary-container bg-primary-container/10 text-primary-container font-label-caps text-[10px] uppercase tracking-widest">
+                              Active
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    )
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

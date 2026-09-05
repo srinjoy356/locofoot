@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Plus, Edit } from "lucide-react";
+import { TurfHero } from "@/components/shared/TurfHero";
 
 export default function AdminEventsPage() {
   const [events, setEvents] = useState<any[]>([]);
@@ -29,27 +30,40 @@ export default function AdminEventsPage() {
   }, [supabase]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Manage Events</h1>
-        <Link href="/admin/events/create" className="bg-black text-white px-4 py-2 rounded flex items-center gap-2">
+    <div className="w-full flex flex-col bg-background text-on-surface min-h-screen pb-12">
+      <TurfHero
+        eyebrow="Organizer"
+        title={<>Manage <span className="text-primary-container">Events</span></>}
+        subtitle="Your tournaments and competitions in one place."
+        image="/turf/stadium.jpg"
+        size="sm"
+        actions={
+          <Link href="/admin/events/create" className="bg-primary-container text-on-primary-container px-6 py-3 font-label-caps text-label-caps uppercase tracking-widest hover:bg-primary-fixed transition-colors flex items-center gap-2">
+            <Plus size={16} /> Create Event
+          </Link>
+        }
+      />
+
+      <div className="w-full max-w-container-max mx-auto px-margin-mobile md:px-gutter py-8 space-y-6">
+        {/* Mobile create action (hero actions are desktop-only) */}
+        <Link href="/admin/events/create" className="md:hidden bg-primary-container text-on-primary-container px-6 py-3 font-label-caps text-label-caps uppercase tracking-widest hover:bg-primary-fixed transition-colors flex items-center justify-center gap-2">
           <Plus size={16} /> Create Event
         </Link>
-      </div>
 
-      <div className="grid gap-4">
-        {events.map((e) => (
-          <div key={e.id} className="border p-4 rounded bg-white dark:bg-zinc-900 flex justify-between items-center">
-            <div>
-              <h3 className="font-bold">{e.name}</h3>
-              <p className="text-sm text-slate-500 dark:text-zinc-400">{e.status} • {e.format}</p>
+        <div className="grid gap-4">
+          {events.map((e) => (
+            <div key={e.id} className="border border-outline-variant p-4 bg-surface hover:bg-surface-variant transition-colors flex justify-between items-center gap-4">
+              <div className="min-w-0">
+                <h3 className="font-headline-lg-mobile text-headline-lg-mobile uppercase tracking-tighter text-on-surface truncate">{e.name}</h3>
+                <p className="font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant mt-1">{e.status} • {e.format}</p>
+              </div>
+              <Link href={`/admin/events/${e.id}`} className="border border-outline-variant bg-surface hover:bg-surface-variant text-on-surface px-4 py-2 font-label-caps text-label-caps uppercase tracking-widest transition-colors flex items-center gap-2 shrink-0">
+                <Edit size={14} /> Manage
+              </Link>
             </div>
-            <Link href={`/admin/events/${e.id}`} className="px-3 py-1 bg-slate-100 dark:bg-zinc-800 rounded text-sm hover:bg-gray-200 flex items-center gap-1">
-              <Edit size={14} /> Manage
-            </Link>
-          </div>
-        ))}
-        {events.length === 0 && <p className="text-slate-500 dark:text-zinc-400 py-4">No events found.</p>}
+          ))}
+          {events.length === 0 && <p className="font-body-md text-on-surface-variant py-4">No events found.</p>}
+        </div>
       </div>
     </div>
   );

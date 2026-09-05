@@ -105,14 +105,24 @@ export default function ChatWindow({ params }: { params: Promise<{ conversationI
     }
   };
 
-  if (error) return <div className="p-10 text-red-500 font-semibold">{error}</div>;
+  if (error) return <div className="p-10 text-error font-semibold">{error}</div>;
   if (!userId) return <div className="p-10">Loading...</div>;
 
   return (
     <div className="w-full flex flex-col bg-background text-on-surface min-h-screen pb-12">
       {/* Header */}
-      <div className="w-full border-b border-outline-variant bg-[#0b0d0c] pt-12 pb-8 px-margin-mobile md:px-gutter shrink-0">
-        <h1 className="font-display-lg text-display-lg md:text-[64px] uppercase tracking-tighter leading-none text-on-surface">Conversation</h1>
+      <div className="relative w-full overflow-hidden border-b border-outline-variant bg-[#0b0d0c] shrink-0">
+        <div className="absolute inset-0 z-0">
+          <img alt="" aria-hidden="true" className="w-full h-full object-cover object-center  opacity-30 " src="/turf/pitch-corner.jpg" />
+          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-background/40 z-10" />
+        </div>
+        <div className="relative z-20 max-w-container-max mx-auto px-margin-mobile md:px-gutter py-6 flex items-center gap-3">
+          <span className="w-2 h-2 rounded-full bg-primary-container animate-pulse shadow-[0_0_8px_rgba(57,255,106,0.8)]" />
+          <div className="min-w-0">
+            <span className="block font-label-caps text-label-caps text-primary-container uppercase tracking-widest">Direct Message</span>
+            <h1 className="font-display-lg text-headline-lg-mobile md:text-headline-lg uppercase tracking-tighter leading-none text-on-surface mt-1">Conversation</h1>
+          </div>
+        </div>
       </div>
 
       <div className="w-full max-w-container-max mx-auto px-margin-mobile md:px-gutter py-8 h-[calc(100vh-200px)]">

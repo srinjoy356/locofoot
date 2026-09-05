@@ -3,9 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { Button } from '@/components/ui/button';
 import { Loader2, ArrowLeft, Trophy, CalendarPlus, AlertCircle, Clock } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { TurfHero } from '@/components/shared/TurfHero';
 
 export default function CreateMatchPage() {
   const params = useParams();
@@ -15,7 +14,7 @@ export default function CreateMatchPage() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   const [teams, setTeams] = useState<any[]>([]);
   const [groups, setGroups] = useState<any[]>([]);
   const [brackets, setBrackets] = useState<any[]>([]);
@@ -24,15 +23,15 @@ export default function CreateMatchPage() {
   const [awayRegistrationId, setAwayRegistrationId] = useState<string>('');
   const [groupId, setGroupId] = useState<string>('');
   const [bracketId, setBracketId] = useState<string>('');
-  
+
   const [emptySlots, setEmptySlots] = useState<any[]>([]);
   const [slotAssignmentId, setSlotAssignmentId] = useState<string>('');
-  
+
   const [useStandardFormat, setUseStandardFormat] = useState(true);
   const [firstHalf, setFirstHalf] = useState(45);
   const [secondHalf, setSecondHalf] = useState(45);
   const [halfTime, setHalfTime] = useState(15);
-  
+
   useEffect(() => {
     fetchData();
   }, [eventId]);
@@ -67,7 +66,7 @@ export default function CreateMatchPage() {
       setError('Please select a time slot.');
       return;
     }
-    
+
     // Validation for custom time
     let metadata = undefined;
     if (!useStandardFormat) {
@@ -76,13 +75,13 @@ export default function CreateMatchPage() {
         const start = new Date(selectedSlot.schedule_slots.scheduled_start).getTime();
         const end = new Date(selectedSlot.schedule_slots.scheduled_end).getTime();
         const slotMins = (end - start) / 60000;
-        
+
         const formatMins = firstHalf + secondHalf + halfTime;
         if (formatMins > slotMins) {
           setError(`Match duration (${formatMins} mins) exceeds the selected slot duration (${slotMins} mins).`);
           return;
         }
-        
+
         metadata = {
           first_half_minutes: firstHalf,
           second_half_minutes: secondHalf,
@@ -96,7 +95,7 @@ export default function CreateMatchPage() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token || '';
-      
+
       const payload = {
         idempotency_key: crypto.randomUUID(),
         home_registration_id: homeRegistrationId,
@@ -136,60 +135,57 @@ export default function CreateMatchPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 p-4 md:p-10 font-sans">
-      <div className="max-w-4xl mx-auto space-y-8">
-        
-        {/* Header */}
-        <div className="flex items-center gap-4 border-b border-slate-200 dark:border-zinc-800 pb-6">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => router.back()} 
-            className="rounded-full hover:bg-slate-200 dark:hover:bg-zinc-800 h-10 w-10 flex-shrink-0"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-indigo-500 to-purple-600 bg-clip-text text-transparent">
-              Create Manual Match
-            </h1>
-            <p className="text-slate-500 dark:text-zinc-400 mt-1 font-medium text-sm">
-              Inject custom fixtures into the live tournament schedule.
-            </p>
-          </div>
-        </div>
+    <div className="w-full flex flex-col bg-background text-on-surface min-h-screen pb-12">
+      {/* Header */}
+      <TurfHero
+        eyebrow="Manual Fixture"
+        title="Create Match"
+        subtitle="Inject custom fixtures into the live tournament schedule."
+        image="/turf/aerial-goal.jpg"
+        size="sm"
+      />
+
+      <div className="w-full max-w-4xl mx-auto px-margin-mobile md:px-gutter py-8 space-y-8">
+
+        {/* Back */}
+        <button
+          onClick={() => router.back()}
+          className="inline-flex items-center gap-2 text-on-surface-variant hover:text-on-surface font-label-caps text-label-caps uppercase tracking-widest transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" /> Back
+        </button>
 
         {error && (
-          <Alert variant="destructive" className="bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-900/50">
-            <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
-            <AlertTitle className="text-red-800 dark:text-red-300 font-bold">Error</AlertTitle>
-            <AlertDescription className="text-red-700 dark:text-red-400 font-medium">
-              {error}
-            </AlertDescription>
-          </Alert>
+          <div className="border border-error bg-error/10 p-4 flex items-start gap-3">
+            <AlertCircle className="h-5 w-5 text-error flex-shrink-0 mt-0.5" />
+            <div>
+              <h3 className="font-label-caps text-label-caps uppercase tracking-widest text-error">Error</h3>
+              <p className="font-body-md text-error mt-1">{error}</p>
+            </div>
+          </div>
         )}
 
-        <div className="bg-white dark:bg-zinc-900 rounded-3xl shadow-xl shadow-indigo-100/20 dark:shadow-black/40 border border-slate-100 dark:border-zinc-800/80 overflow-hidden">
-          
-          <div className="p-8 space-y-10">
+        <div className="bg-surface border border-outline-variant overflow-hidden">
+
+          <div className="p-6 md:p-8 space-y-10">
             {/* Teams Section */}
             <div>
               <div className="flex items-center gap-2 mb-6">
-                <Trophy className="h-5 w-5 text-indigo-500" />
-                <h2 className="text-xl font-bold">Select Teams</h2>
+                <Trophy className="h-5 w-5 text-primary-container" />
+                <h2 className="font-headline-lg-mobile text-headline-lg-mobile uppercase tracking-tighter text-on-surface">Select Teams</h2>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative">
-                
+
                 {/* VS Badge */}
-                <div className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-10 w-10 bg-slate-100 dark:bg-zinc-800 rounded-full items-center justify-center font-bold text-sm text-slate-400 dark:text-zinc-500 z-10 border-4 border-white dark:border-zinc-900 shadow-sm">
+                <div className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-10 w-10 bg-surface-container items-center justify-center font-label-caps text-label-caps text-on-surface-variant z-10 border border-outline-variant">
                   VS
                 </div>
 
-                <div className="space-y-3 bg-slate-50 dark:bg-zinc-950/50 p-6 rounded-2xl border border-slate-100 dark:border-zinc-800/80">
-                  <label className="text-sm font-bold text-slate-700 dark:text-zinc-300 uppercase tracking-wider">Home Team</label>
+                <div className="space-y-3 bg-surface-container p-6 border border-outline-variant">
+                  <label className="font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant">Home Team</label>
                   <div className="relative">
                     <select
-                      className="w-full appearance-none bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 rounded-xl px-4 py-3.5 pr-10 text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all shadow-sm"
+                      className="w-full appearance-none bg-background border border-outline-variant px-4 py-3.5 pr-10 text-on-surface font-body-md focus:outline-none focus:border-primary-container transition-colors"
                       value={homeRegistrationId}
                       onChange={(e) => setHomeRegistrationId(e.target.value)}
                     >
@@ -198,17 +194,17 @@ export default function CreateMatchPage() {
                         <option key={t.id} value={t.id}>{t.team_name}</option>
                       ))}
                     </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500 dark:text-zinc-400">
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-on-surface-variant">
                       <svg className="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
                     </div>
                   </div>
                 </div>
-                
-                <div className="space-y-3 bg-slate-50 dark:bg-zinc-950/50 p-6 rounded-2xl border border-slate-100 dark:border-zinc-800/80">
-                  <label className="text-sm font-bold text-slate-700 dark:text-zinc-300 uppercase tracking-wider">Away Team</label>
+
+                <div className="space-y-3 bg-surface-container p-6 border border-outline-variant">
+                  <label className="font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant">Away Team</label>
                   <div className="relative">
                     <select
-                      className="w-full appearance-none bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 rounded-xl px-4 py-3.5 pr-10 text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all shadow-sm"
+                      className="w-full appearance-none bg-background border border-outline-variant px-4 py-3.5 pr-10 text-on-surface font-body-md focus:outline-none focus:border-primary-container transition-colors"
                       value={awayRegistrationId}
                       onChange={(e) => setAwayRegistrationId(e.target.value)}
                     >
@@ -217,7 +213,7 @@ export default function CreateMatchPage() {
                         <option key={t.id} value={t.id}>{t.team_name}</option>
                       ))}
                     </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500 dark:text-zinc-400">
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-on-surface-variant">
                       <svg className="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
                     </div>
                   </div>
@@ -225,21 +221,21 @@ export default function CreateMatchPage() {
               </div>
             </div>
 
-            <hr className="border-slate-100 dark:border-zinc-800" />
+            <hr className="border-outline-variant" />
 
             {/* Assignment Section */}
             <div>
               <div className="flex items-center gap-2 mb-6">
-                <CalendarPlus className="h-5 w-5 text-purple-500" />
-                <h2 className="text-xl font-bold">Stage Assignment (Optional)</h2>
+                <CalendarPlus className="h-5 w-5 text-primary-container" />
+                <h2 className="font-headline-lg-mobile text-headline-lg-mobile uppercase tracking-tighter text-on-surface">Stage Assignment (Optional)</h2>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                
+
                 <div className="space-y-3">
-                  <label className="text-sm font-bold text-slate-700 dark:text-zinc-300 uppercase tracking-wider">Group (League phase)</label>
+                  <label className="font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant">Group (League phase)</label>
                   <div className="relative">
                     <select
-                      className="w-full appearance-none bg-slate-50 dark:bg-zinc-900/50 border border-slate-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 pr-10 text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all"
+                      className="w-full appearance-none bg-background border border-outline-variant px-4 py-3.5 pr-10 text-on-surface font-body-md focus:outline-none focus:border-primary-container transition-colors"
                       value={groupId}
                       onChange={(e) => { setGroupId(e.target.value); setBracketId(''); }}
                     >
@@ -248,18 +244,18 @@ export default function CreateMatchPage() {
                         <option key={g.id} value={g.id}>{g.name}</option>
                       ))}
                     </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500 dark:text-zinc-500">
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-on-surface-variant">
                       <svg className="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
                     </div>
                   </div>
-                  <p className="text-xs text-slate-400 dark:text-zinc-500 px-1">Assign to a group to impact league standings.</p>
+                  <p className="font-body-md text-on-surface-variant px-1">Assign to a group to impact league standings.</p>
                 </div>
-                
+
                 <div className="space-y-3">
-                  <label className="text-sm font-bold text-slate-700 dark:text-zinc-300 uppercase tracking-wider">Bracket (Knockout phase)</label>
+                  <label className="font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant">Bracket (Knockout phase)</label>
                   <div className="relative">
                     <select
-                      className="w-full appearance-none bg-slate-50 dark:bg-zinc-900/50 border border-slate-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 pr-10 text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all"
+                      className="w-full appearance-none bg-background border border-outline-variant px-4 py-3.5 pr-10 text-on-surface font-body-md focus:outline-none focus:border-primary-container transition-colors"
                       value={bracketId}
                       onChange={(e) => { setBracketId(e.target.value); setGroupId(''); }}
                     >
@@ -268,31 +264,31 @@ export default function CreateMatchPage() {
                         <option key={b.id} value={b.id}>{b.round_name} (Pos {b.position})</option>
                       ))}
                     </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500 dark:text-zinc-500">
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-on-surface-variant">
                       <svg className="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
                     </div>
                   </div>
-                  <p className="text-xs text-slate-400 dark:text-zinc-500 px-1">Assign to a bracket node to advance tournament trees.</p>
+                  <p className="font-body-md text-on-surface-variant px-1">Assign to a bracket node to advance tournament trees.</p>
                 </div>
-                
+
               </div>
             </div>
-            
-            <hr className="border-slate-100 dark:border-zinc-800" />
-            
+
+            <hr className="border-outline-variant" />
+
             {/* Slot & Format Assignment */}
             <div>
               <div className="flex items-center gap-2 mb-6">
-                <Clock className="h-5 w-5 text-emerald-500" />
-                <h2 className="text-xl font-bold">Scheduling & Format</h2>
+                <Clock className="h-5 w-5 text-primary-container" />
+                <h2 className="font-headline-lg-mobile text-headline-lg-mobile uppercase tracking-tighter text-on-surface">Scheduling & Format</h2>
               </div>
-              
+
               <div className="space-y-6">
                 <div className="space-y-3">
-                  <label className="text-sm font-bold text-slate-700 dark:text-zinc-300 uppercase tracking-wider">Time Slot <span className="text-red-500">*</span></label>
+                  <label className="font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant">Time Slot <span className="text-error">*</span></label>
                   <div className="relative">
                     <select
-                      className="w-full appearance-none bg-slate-50 dark:bg-zinc-900/50 border border-slate-200 dark:border-zinc-800 rounded-xl px-4 py-3.5 pr-10 text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
+                      className="w-full appearance-none bg-background border border-outline-variant px-4 py-3.5 pr-10 text-on-surface font-body-md focus:outline-none focus:border-primary-container transition-colors"
                       value={slotAssignmentId}
                       onChange={(e) => setSlotAssignmentId(e.target.value)}
                     >
@@ -308,40 +304,40 @@ export default function CreateMatchPage() {
                         );
                       })}
                     </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500 dark:text-zinc-500">
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-on-surface-variant">
                       <svg className="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
                     </div>
                   </div>
-                  <p className="text-xs text-slate-400 dark:text-zinc-500 px-1">Mandatory. Match will immediately drop into this grid block.</p>
+                  <p className="font-body-md text-on-surface-variant px-1">Mandatory. Match will immediately drop into this grid block.</p>
                 </div>
-                
-                <div className="bg-slate-50 dark:bg-zinc-900/50 border border-slate-200 dark:border-zinc-800 rounded-xl p-6">
+
+                <div className="bg-surface-container border border-outline-variant p-6">
                   <div className="flex items-center gap-3 mb-4">
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       id="standardFormat"
                       checked={useStandardFormat}
                       onChange={(e) => setUseStandardFormat(e.target.checked)}
-                      className="w-5 h-5 rounded text-indigo-600 focus:ring-indigo-500"
+                      className="w-5 h-5 border border-outline-variant bg-background accent-primary-container"
                     />
-                    <label htmlFor="standardFormat" className="font-semibold text-slate-800 dark:text-zinc-200 cursor-pointer">
+                    <label htmlFor="standardFormat" className="font-body-md text-on-surface cursor-pointer">
                       Use standard tournament time format
                     </label>
                   </div>
-                  
+
                   {!useStandardFormat && (
-                    <div className="grid grid-cols-3 gap-4 pt-4 border-t border-slate-200 dark:border-zinc-800 mt-4">
+                    <div className="grid grid-cols-3 gap-4 pt-4 border-t border-outline-variant mt-4">
                       <div className="space-y-2">
-                        <label className="text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase">1st Half (mins)</label>
-                        <input type="number" value={firstHalf} onChange={e => setFirstHalf(Number(e.target.value))} className="w-full bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-lg px-3 py-2 font-medium" />
+                        <label className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">1st Half (mins)</label>
+                        <input type="number" value={firstHalf} onChange={e => setFirstHalf(Number(e.target.value))} className="w-full bg-background border border-outline-variant px-3 py-2 font-mono text-on-surface focus:outline-none focus:border-primary-container transition-colors" />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase">2nd Half (mins)</label>
-                        <input type="number" value={secondHalf} onChange={e => setSecondHalf(Number(e.target.value))} className="w-full bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-lg px-3 py-2 font-medium" />
+                        <label className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">2nd Half (mins)</label>
+                        <input type="number" value={secondHalf} onChange={e => setSecondHalf(Number(e.target.value))} className="w-full bg-background border border-outline-variant px-3 py-2 font-mono text-on-surface focus:outline-none focus:border-primary-container transition-colors" />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase">Half-Time (mins)</label>
-                        <input type="number" value={halfTime} onChange={e => setHalfTime(Number(e.target.value))} className="w-full bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-lg px-3 py-2 font-medium" />
+                        <label className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">Half-Time (mins)</label>
+                        <input type="number" value={halfTime} onChange={e => setHalfTime(Number(e.target.value))} className="w-full bg-background border border-outline-variant px-3 py-2 font-mono text-on-surface focus:outline-none focus:border-primary-container transition-colors" />
                       </div>
                     </div>
                   )}
@@ -349,18 +345,18 @@ export default function CreateMatchPage() {
               </div>
             </div>
           </div>
-          
-          <div className="bg-slate-50 dark:bg-zinc-950/50 p-6 md:p-8 border-t border-slate-100 dark:border-zinc-800/80 flex justify-end">
-            <Button 
-              onClick={handleCreate} 
-              disabled={loading} 
-              className="w-full md:w-auto px-10 h-14 bg-indigo-600 hover:bg-indigo-700 text-white shadow-xl shadow-indigo-600/20 text-lg font-bold rounded-xl transition-all"
+
+          <div className="bg-surface-container p-6 md:p-8 border-t border-outline-variant flex justify-end">
+            <button
+              onClick={handleCreate}
+              disabled={loading}
+              className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-10 py-4 bg-primary-container text-on-primary-container font-label-caps text-label-caps uppercase tracking-widest hover:bg-primary-fixed transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? <Loader2 className="h-6 w-6 animate-spin mr-2" /> : null}
+              {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : null}
               Confirm & Create Match
-            </Button>
+            </button>
           </div>
-          
+
         </div>
       </div>
     </div>

@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { AdvancedDashboard } from '@/components/analytics/AdvancedDashboard';
-import { Zap } from 'lucide-react';
+import { TurfHero } from '@/components/shared/TurfHero';
 
 export default async function AdvancedAnalyticsPage({ params }: { params: Promise<{ slug: string }> }) {
   const supabase = await createClient();
@@ -37,29 +37,30 @@ export default async function AdvancedAnalyticsPage({ params }: { params: Promis
   const trendsData = trendsRes.ok ? await trendsRes.json() : [];
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 p-4">
-      <div>
-         <Link href={`/events/${slug}/stats`} className="text-sm text-zinc-400 hover:text-white flex items-center gap-2 w-fit mb-4">
-            ← Back to Overview
-         </Link>
-         <div className="flex items-center gap-3">
-           <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center">
-             <Zap className="w-5 h-5 text-orange-400" />
-           </div>
-           <div>
-             <h1 className="text-2xl font-bold text-white tracking-tight">Advanced Insights</h1>
-             <p className="text-sm text-zinc-400">{eventData.name}</p>
-           </div>
-         </div>
-      </div>
-
-      <AdvancedDashboard 
-        clutch={clutchData} 
-        comebacks={comebacksData} 
-        records={recordsData} 
-        trends={trendsData} 
-        eventSlug={slug} 
+    <div className="w-full flex flex-col bg-background text-on-surface min-h-screen">
+      <TurfHero
+        eyebrow="Advanced Metrics"
+        title="Advanced Insights"
+        subtitle={eventData.name}
+        image="/turf/stadium.jpg"
+        size="sm"
       />
+
+      <div className="max-w-6xl mx-auto w-full space-y-6 p-4">
+        <div>
+           <Link href={`/events/${slug}/stats`} className="font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant hover:text-on-surface flex items-center gap-2 w-fit">
+              ← Back to Overview
+           </Link>
+        </div>
+
+        <AdvancedDashboard
+          clutch={clutchData}
+          comebacks={comebacksData}
+          records={recordsData}
+          trends={trendsData}
+          eventSlug={slug}
+        />
+      </div>
     </div>
   );
 }

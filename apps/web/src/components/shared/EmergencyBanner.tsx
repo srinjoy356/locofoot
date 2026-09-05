@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { AlertTriangle, X } from 'lucide-react';
+import { AlertTriangle, Info, X } from 'lucide-react';
 
 interface Announcement {
   id: string;
@@ -79,22 +79,22 @@ export function EmergencyBanner({ eventId }: { eventId: string }) {
   if (!isVisible || !announcement) return null;
 
   return (
-    <div className={`${announcement.is_emergency ? 'bg-red-600' : 'bg-blue-600'} text-white px-4 py-3 shadow-lg relative flex items-center justify-between`}>
-      <div className="flex items-center space-x-3 max-w-7xl mx-auto w-full">
+    <div className={`${announcement.is_emergency ? 'bg-error-container text-on-error-container' : 'bg-surface-container text-on-surface border-b border-outline-variant'} px-margin-mobile md:px-gutter py-3 relative`}>
+      <div className="flex items-center gap-3 max-w-container-max mx-auto w-full">
         {announcement.is_emergency ? (
-          <AlertTriangle className="h-6 w-6 text-red-200 shrink-0 animate-pulse" />
+          <AlertTriangle className="h-6 w-6 shrink-0 animate-pulse" />
         ) : (
-          <div className="text-xl">ℹ️</div>
+          <Info className="h-6 w-6 text-primary-container shrink-0" />
         )}
         <div className="flex-1">
-          <p className={`font-bold text-sm uppercase tracking-wider ${announcement.is_emergency ? 'text-red-200' : 'text-blue-200'}`}>
+          <p className={`font-label-caps text-label-caps uppercase tracking-widest ${announcement.is_emergency ? 'text-on-error-container' : 'text-primary-container'}`}>
             {announcement.is_emergency ? 'Emergency Announcement' : 'Announcement'}
           </p>
-          <p className="font-medium">{announcement.message}</p>
+          <p className="font-body-md">{announcement.message}</p>
         </div>
-        <button 
+        <button
           onClick={() => setIsVisible(false)}
-          className={`p-1 hover:${announcement.is_emergency ? 'bg-red-700' : 'bg-blue-700'} rounded transition-colors`}
+          className={`p-1 shrink-0 transition-colors ${announcement.is_emergency ? 'hover:bg-on-error-container/10' : 'hover:bg-surface-variant'}`}
           title="Dismiss"
         >
           <X className="h-5 w-5" />

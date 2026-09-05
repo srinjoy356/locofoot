@@ -55,52 +55,75 @@ export default function AdminEventRegistrationsPage({ params }: { params: Promis
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4 mb-6">
-        <Link href={`/admin/events/${eventId}`} className="text-slate-500 dark:text-zinc-400 hover:text-black">← Back to Event</Link>
-        <h1 className="text-2xl font-bold">Team Registrations</h1>
+    <div className="w-full bg-background min-h-[calc(100vh-64px)] text-on-surface">
+      {/* Top Bar */}
+      <div className="border-b border-outline-variant bg-surface sticky top-0 z-10">
+        <div className="max-w-container-max mx-auto px-margin-mobile md:px-gutter h-14 flex items-center justify-between">
+          <Link href={`/admin/events/${eventId}`} className="flex items-center gap-2 font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors">← Back to Event</Link>
+        </div>
       </div>
 
-      <div className="grid gap-6">
-        {registrations.map(reg => (
-          <div key={reg.id} className="border p-4 rounded bg-white dark:bg-zinc-900 space-y-4">
-            <div className="flex justify-between items-center">
-              <div>
-                <h3 className="font-bold text-lg">{reg.team_name}</h3>
-                <p className="text-sm text-slate-500 dark:text-zinc-400">Status: {reg.status} {reg.roster_locked && '🔒 (Locked)'}</p>
-              </div>
-              <div className="flex gap-2">
-                {(reg.status === 'PENDING_APPROVAL' || reg.status === 'APPROVED') && (
-                  <button onClick={() => changeStatus(reg.id, 'DRAFT')} className="bg-gray-200 text-slate-800 dark:text-zinc-200 px-3 py-1 rounded text-sm hover:bg-gray-300">Revert to Draft</button>
-                )}
-                {reg.status === 'PENDING_APPROVAL' && (
-                  <button onClick={() => changeStatus(reg.id, 'APPROVED')} className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">Approve</button>
-                )}
-                {!reg.roster_locked && (
-                  <button onClick={() => lockRoster(reg.id)} className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700">Lock Roster</button>
-                )}
-                {reg.roster_locked && (
-                  <button onClick={() => unlockRoster(reg.id)} className="bg-red-100 text-red-800 px-3 py-1 rounded text-sm hover:bg-red-200">Unlock Roster</button>
-                )}
-              </div>
-            </div>
-
-            <div className="bg-slate-50 dark:bg-zinc-900/50 rounded p-3 text-sm">
-              <h4 className="font-semibold mb-2">Roster ({reg.players?.length || 0} players)</h4>
-              <ul className="grid grid-cols-2 gap-2">
-                {reg.players?.map((p: any) => (
-                  <li key={p.id} className="flex gap-2 items-center">
-                    <span className="w-8 text-center bg-gray-200 rounded">{p.jersey_number || '-'}</span>
-                    <span className="font-medium">{p.user?.display_name || p.user?.email}</span>
-                    {p.is_captain && <span className="text-xs bg-yellow-100 text-yellow-800 px-1 rounded">C</span>}
-                    {p.is_vice_captain && <span className="text-xs bg-blue-100 text-blue-800 dark:text-blue-400 px-1 rounded">VC</span>}
-                  </li>
-                ))}
-              </ul>
-            </div>
+      <div className="max-w-container-max mx-auto px-margin-mobile md:px-gutter py-8 space-y-12">
+        <div className="relative overflow-hidden border border-outline-variant bg-[#151816]">
+          <div className="absolute inset-0 z-0">
+            <img alt="" aria-hidden="true" className="w-full h-full object-cover object-center  opacity-25 " src="/turf/aerial-field.jpg" />
+            <div className="absolute inset-0 bg-gradient-to-r from-background via-background/85 to-background/40 z-10" />
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent z-10" />
           </div>
-        ))}
-        {registrations.length === 0 && <p className="text-slate-500 dark:text-zinc-400">No registrations found.</p>}
+          <div className="relative z-20 p-6 md:p-8">
+            <span className="mb-3 block font-label-caps text-label-caps text-primary-container uppercase tracking-widest">
+              Event Operations
+            </span>
+            <h1 className="font-display-lg text-display-lg md:text-[56px] uppercase tracking-tighter leading-none text-on-surface">
+              Team Registrations
+            </h1>
+            <p className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant mt-4 max-w-xl">
+              Review team submissions, approve entries, and manage roster locks.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid gap-6">
+          {registrations.map(reg => (
+            <div key={reg.id} className="border border-outline-variant bg-surface p-6 space-y-4">
+              <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+                <div>
+                  <h3 className="font-headline-sm uppercase tracking-tighter text-on-surface">{reg.team_name}</h3>
+                  <p className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant mt-1">Status: <span className="text-on-surface">{reg.status}</span> {reg.roster_locked && '🔒 (Locked)'}</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {(reg.status === 'PENDING_APPROVAL' || reg.status === 'APPROVED') && (
+                    <button onClick={() => changeStatus(reg.id, 'DRAFT')} className="border border-outline-variant bg-surface-variant text-on-surface px-3 py-1.5 font-label-caps text-[10px] uppercase tracking-widest hover:bg-surface-container-highest transition-colors">Revert to Draft</button>
+                  )}
+                  {reg.status === 'PENDING_APPROVAL' && (
+                    <button onClick={() => changeStatus(reg.id, 'APPROVED')} className="bg-primary-container text-on-primary-container px-3 py-1.5 font-label-caps text-[10px] uppercase tracking-widest hover:bg-primary-fixed transition-colors">Approve</button>
+                  )}
+                  {!reg.roster_locked && (
+                    <button onClick={() => lockRoster(reg.id)} className="bg-error text-on-error px-3 py-1.5 font-label-caps text-[10px] uppercase tracking-widest hover:bg-error/90 transition-colors">Lock Roster</button>
+                  )}
+                  {reg.roster_locked && (
+                    <button onClick={() => unlockRoster(reg.id)} className="border border-error text-error px-3 py-1.5 font-label-caps text-[10px] uppercase tracking-widest hover:bg-error/10 transition-colors">Unlock Roster</button>
+                  )}
+                </div>
+              </div>
+
+              <div className="border border-outline-variant bg-background p-4">
+                <h4 className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant mb-3">Roster ({reg.players?.length || 0} players)</h4>
+                <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {reg.players?.map((p: any) => (
+                    <li key={p.id} className="flex gap-2 items-center font-body-sm text-on-surface">
+                      <span className="w-8 text-center shrink-0 bg-surface-variant border border-outline-variant text-on-surface-variant font-mono text-xs py-0.5">{p.jersey_number || '-'}</span>
+                      <span className="text-on-surface truncate">{p.user?.display_name || p.user?.email}</span>
+                      {p.is_captain && <span className="border border-primary-container text-primary-container text-[10px] px-1 font-label-caps uppercase tracking-widest">C</span>}
+                      {p.is_vice_captain && <span className="border border-outline-variant text-on-surface-variant text-[10px] px-1 font-label-caps uppercase tracking-widest">VC</span>}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          ))}
+          {registrations.length === 0 && <p className="font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant">No registrations found.</p>}
+        </div>
       </div>
     </div>
   );

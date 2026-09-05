@@ -4,6 +4,7 @@ import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import { Users, UserPlus, Shield, Activity, Settings2, Clock } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { TurfHero } from "@/components/shared/TurfHero";
 
 export default function EventDetailsPage({ params }: { params: Promise<{ eventId: string }> }) {
   const { eventId } = use(params);
@@ -106,6 +107,7 @@ export default function EventDetailsPage({ params }: { params: Promise<{ eventId
       body: JSON.stringify({
         description: event.description,
         venue_id: event.venue_id === "" ? null : event.venue_id,
+        rules: event.rules || null,
         start_date: event.start_date || null,
         end_date: event.end_date || null,
         registration_deadline: event.registration_deadline || null
@@ -130,16 +132,20 @@ export default function EventDetailsPage({ params }: { params: Promise<{ eventId
   );
 
   return (
-    <div className="w-full bg-background min-h-screen text-on-surface p-4 md:p-8 space-y-12">
-      <div className="max-w-[1200px] mx-auto space-y-12">
-        
-        {/* Header & Status Control */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-outline-variant pb-6">
-          <div>
-            <h1 className="font-display-lg text-display-lg md:text-[56px] uppercase tracking-tighter leading-none">{event.name}</h1>
-            <div className="font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant mt-2 border border-outline-variant px-3 py-1 inline-block bg-surface">
-              STATUS: <span className={event.status === 'LIVE' ? 'text-primary-container' : 'text-on-surface'}>{event.status}</span>
-            </div>
+    <div className="w-full flex flex-col bg-background min-h-screen text-on-surface pb-12">
+      <TurfHero
+        eyebrow="Command Centre"
+        live={event.status === 'LIVE'}
+        title={event.name}
+        image="/turf/aerial-field.jpg"
+        size="sm"
+      />
+      <div className="w-full max-w-[1200px] mx-auto px-margin-mobile md:px-gutter py-8 space-y-12">
+
+        {/* Status Control */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-outline-variant pb-6">
+          <div className="font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant border border-outline-variant px-3 py-1 inline-block bg-surface">
+            STATUS: <span className={event.status === 'LIVE' ? 'text-primary-container' : 'text-on-surface'}>{event.status}</span>
           </div>
           <div className="flex flex-wrap gap-4">
             <button onClick={() => router.push(`/admin/events/${eventId}/registrations`)} className="bg-surface border border-outline-variant text-on-surface hover:bg-surface-variant px-6 py-3 font-label-caps text-[10px] uppercase tracking-widest transition-colors flex items-center gap-2">
@@ -282,6 +288,17 @@ export default function EventDetailsPage({ params }: { params: Promise<{ eventId
                   rows={3}
                   value={event.description || ''} 
                   onChange={e => setEvent({...event, description: e.target.value})} 
+                />
+              </div>
+
+              <div>
+                <label className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant block mb-2">Rules</label>
+                <textarea 
+                  className="w-full bg-background border border-outline-variant text-on-surface font-body-md p-3 rounded-none focus:outline-none focus:border-primary-container transition-colors resize-none placeholder:text-on-surface-variant/50" 
+                  rows={5}
+                  placeholder="e.g. 5v5, no sliding tackles, 15 min halves..."
+                  value={event.rules || ''} 
+                  onChange={e => setEvent({...event, rules: e.target.value})} 
                 />
               </div>
               

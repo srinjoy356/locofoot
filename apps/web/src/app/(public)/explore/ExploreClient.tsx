@@ -20,12 +20,26 @@ interface PlayerItem {
   avatar: string | null;
 }
 
+interface MatchItem {
+  id: string;
+  status: string;
+  homeScore: number;
+  awayScore: number;
+  homeTeam: string;
+  awayTeam: string;
+  arena: string;
+  matchStartedAt: string | null;
+  eventSlug: string;
+}
+
 export default function ExploreClient({ 
   initialEvents, 
-  initialPlayers 
+  initialPlayers,
+  initialMatches
 }: { 
   initialEvents: EventItem[]; 
   initialPlayers: PlayerItem[];
+  initialMatches: MatchItem[];
 }) {
   const [tab, setTab] = useState<"events" | "players">("events");
   const [search, setSearch] = useState("");
@@ -48,10 +62,10 @@ export default function ExploreClient({
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent z-10"></div>
           <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent z-10"></div>
-          <img 
-            alt="Desaturated turf with high contrast stadium lighting" 
-            className="w-full h-full object-cover filter grayscale opacity-60 mix-blend-luminosity" 
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBq6MHWzgiDcohCBMsTTmBd0H6IXmdFKDM5MNCZkru7fqm4hj9BQwGA4Lbc-Y6GAOaWXvqrsH1Oat43fINVvi97atTHJbqf0cb4IRzlKFD-1x3P9I8SdB7A1HpHXKzICgCO6jx1-bDKhgybkfMIQKmtceUoRMhFYy-j2L3yhV1DcUtdbh0QAwZ30TAIFYAirKeW6JQcwcB1i_o8rs6Rgh7GrZsz9YuQorl6fN-aiYhwH4-IDd6_NWmgsA0d255hUpeYFQ"
+          <img
+            alt="Desaturated turf with high contrast stadium lighting"
+            className="w-full h-full object-cover  opacity-60 "
+            src="/turf/stadium.jpg"
           />
         </div>
         
@@ -99,22 +113,21 @@ export default function ExploreClient({
           <span className="font-label-caps text-label-caps text-primary-container uppercase">Live Now</span>
         </div>
         <div className="flex gap-6 overflow-x-auto whitespace-nowrap no-scrollbar pb-1">
-          {/* Mock Ticker Items for flavor */}
-          <div className="flex items-center gap-3 border-r border-outline-variant pr-6">
-            <span className="font-label-caps text-label-caps text-on-surface-variant uppercase">Arena A</span>
-            <span className="font-mono text-sm uppercase">FC Blitz <span className="text-primary-container font-bold tabular-nums">2 - 1</span> Titans</span>
-            <span className="font-label-caps text-label-caps text-on-surface-variant text-[10px]">78'</span>
-          </div>
-          <div className="flex items-center gap-3 border-r border-outline-variant pr-6">
-            <span className="font-label-caps text-label-caps text-on-surface-variant uppercase">Arena B</span>
-            <span className="font-mono text-sm uppercase">Vanguard <span className="text-primary-container font-bold tabular-nums">0 - 0</span> Apex</span>
-            <span className="font-label-caps text-label-caps text-on-surface-variant text-[10px]">12'</span>
-          </div>
-          <div className="flex items-center gap-3 border-r border-outline-variant pr-6">
-            <span className="font-label-caps text-label-caps text-on-surface-variant uppercase">Arena C</span>
-            <span className="font-mono text-sm uppercase">Night Hawks <span className="text-primary-container font-bold tabular-nums">3 - 3</span> Rovers</span>
-            <span className="font-label-caps text-label-caps text-on-surface-variant text-[10px]">HT</span>
-          </div>
+          {initialMatches.length === 0 ? (
+            <span className="font-label-caps text-label-caps text-on-surface-variant uppercase">No matches right now</span>
+          ) : (
+            initialMatches.map(match => (
+              <Link href={`/events/${match.eventSlug}/matches/${match.id}`} key={match.id} className="flex items-center gap-3 border-r border-outline-variant pr-6 group">
+                <span className="font-label-caps text-label-caps text-on-surface-variant uppercase group-hover:text-primary-container transition-colors">{match.arena}</span>
+                <span className="font-mono text-sm uppercase">
+                  {match.homeTeam} <span className="text-primary-container font-bold tabular-nums">{match.homeScore} - {match.awayScore}</span> {match.awayTeam}
+                </span>
+                <span className="font-label-caps text-label-caps text-on-surface-variant text-[10px]">
+                  {match.status === 'LIVE' ? "LIVE" : match.status === 'COMPLETED' ? "FT" : "SCH"}
+                </span>
+              </Link>
+            ))
+          )}
         </div>
       </div>
 

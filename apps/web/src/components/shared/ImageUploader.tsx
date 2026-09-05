@@ -108,8 +108,8 @@ export function ImageUploader({ ownerType, ownerId, onUploadSuccess }: Props) {
         onChange={handleUpload} 
         disabled={uploading} 
       />
-      {uploading && <p className="text-sm text-blue-500">Uploading...</p>}
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {uploading && <p className="text-sm text-primary-container">Uploading...</p>}
+      {error && <p className="text-sm text-error">{error}</p>}
     </div>
   );
 }

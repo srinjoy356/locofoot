@@ -54,12 +54,12 @@ export default function RecorderPage({ params }: { params: Promise<{ eventId: st
     const rect = pitchRef.current.getBoundingClientRect();
     let x = ((e.clientX - rect.left) / rect.width) * 100;
     let y = ((e.clientY - rect.top) / rect.height) * 100;
-    
+
     if (attackingDirection === 'home_down') {
       x = 100 - x;
       y = 100 - y;
     }
-    
+
     setCoordinates({ x, y });
   };
 
@@ -70,16 +70,16 @@ export default function RecorderPage({ params }: { params: Promise<{ eventId: st
 
   const confirmDetailedEvent = async (actor: MatchPlayer | null, target: MatchPlayer | null, metadata: any) => {
     if (!pendingEvent) return;
-    
+
     // Merge base metadata (e.g. { result: 'GOAL' } for the GOAL shortcut button) with detailed form metadata
     const finalMetadata = { ...pendingEvent.extra, ...metadata };
-    
-    const { 
-      is_big_chance, 
-      assist_player_id, 
-      second_assist_player_id, 
-      related_event_id, 
-      ...cleanMetadata 
+
+    const {
+      is_big_chance,
+      assist_player_id,
+      second_assist_player_id,
+      related_event_id,
+      ...cleanMetadata
     } = finalMetadata;
 
     await fetch(`/api/v1/events/${eventId}/matches/${matchId}/timeline/event`, {
@@ -112,35 +112,48 @@ export default function RecorderPage({ params }: { params: Promise<{ eventId: st
   };
 
   return (
-    <div className="flex flex-col min-h-screen max-w-md mx-auto bg-slate-50 dark:bg-zinc-900/50 p-4">
-      <div className="text-center py-4 border-b flex justify-between items-center">
-        <h1 className="text-xl font-bold">Event Recorder</h1>
-        <div className="text-lg font-mono font-bold text-slate-800 dark:text-zinc-200">{formatClock()}</div>
+    <div className="flex flex-col min-h-screen max-w-md mx-auto bg-background text-on-surface p-4">
+      {/* Themed turf header bar */}
+      <div className="relative overflow-hidden border border-outline-variant bg-[#151816] shrink-0">
+        <div className="absolute inset-0 z-0">
+          <img alt="" aria-hidden="true" className="w-full h-full object-cover object-center  opacity-25 " src="/turf/aerial-field.jpg" />
+          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-background/40 z-10" />
+        </div>
+        <div className="relative z-20 flex justify-between items-center px-4 py-4">
+          <div>
+            <span className="flex items-center gap-2 font-label-caps text-label-caps text-primary-container uppercase tracking-widest">
+              <span className="w-2 h-2 rounded-full bg-primary-container animate-pulse shadow-[0_0_8px_rgba(57,255,106,0.8)]" />
+              Live Recorder
+            </span>
+            <h1 className="font-headline-lg-mobile text-headline-lg-mobile uppercase tracking-tighter text-on-surface mt-1">Event Recorder</h1>
+          </div>
+          <div className="text-lg font-mono font-bold text-primary-container tabular-nums tracking-tighter">{formatClock()}</div>
+        </div>
       </div>
 
       <div className="flex justify-between items-center mt-4 px-2">
-        <div className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase leading-tight">
-          <div><span className="text-slate-800 dark:text-zinc-200">{teams.homeName}</span>: {attackingDirection === 'home_up' ? 'TOP' : 'BOTTOM'}</div>
-          <div><span className="text-slate-800 dark:text-zinc-200">{teams.awayName}</span>: {attackingDirection === 'home_up' ? 'BOTTOM' : 'TOP'}</div>
+        <div className="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest leading-tight">
+          <div><span className="text-on-surface">{teams.homeName}</span>: {attackingDirection === 'home_up' ? 'TOP' : 'BOTTOM'}</div>
+          <div><span className="text-on-surface">{teams.awayName}</span>: {attackingDirection === 'home_up' ? 'BOTTOM' : 'TOP'}</div>
         </div>
-        <button 
-          onClick={toggleDirection} 
-          className="text-xs bg-slate-200 hover:bg-slate-300 px-3 py-1 rounded font-bold transition-colors shadow-sm"
+        <button
+          onClick={toggleDirection}
+          className="border border-outline-variant bg-surface text-on-surface hover:bg-surface-variant px-3 py-1 font-label-caps text-[10px] uppercase tracking-widest transition-colors"
         >
           Flip Sides
         </button>
       </div>
 
       {penalties.length > 0 && (
-        <div className="mt-4 p-3 bg-red-100 dark:bg-red-900/40 border border-red-200 dark:border-red-800 rounded-lg flex flex-col gap-2">
-          <div className="text-sm font-bold text-red-800 dark:text-red-200">
+        <div className="mt-4 p-3 border border-error bg-error/10 flex flex-col gap-2">
+          <div className="font-label-caps text-label-caps uppercase tracking-widest text-error">
             🚨 PENALTY KICK AWARDED!
           </div>
           {penalties.map(p => (
             <button
               key={p.id}
               onClick={() => handleEventClick('SHOT' as TimelineEventType, { result: 'GOAL', situation: 'PENALTY' }, p.id)}
-              className="bg-red-600 text-white font-bold py-2 rounded text-sm w-full animate-pulse shadow hover:bg-red-700"
+              className="bg-error text-on-error py-2 font-label-caps text-label-caps uppercase tracking-widest w-full animate-pulse hover:bg-error/90 transition-colors"
             >
               RECORD PENALTY GOAL
             </button>
@@ -149,42 +162,42 @@ export default function RecorderPage({ params }: { params: Promise<{ eventId: st
       )}
 
       {/* Interactive Pitch */}
-      <div 
+      <div
         ref={pitchRef}
         onClick={handlePitchClick}
-        className={`aspect-[2/3] bg-emerald-700 w-full max-h-[50vh] rounded-lg mt-2 border-2 border-white relative shadow-inner overflow-hidden cursor-crosshair shrink-0 transition-transform duration-500 ${attackingDirection === 'home_down' ? 'rotate-180' : ''}`}
+        className={`aspect-[2/3] bg-surface-container w-full max-h-[50vh] mt-2 border border-outline-variant relative overflow-hidden cursor-crosshair shrink-0 transition-transform duration-500 ${attackingDirection === 'home_down' ? 'rotate-180' : ''}`}
       >
-        <div className="absolute top-0 w-full h-1/2 border-b-2 border-white/50" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 rounded-full border-2 border-white/50" />
-        <div className={`absolute inset-0 flex items-center justify-center text-white/30 font-bold pointer-events-none transition-transform duration-500 ${attackingDirection === 'home_down' ? '-rotate-180' : ''}`}>TAP TO SET LOCATION</div>
-        
+        <div className="absolute top-0 w-full h-1/2 border-b border-primary-container/20" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 rounded-full border border-primary-container/20" />
+        <div className={`absolute inset-0 flex items-center justify-center text-on-surface-variant/40 font-label-caps text-label-caps uppercase tracking-widest pointer-events-none transition-transform duration-500 ${attackingDirection === 'home_down' ? '-rotate-180' : ''}`}>TAP TO SET LOCATION</div>
+
         {coordinates && (
-          <div 
-            className="absolute w-4 h-4 bg-yellow-400 rounded-full border-2 border-white transform -translate-x-1/2 -translate-y-1/2 pointer-events-none shadow"
+          <div
+            className="absolute w-4 h-4 bg-primary-container rounded-full border-2 border-background transform -translate-x-1/2 -translate-y-1/2 pointer-events-none shadow-[0_0_8px_rgba(57,255,106,0.8)]"
             style={{ left: `${coordinates.x}%`, top: `${coordinates.y}%` }}
           />
         )}
       </div>
-      
-      {!coordinates && <p className="text-center text-sm text-slate-500 dark:text-zinc-400 mt-2 font-medium">Tap the pitch first, then select an event.</p>}
+
+      {!coordinates && <p className="text-center font-label-caps text-[10px] text-on-surface-variant mt-2 uppercase tracking-widest">Tap the pitch first, then select an event.</p>}
 
       <div className={`grid grid-cols-2 gap-2 mt-4 pb-4 ${isMatchEnded ? 'opacity-50 pointer-events-none' : ''}`}>
-        <button onClick={() => handleEventClick('SHOT' as TimelineEventType, { result: 'GOAL' })} className="bg-emerald-50 dark:bg-emerald-950/200 text-white py-3 rounded-lg font-bold shadow">GOAL</button>
-        <button onClick={() => handleEventClick('SHOT' as TimelineEventType)} className="bg-slate-800 text-white py-3 rounded-lg font-bold shadow">SHOT</button>
-        <button onClick={() => handleEventClick('PASS' as TimelineEventType, { result: 'COMPLETED' })} className="bg-blue-50 dark:bg-blue-950/200 text-white py-3 rounded-lg font-bold shadow">PASS</button>
-        <button onClick={() => handleEventClick('DRIBBLE' as TimelineEventType, { result: 'SUCCESS' })} className="bg-purple-500 text-white py-3 rounded-lg font-bold shadow">DRIBBLE</button>
-        <button onClick={() => handleEventClick('TACKLE' as TimelineEventType, { result: 'WON_RETAINED' })} className="bg-amber-600 text-white py-3 rounded-lg font-bold shadow">TACKLE</button>
-        <button onClick={() => handleEventClick('INTERCEPTION' as TimelineEventType)} className="bg-cyan-600 text-white py-3 rounded-lg font-bold shadow">INTERCEPT</button>
-        <button onClick={() => handleEventClick('CLEARANCE' as TimelineEventType)} className="bg-orange-500 text-white py-3 rounded-lg font-bold shadow">CLEAR</button>
-        <button onClick={() => handleEventClick('AERIAL_DUEL' as TimelineEventType, { result: 'WON' })} className="bg-lime-600 text-white py-3 rounded-lg font-bold shadow">AERIAL WON</button>
-        <button onClick={() => handleEventClick('SAVE' as TimelineEventType)} className="bg-indigo-500 text-white py-3 rounded-lg font-bold shadow">SAVE</button>
-        <button onClick={() => handleEventClick('BALL_RECOVERY' as TimelineEventType)} className="bg-teal-600 text-white py-3 rounded-lg font-bold shadow">RECOVERY</button>
-        <button onClick={() => handleEventClick('GREAT_FIRST_TOUCH' as TimelineEventType)} className="bg-fuchsia-600 text-white py-3 rounded-lg font-bold shadow">GREAT 1ST TOUCH</button>
-        <button onClick={() => handleEventClick('CROSS' as TimelineEventType)} className="bg-sky-500 text-white py-3 rounded-lg font-bold shadow">CROSS</button>
+        <button onClick={() => handleEventClick('SHOT' as TimelineEventType, { result: 'GOAL' })} className="bg-primary-container text-on-primary-container py-3 font-label-caps text-label-caps uppercase tracking-widest hover:bg-primary-fixed transition-colors">GOAL</button>
+        <button onClick={() => handleEventClick('SHOT' as TimelineEventType)} className="border border-outline-variant bg-surface text-on-surface py-3 font-label-caps text-label-caps uppercase tracking-widest hover:bg-surface-variant transition-colors">SHOT</button>
+        <button onClick={() => handleEventClick('PASS' as TimelineEventType, { result: 'COMPLETED' })} className="border border-outline-variant bg-surface text-on-surface py-3 font-label-caps text-label-caps uppercase tracking-widest hover:bg-surface-variant transition-colors">PASS</button>
+        <button onClick={() => handleEventClick('DRIBBLE' as TimelineEventType, { result: 'SUCCESS' })} className="border border-outline-variant bg-surface text-on-surface py-3 font-label-caps text-label-caps uppercase tracking-widest hover:bg-surface-variant transition-colors">DRIBBLE</button>
+        <button onClick={() => handleEventClick('TACKLE' as TimelineEventType, { result: 'WON_RETAINED' })} className="border border-outline-variant bg-surface text-on-surface py-3 font-label-caps text-label-caps uppercase tracking-widest hover:bg-surface-variant transition-colors">TACKLE</button>
+        <button onClick={() => handleEventClick('INTERCEPTION' as TimelineEventType)} className="border border-outline-variant bg-surface text-on-surface py-3 font-label-caps text-label-caps uppercase tracking-widest hover:bg-surface-variant transition-colors">INTERCEPT</button>
+        <button onClick={() => handleEventClick('CLEARANCE' as TimelineEventType)} className="border border-outline-variant bg-surface text-on-surface py-3 font-label-caps text-label-caps uppercase tracking-widest hover:bg-surface-variant transition-colors">CLEAR</button>
+        <button onClick={() => handleEventClick('AERIAL_DUEL' as TimelineEventType, { result: 'WON' })} className="border border-outline-variant bg-surface text-on-surface py-3 font-label-caps text-label-caps uppercase tracking-widest hover:bg-surface-variant transition-colors">AERIAL WON</button>
+        <button onClick={() => handleEventClick('SAVE' as TimelineEventType)} className="border border-outline-variant bg-surface text-on-surface py-3 font-label-caps text-label-caps uppercase tracking-widest hover:bg-surface-variant transition-colors">SAVE</button>
+        <button onClick={() => handleEventClick('BALL_RECOVERY' as TimelineEventType)} className="border border-outline-variant bg-surface text-on-surface py-3 font-label-caps text-label-caps uppercase tracking-widest hover:bg-surface-variant transition-colors">RECOVERY</button>
+        <button onClick={() => handleEventClick('GREAT_FIRST_TOUCH' as TimelineEventType)} className="border border-outline-variant bg-surface text-on-surface py-3 font-label-caps text-label-caps uppercase tracking-widest hover:bg-surface-variant transition-colors">GREAT 1ST TOUCH</button>
+        <button onClick={() => handleEventClick('CROSS' as TimelineEventType)} className="border border-outline-variant bg-surface text-on-surface py-3 font-label-caps text-label-caps uppercase tracking-widest hover:bg-surface-variant transition-colors">CROSS</button>
       </div>
 
       {pendingEvent && (
-        <DetailedEventModal 
+        <DetailedEventModal
           eventType={pendingEvent.type}
           players={players}
           playersLoading={playersLoading}
