@@ -2,6 +2,7 @@ import React from 'react';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { TurfHero } from '@/components/shared/TurfHero';
+import { InteractiveMatchTimeline } from '@/components/analytics/InteractiveMatchTimeline';
 
 export default async function MatchStatsPage({ params }: { params: Promise<{ slug: string, matchId: string }> }) {
   const supabase = await createClient();
@@ -301,34 +302,12 @@ export default async function MatchStatsPage({ params }: { params: Promise<{ slu
         <div className="space-y-6">
            
            {/* MATCH TIMELINE */}
-           <div className="bg-surface-container border border-outline-variant overflow-hidden">
-              <div className="bg-surface-container-high p-4 font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant">Key Moments</div>
-              <div className="p-4 space-y-4">
-                {combinedTimeline.length === 0 ? (
-                  <div className="text-sm text-on-surface-variant text-center p-4">No key events recorded.</div>
-                ) : (
-                  combinedTimeline.map((e, i) => {
-                     const isHome = e.actor_registration_id === matchData.home_registration_id || e.event_registration_id === matchData.home_registration_id;
-                     const name = playerNames[e.actor_player_id || e.event_player_id] || 'Unknown Player';
-                     let icon = '⏱️';
-                     if (e.event_type === 'SHOT' || e.event_type === 'GOAL') icon = '⚽';
-                     if (e.event_type === 'YELLOW_CARD') icon = '🟨';
-                     if (e.event_type === 'RED_CARD') icon = '🟥';
-                     
-                     return (
-                       <div key={i} className={`flex gap-3 text-sm items-center ${isHome ? 'flex-row' : 'flex-row-reverse'}`}>
-                         <div className="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center font-bold text-xs shrink-0 text-on-surface">
-                           {e.display_minute}'
-                         </div>
-                         <div className="bg-surface-variant px-3 py-2 flex items-center gap-2">
-                            <span>{icon}</span>
-                            <span className="font-semibold text-on-surface">{name}</span>
-                         </div>
-                       </div>
-                     );
-                  })
-                )}
-              </div>
+           <div className="h-[700px]">
+             <InteractiveMatchTimeline 
+               timeline={combinedTimeline} 
+               matchData={matchData} 
+               playerNames={playerNames} 
+             />
            </div>
 
            {/* PLAYER MATCH CARDS */}

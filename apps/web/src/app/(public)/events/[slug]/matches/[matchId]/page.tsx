@@ -6,6 +6,7 @@ import { Clock, ShieldAlert, Share2 } from 'lucide-react';
 import Link from 'next/link';
 import { ShareButton } from '@/components/shared/ShareButton';
 import { QRCodeBlock } from '@/components/shared/QRCodeBlock';
+import { AnimatedPitch } from '@/components/analytics/AnimatedPitch';
 
 import { useMatchClock } from '@/app/(admin)/admin/events/[eventId]/matches/[matchId]/useMatchClock';
 
@@ -24,11 +25,44 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
   const [disputeDescription, setDisputeDescription] = useState('');
   const [isSubmittingDispute, setIsSubmittingDispute] = useState(false);
   const [announcement, setAnnouncement] = useState<any>(null);
+  const [rawActiveEvent, setRawActiveEvent] = useState<any>(null);
+  const [activeEvent, setActiveEvent] = useState<any>(null);
+  
+  const [homeStarters, setHomeStarters] = useState<any[]>([]);
+  const [awayStarters, setAwayStarters] = useState<any[]>([]);
+  const [homeSubs, setHomeSubs] = useState<any[]>([]);
+  const [awaySubs, setAwaySubs] = useState<any[]>([]);
+  
   const supabase = createClient();
   
   // We use the event_id from matchData to power the clock, falling back to slug if it's a UUID
   const clockEventId = matchData?.event_id || slug;
   const { elapsed, formatClock } = useMatchClock(clockEventId, matchId);
+
+  useEffect(() => {
+    if (rawActiveEvent && matchData) {
+      const isHome = rawActiveEvent.actor_registration_id === matchData.home_registration_id || rawActiveEvent.event_registration_id === matchData.home_registration_id;
+      const actorId = rawActiveEvent.actor_player_id || rawActiveEvent.player_id || rawActiveEvent.event_player_id;
+      const actorName = actorId ? playerMap[actorId] : (rawActiveEvent.metadata?.committed_by_player_name || rawActiveEvent.metadata?.player_out_name || 'Unknown');
+      const targetId = rawActiveEvent.target_player_id || rawActiveEvent.metadata?.player_in_id;
+      const targetName = targetId ? playerMap[targetId] : 'Unknown';
+      
+      setActiveEvent({
+        id: rawActiveEvent.id || `${rawActiveEvent.event_type}-${rawActiveEvent.elapsed_seconds}`,
+        type: rawActiveEvent.event_type,
+        actor: {
+          id: actorId,
+          name: actorName,
+          team: isHome ? 'home' : 'away',
+        },
+        target: {
+          id: targetId,
+          name: targetName,
+        },
+        minute: rawActiveEvent.display_minute
+      });
+    }
+  }, [rawActiveEvent, matchData, playerMap]);
 
   useEffect(() => {
     async function loadInitialData() {
@@ -100,31 +134,84 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
             setIsCaptain(true);
           }
 
-          // Fetch all players for these teams to get their names
-          const { data: playersData } = await supabase
-            .from('event_team_players')
-            .select('id, user_id')
-            .in('event_registration_id', [match.home_registration_id, match.away_registration_id]);
+            // Fetch all players for these teams to get their names
+            const { data: playersData } = await supabase
+              .from('event_team_players')
+              .select('id, user_id, event_registration_id')
+              .in('event_registration_id', [match.home_registration_id, match.away_registration_id]);
 
-          if (playersData && playersData.length > 0) {
-            const userIds = playersData.map(p => p.user_id).filter(Boolean);
-            if (userIds.length > 0) {
-              const { data: usersData } = await supabase
-                .from('users')
-                .select('id, display_name')
-                .in('id', userIds);
+            if (playersData && playersData.length > 0) {
+              const userIds = playersData.map(p => p.user_id).filter(Boolean);
+              if (userIds.length > 0) {
+                const { data: usersData } = await supabase
+                  .from('users')
+                  .select('id, display_name')
+                  .in('id', userIds);
+                  
+                const tempMap: Record<string, string> = {};
+                playersData.forEach(p => {
+                  const user = usersData?.find(u => u.id === p.user_id);
+                  if (user?.display_name) {
+                    tempMap[p.id] = user.display_name;
+                  }
+                });
+                setPlayerMap(tempMap);
+
+                // Now fetch lineups
+                const { data: lineups } = await supabase
+                  .from('match_lineups')
+                  .select('id, team_registration_id')
+                  .eq('match_id', matchId);
+
+                let starters = new Set<string>();
+                let hasLineups = false;
                 
-              const tempMap: Record<string, string> = {};
-              playersData.forEach(p => {
-                const user = usersData?.find(u => u.id === p.user_id);
-                if (user?.display_name) {
-                  tempMap[p.id] = user.display_name;
+                if (lineups && lineups.length > 0) {
+                  hasLineups = true;
+                  const { data: lineupPlayers } = await supabase
+                    .from('match_lineup_players')
+                    .select('event_team_player_id')
+                    .in('lineup_id', lineups.map((l: any) => l.id))
+                    .eq('lineup_role', 'STARTER');
+                  if (lineupPlayers) {
+                    lineupPlayers.forEach((lp: any) => starters.add(lp.event_team_player_id));
+                  }
                 }
-              });
-              setPlayerMap(tempMap);
+
+                const hStarters: any[] = [];
+                const hSubs: any[] = [];
+                const aStarters: any[] = [];
+                const aSubs: any[] = [];
+
+                playersData.forEach((p: any) => {
+                  const isHome = p.event_registration_id === match.home_registration_id;
+                  
+                  // If no formal lineup has been submitted yet, default everyone to starters so the pitch isn't empty!
+                  const isStarter = hasLineups ? starters.has(p.id) : true;
+                  
+                  const user = usersData?.find(u => u.id === p.user_id);
+                  const mapped = {
+                    id: p.id,
+                    user_id: p.user_id,
+                    name: user?.display_name || 'Unknown',
+                    team: isHome ? 'home' : 'away'
+                  };
+                  if (isHome) {
+                    if (isStarter) hStarters.push(mapped);
+                    else hSubs.push(mapped);
+                  } else {
+                    if (isStarter) aStarters.push(mapped);
+                    else aSubs.push(mapped);
+                  }
+                });
+
+                setHomeStarters(hStarters);
+                setAwayStarters(aStarters);
+                setHomeSubs(hSubs);
+                setAwaySubs(aSubs);
+              }
             }
           }
-        }
       }
       setIsLoading(false);
     }
@@ -145,12 +232,14 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
     const timelineChannel = supabase.channel(`match:${matchId}:timeline`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'match_timeline_events', filter: `match_id=eq.${matchId}` }, (payload) => {
         setTimelineEvents(prev => [payload.new, ...prev]);
+        setRawActiveEvent(payload.new);
       })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'match_timeline_events', filter: `match_id=eq.${matchId}` }, (payload) => {
         setTimelineEvents(prev => prev.map(ev => ev.id === payload.new.id ? payload.new : ev));
       })
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'referee_events', filter: `match_id=eq.${matchId}` }, (payload) => {
         setRefereeEvents(prev => [payload.new, ...prev]);
+        setRawActiveEvent(payload.new);
       })
       .subscribe();
 
@@ -364,6 +453,25 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
         <h2 className="font-headline-lg-mobile text-headline-lg-mobile uppercase text-on-surface mb-6 tracking-tighter">
           Match Timeline
         </h2>
+
+        {/* Animated Pitch Section */}
+        <div className="mb-8 border border-outline-variant bg-surface relative h-[400px] overflow-hidden">
+           <AnimatedPitch 
+             activeEvent={activeEvent} 
+             homeStarters={homeStarters}
+             awayStarters={awayStarters}
+             homeSubs={homeSubs}
+             awaySubs={awaySubs}
+           />
+           {allEvents.length > 0 && !activeEvent && (
+             <div className="absolute inset-0 bg-surface/50 backdrop-blur-[2px] flex items-center justify-center pointer-events-none z-50">
+               <div className="bg-surface-container-high px-6 py-3 border border-outline-variant text-on-surface font-label-caps text-label-caps uppercase tracking-widest text-center max-w-xs shadow-2xl">
+                 Click an event below to view replay or wait for live events
+               </div>
+             </div>
+           )}
+        </div>
+
         <div className="flex flex-col gap-0 border-t border-outline-variant">
           {allEvents.map((ev, i) => {
             const isGoal = ev.metadata?.result === 'GOAL';
@@ -374,14 +482,23 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
             let actorName = (ev.actor_player_id || ev.player_id || ev.event_player_id) ? playerMap[ev.actor_player_id || ev.player_id || ev.event_player_id] : (ev.metadata?.committed_by_player_name || ev.metadata?.player_out_name || null);
             let targetName = ev.target_player_id ? playerMap[ev.target_player_id] : (ev.metadata?.received_by_player_name || ev.metadata?.player_in_name || null);
             
+            const isActive = rawActiveEvent?.id === ev.id;
+            
             return (
-              <div key={ev.id || i} className={`flex items-center border-b border-outline-variant p-4 transition-colors hover:bg-surface ${isGoal ? 'bg-primary-container/5 border-l-4 border-l-primary-container' : 'bg-background'} ${isCard ? (ev.event_type === 'RED_CARD' ? 'border-l-4 border-l-error bg-error/5' : 'border-l-4 border-l-yellow-400 bg-yellow-400/5') : ''}`}>
-                <div className="font-mono text-xl tabular-nums tracking-tighter text-on-surface-variant w-12 shrink-0">
+              <button 
+                key={ev.id || i} 
+                onClick={() => setRawActiveEvent(ev)}
+                className={`w-full text-left flex items-center border-b border-outline-variant p-4 transition-colors hover:bg-surface-variant ${
+                  isActive ? 'bg-primary-container/20 ring-inset ring-2 ring-primary-container relative z-10' : 
+                  (isGoal ? 'bg-primary-container/5 border-l-4 border-l-primary-container' : 'bg-background')
+                } ${!isActive && isCard ? (ev.event_type === 'RED_CARD' ? 'border-l-4 border-l-error bg-error/5' : 'border-l-4 border-l-yellow-400 bg-yellow-400/5') : ''}`}
+              >
+                <div className={`font-mono text-xl tabular-nums tracking-tighter w-12 shrink-0 ${isActive ? 'text-primary' : 'text-on-surface-variant'}`}>
                   {ev.display_minute}<span>'</span>
                 </div>
                 <div className="flex-1 ml-4">
                     <div className="flex items-center gap-3 mb-1">
-                      <span className="font-label-caps text-[10px] text-on-surface uppercase tracking-widest">{ev.event_type.replace(/_/g, ' ')}</span>
+                      <span className={`font-label-caps text-[10px] uppercase tracking-widest ${isActive ? 'text-primary' : 'text-on-surface'}`}>{ev.event_type.replace(/_/g, ' ')}</span>
                       {isGoal && <span className="bg-primary-container text-on-primary-container text-[9px] font-bold px-2 py-0.5 rounded-none uppercase tracking-widest">GOAL</span>}
                       {ev.event_type === 'YELLOW_CARD' && <span className="bg-yellow-400 w-3 h-4 border border-outline-variant shadow-sm block"></span>}
                       {ev.event_type === 'RED_CARD' && <span className="bg-error w-3 h-4 border border-outline-variant shadow-sm block"></span>}
@@ -402,11 +519,11 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
                       <>
                         {actorName && (
                           <div className="font-body-md text-on-surface mt-1 flex items-center gap-2 flex-wrap">
-                            <span className="border border-outline-variant bg-surface px-2 py-1">{actorName}</span>
+                            <span className={`border px-2 py-1 ${isActive ? 'border-primary-container bg-primary-container/20 text-primary-container' : 'border-outline-variant bg-surface'}`}>{actorName}</span>
                             {targetName && (
                               <>
                                 <span className="text-on-surface-variant text-xs">&rarr;</span>
-                                <span className="border border-outline-variant bg-surface px-2 py-1">{targetName}</span>
+                                <span className={`border px-2 py-1 ${isActive ? 'border-primary-container bg-primary-container/20 text-primary-container' : 'border-outline-variant bg-surface'}`}>{targetName}</span>
                               </>
                             )}
                           </div>
@@ -430,7 +547,7 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
                       </>
                     )}
                 </div>
-              </div>
+              </button>
             );
           })}
           {allEvents.length === 0 && (

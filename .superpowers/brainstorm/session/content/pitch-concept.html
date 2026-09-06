@@ -1,0 +1,150 @@
+<style>
+  .pitch-container {
+    background: #2E7D32;
+    border: 2px solid white;
+    aspect-ratio: 16/9;
+    position: relative;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  /* Draw pitch lines */
+  .pitch-container::before {
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0; left: 50%;
+    border-left: 2px solid white;
+  }
+  .center-circle {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 20%; aspect-ratio: 1/1;
+    border: 2px solid white;
+    border-radius: 50%;
+  }
+  .penalty-area-left {
+    position: absolute;
+    top: 20%; bottom: 20%; left: 0;
+    width: 15%;
+    border: 2px solid white;
+    border-left: none;
+  }
+  .penalty-area-right {
+    position: absolute;
+    top: 20%; bottom: 20%; right: 0;
+    width: 15%;
+    border: 2px solid white;
+    border-right: none;
+  }
+  .player {
+    position: absolute;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    border: 2px solid white;
+    color: white; font-size: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold;
+    transition: all 0.5s ease-in-out;
+  }
+  .home-team { background: #1976D2; }
+  .away-team { background: #D32F2F; }
+  
+  .event-animation {
+    position: absolute;
+    border: 2px dashed yellow;
+    border-radius: 50%;
+    animation: pulse 1s infinite;
+  }
+  
+  @keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    100% { transform: scale(2); opacity: 0; }
+  }
+
+  /* Subs bench */
+  .bench {
+    display: flex; gap: 8px; padding: 10px; background: #1a1a1a;
+    border-radius: 8px; margin-bottom: 20px;
+  }
+</style>
+
+<h2>2D Animated Pitch Visualization</h2>
+<p class="subtitle">Concept for the interactive match timeline</p>
+
+<div class="mockup">
+  <div class="mockup-header">Match Stats & Timeline</div>
+  <div class="mockup-body">
+    
+    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+      <div class="bench">
+        <div class="player home-team" style="position:static; transform:none">12</div>
+        <div class="player home-team" style="position:static; transform:none">14</div>
+        <span style="color: #888; font-size: 12px; align-self: center; margin-left: 10px">Home Subs</span>
+      </div>
+      <div class="bench">
+        <span style="color: #888; font-size: 12px; align-self: center; margin-right: 10px">Away Subs</span>
+        <div class="player away-team" style="position:static; transform:none">9</div>
+        <div class="player away-team" style="position:static; transform:none">11</div>
+      </div>
+    </div>
+
+    <div class="pitch-container">
+      <div class="center-circle"></div>
+      <div class="penalty-area-left"></div>
+      <div class="penalty-area-right"></div>
+      
+      <!-- Home Team (Left Half) -->
+      <div class="player home-team" style="left: 10%; top: 50%;">1</div>
+      <div class="player home-team" style="left: 30%; top: 30%;">4</div>
+      <div class="player home-team" style="left: 30%; top: 70%;">5</div>
+      <div class="player home-team" style="left: 45%; top: 50%;">10</div>
+      
+      <!-- Away Team (Right Half) -->
+      <div class="player away-team" style="left: 90%; top: 50%;">1</div>
+      <div class="player away-team" style="left: 70%; top: 20%;">2</div>
+      <div class="player away-team" style="left: 70%; top: 80%;">3</div>
+      <div class="player away-team" style="left: 55%; top: 40%;">8</div>
+      
+      <!-- Event Animation (e.g. Pass from 10 to 4) -->
+      <svg style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none">
+        <line x1="45%" y1="50%" x2="30%" y2="30%" stroke="yellow" stroke-width="2" stroke-dasharray="4" />
+      </svg>
+      <div class="event-animation" style="left: 30%; top: 30%; width: 30px; height: 30px; transform: translate(-50%, -50%);"></div>
+    </div>
+
+    <div class="mock-nav" style="background: #2a2a2a; border-radius: 8px; padding: 15px;">
+      <div style="font-weight:bold; margin-bottom: 10px;">Timeline Events (Scrolls)</div>
+      <div style="display:flex; gap: 10px; margin-bottom: 10px; align-items:center; background: #333; padding: 10px; border-radius: 4px; border-left: 3px solid yellow;">
+        <div style="font-weight:bold">24'</div>
+        <div>⚽ Goal - Home #10 (Selected)</div>
+      </div>
+      <div style="display:flex; gap: 10px; margin-bottom: 10px; align-items:center;">
+        <div style="font-weight:bold">32'</div>
+        <div>🟨 Yellow Card - Away #2</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<h3>Questions for the Visualization</h3>
+<p class="subtitle">How should this behave when a user interacts with it?</p>
+
+<div class="options">
+  <div class="option" data-choice="auto-play" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Continuous Playback</h3>
+      <p>The pitch animations play automatically in sequence, like a highlight reel, while the timeline scrolls along.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="scroll-driven" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Scroll / Click Driven</h3>
+      <p>The pitch updates only when the user scrolls to a specific event in the timeline, or clicks an event.</p>
+    </div>
+  </div>
+</div>

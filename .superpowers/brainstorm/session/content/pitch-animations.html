@@ -1,0 +1,184 @@
+<style>
+  .mobile-preview { max-width: 400px; margin: 0 auto; border: 12px solid #333; border-radius: 36px; background: #121212; height: 600px; display: flex; flex-direction: column; overflow:hidden;}
+  .pitch-container { background: #2E7D32; border: 2px solid white; flex: 1; position: relative; margin: 10px; border-radius: 8px; overflow: hidden; }
+  .pitch-container::before { content: ''; position: absolute; top: 50%; left: 0; right: 0; border-top: 2px solid white; }
+  .center-circle { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 30%; aspect-ratio: 1/1; border: 2px solid white; border-radius: 50%; }
+  .penalty-area-top { position: absolute; top: 0; left: 25%; right: 25%; height: 15%; border: 2px solid white; border-top: none; }
+  .penalty-area-bottom { position: absolute; bottom: 0; left: 25%; right: 25%; height: 15%; border: 2px solid white; border-bottom: none; }
+  
+  .character { position: absolute; transform: translate(-50%, -50%); font-size: 24px; text-align: center; line-height: 1; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5)); transition: all 0.5s ease-in-out; z-index: 10; opacity: 1; }
+  .char-label { font-size: 9px; background: rgba(0,0,0,0.7); color: white; border-radius: 4px; padding: 1px 4px; margin-top: 2px; font-weight: bold; white-space: nowrap; }
+  .home-team { filter: hue-rotate(200deg); }
+  .away-team { filter: hue-rotate(0deg); }
+  
+  .ball { position:absolute; font-size: 16px; transform:translate(-50%, -50%); z-index: 20; transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1); opacity: 0; }
+  .fx { position:absolute; font-size: 32px; transform:translate(-50%, -50%); z-index: 30; opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space:nowrap; font-weight:900; color:yellow; -webkit-text-stroke: 1px black; }
+
+  .controls { padding: 15px; background: #1e1e1e; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; overflow-y: auto;}
+  .btn { background: #333; border: 1px solid #555; color: white; padding: 6px 12px; border-radius: 16px; font-size: 12px; cursor: pointer; transition: background 0.2s;}
+  .btn:hover { background: #444; }
+  
+  .bench-container { display: flex; justify-content: space-between; padding: 0 15px; margin-bottom: 5px; margin-top: 15px;}
+  .bench { display: flex; gap: 8px; background: #222; padding: 5px 10px; border-radius: 20px; align-items: center; }
+
+  /* Specific Animations */
+  @keyframes shake { 0% {transform: translate(-50%, -50%) rotate(0deg);} 25% {transform: translate(-50%, -50%) rotate(-20deg);} 50% {transform: translate(-50%, -50%) rotate(20deg);} 75% {transform: translate(-50%, -50%) rotate(-10deg);} 100% {transform: translate(-50%, -50%) rotate(0deg);} }
+  .anim-shake { animation: shake 0.4s ease-in-out; }
+  
+  @keyframes pop { 0% {transform: translate(-50%, -50%) scale(0.5); opacity:0} 50% {transform: translate(-50%, -50%) scale(1.5); opacity:1} 100% {transform: translate(-50%, -50%) scale(1); opacity:0} }
+  .anim-pop { animation: pop 1s forwards; }
+</style>
+
+<h2>Animation Choreography Sandbox</h2>
+<p class="subtitle">Click the buttons below to see how each timeline event will animate on the field.</p>
+
+<div class="split">
+  <div class="mockup" style="flex: 1">
+    <div class="mockup-header">Animation Preview</div>
+    <div class="mobile-preview">
+      
+      <div class="bench-container">
+        <div class="bench"><span style="font-size: 10px; color:#aaa">Home Subs</span><div id="sub_in" class="character home-team" style="position:relative; transform:none; display:none;">🧍‍♂️</div></div>
+        <div class="bench"><div class="character away-team" style="position:relative; transform:none">🧍‍♂️</div><span style="font-size: 10px; color:#aaa">Away Subs</span></div>
+      </div>
+
+      <div class="pitch-container" id="pitch">
+        <div class="center-circle"></div>
+        <div class="penalty-area-top"></div>
+        <div class="penalty-area-bottom"></div>
+        
+        <!-- Actors -->
+        <div id="p_atk1" class="character home-team" style="left: 50%; top: 60%;">🏃‍♂️<div class="char-label">10 (ATK)</div></div>
+        <div id="p_atk2" class="character home-team" style="left: 20%; top: 40%;">🏃‍♂️<div class="char-label">7 (ATK)</div></div>
+        <div id="p_def" class="character away-team" style="left: 50%; top: 30%;">🏃‍♂️<div class="char-label">4 (DEF)</div></div>
+        <div id="p_gk" class="character away-team" style="left: 50%; top: 10%;">🧍‍♂️<div class="char-label">1 (GK)</div></div>
+        <div id="p_subout" class="character home-team" style="left: 80%; top: 80%;">🏃‍♂️<div class="char-label">9 (OUT)</div></div>
+
+        <!-- Props -->
+        <div id="ball" class="ball">⚽</div>
+        <div id="fx" class="fx"></div>
+      </div>
+
+      <div class="controls">
+        <button class="btn" onclick="playAnim('pass')">Pass / Cross</button>
+        <button class="btn" onclick="playAnim('goal')">Goal</button>
+        <button class="btn" onclick="playAnim('save')">Save</button>
+        <button class="btn" onclick="playAnim('tackle')">Tackle</button>
+        <button class="btn" onclick="playAnim('nutmeg')">Nutmeg</button>
+        <button class="btn" onclick="playAnim('foul')">Foul</button>
+        <button class="btn" onclick="playAnim('redcard')">Red Card</button>
+        <button class="btn" onclick="playAnim('sub')">Substitution</button>
+        <button class="btn" onclick="resetPitch()" style="background:#800; border-color:#f00">Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <div style="flex: 1; padding: 20px;">
+    <h3>Proposed Logic for Animations</h3>
+    <p>Every event is broken down into an <strong>Actor</strong>, a <strong>Target</strong>, and an <strong>Action</strong>.</p>
+    <ul>
+      <li><strong>Goal:</strong> Ball flies from Actor to Goal net. "GOAL!" text pops up.</li>
+      <li><strong>Passes:</strong> Ball moves from Actor to Target player.</li>
+      <li><strong>Nutmeg:</strong> Ball moves from Actor, *through* Defender, back to Actor. Defender shakes.</li>
+      <li><strong>Fouls/Tackles:</strong> Actor moves quickly into Target. Collision icon 💥 pops up.</li>
+      <li><strong>Cards:</strong> Card icon 🟨/🟥 floats above player. Red card makes player fade and exit.</li>
+      <li><strong>Subs:</strong> Player walks off to bench, Sub walks from bench to their spot.</li>
+    </ul>
+
+    <h3 style="margin-top: 30px">Do these animations match your vision?</h3>
+    <div class="options">
+      <div class="option" data-choice="approve" onclick="toggleSelect(this)">
+        <div class="letter">A</div>
+        <div class="content">
+          <h3>Yes, build this system</h3>
+          <p>The logic is sound and the animations look like exactly what I want.</p>
+        </div>
+      </div>
+      <div class="option" data-choice="refine" onclick="toggleSelect(this)">
+        <div class="letter">B</div>
+        <div class="content">
+          <h3>Needs adjustments</h3>
+          <p>I'd like to change how some of these look before we proceed.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const ball = document.getElementById('ball');
+  const fx = document.getElementById('fx');
+  const atk1 = document.getElementById('p_atk1');
+  const atk2 = document.getElementById('p_atk2');
+  const def = document.getElementById('p_def');
+  const gk = document.getElementById('p_gk');
+  const subout = document.getElementById('p_subout');
+  const subin = document.getElementById('sub_in');
+
+  function resetPitch() {
+    ball.style.opacity = '0';
+    fx.style.opacity = '0';
+    fx.className = 'fx';
+    atk1.style.left = '50%'; atk1.style.top = '60%'; atk1.style.opacity = '1';
+    atk1.className = 'character home-team';
+    atk2.style.left = '20%'; atk2.style.top = '40%';
+    def.style.left = '50%'; def.style.top = '30%'; def.className = 'character away-team';
+    gk.style.left = '50%'; gk.style.top = '10%';
+    subout.style.left = '80%'; subout.style.top = '80%'; subout.style.opacity = '1'; subout.style.display = 'block';
+    subin.style.display = 'none';
+  }
+
+  function playAnim(type) {
+    resetPitch();
+    setTimeout(() => {
+      if(type === 'pass') {
+        ball.style.left = '50%'; ball.style.top = '60%'; ball.style.opacity = '1';
+        setTimeout(() => { ball.style.left = '20%'; ball.style.top = '40%'; }, 500);
+      }
+      else if(type === 'goal') {
+        ball.style.left = '50%'; ball.style.top = '60%'; ball.style.opacity = '1';
+        setTimeout(() => { ball.style.left = '50%'; ball.style.top = '0%'; }, 500);
+        setTimeout(() => { 
+          fx.innerText = 'GOAL!'; fx.style.left = '50%'; fx.style.top = '10%';
+          fx.classList.add('anim-pop');
+        }, 800);
+      }
+      else if(type === 'save') {
+        ball.style.left = '50%'; ball.style.top = '60%'; ball.style.opacity = '1';
+        setTimeout(() => { ball.style.left = '40%'; ball.style.top = '10%'; gk.style.left = '40%'; }, 500);
+        setTimeout(() => { ball.style.left = '10%'; ball.style.top = '20%'; }, 1000); // rebound
+      }
+      else if(type === 'tackle') {
+        ball.style.left = '50%'; ball.style.top = '60%'; ball.style.opacity = '1';
+        setTimeout(() => { def.style.left = '50%'; def.style.top = '58%'; }, 300);
+        setTimeout(() => { ball.style.left = '80%'; ball.style.top = '40%'; }, 600); // knocked away
+      }
+      else if(type === 'nutmeg') {
+        ball.style.left = '50%'; ball.style.top = '60%'; ball.style.opacity = '1';
+        atk1.style.left = '50%'; atk1.style.top = '40%'; // run forward
+        setTimeout(() => { ball.style.left = '50%'; ball.style.top = '20%'; def.classList.add('anim-shake'); }, 400); // through legs
+      }
+      else if(type === 'foul') {
+        setTimeout(() => { def.style.left = '50%'; def.style.top = '60%'; }, 300); // charge!
+        setTimeout(() => { 
+          fx.innerText = '💥'; fx.style.left = '50%'; fx.style.top = '58%';
+          fx.classList.add('anim-pop');
+          atk1.classList.add('anim-shake');
+        }, 600);
+      }
+      else if(type === 'redcard') {
+        fx.innerText = '🟥'; fx.style.left = '50%'; fx.style.top = '55%';
+        fx.classList.add('anim-pop');
+        setTimeout(() => { atk1.style.opacity = '0'; }, 1000); // Sent off
+      }
+      else if(type === 'sub') {
+        subout.style.left = '100%'; subout.style.opacity = '0'; // walk off
+        setTimeout(() => { 
+            subout.style.display = 'none'; 
+            subin.style.display = 'block';
+            subin.style.left = '80%'; subin.style.top = '80%';
+        }, 500);
+      }
+    }, 50);
+  }
+</script>
