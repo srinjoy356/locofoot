@@ -12,7 +12,7 @@ export default function VenuesPage() {
   async function load() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
-    const { data: vData } = await supabase.from('venues').select('*, fields(*)').order('created_at', { ascending: false });
+    const { data: vData } = await supabase.from('venues').select('*, venue_fields(*)').order('created_at', { ascending: false });
     if (vData) setVenues(vData);
   }
 
@@ -70,7 +70,7 @@ export default function VenuesPage() {
               <h2 className="font-headline-lg-mobile text-headline-lg-mobile uppercase tracking-tighter text-on-surface mb-4">{v.name}</h2>
 
               <div className="space-y-2 mb-4">
-                {v.fields?.map((f: any) => (
+                {v.venue_fields?.map((f: any) => (
                   <div key={f.id} className="flex gap-3 items-center bg-background border border-outline-variant p-3">
                     <span className="material-symbols-outlined text-on-surface-variant text-base">grass</span>
                     <span className="font-body-md text-on-surface">{f.name}</span>
