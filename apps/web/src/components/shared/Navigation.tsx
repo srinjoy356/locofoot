@@ -18,7 +18,8 @@ const PRIMARY: NavItem[] = [
   { href: "/explore", icon: "travel_explore", label: "Explore", prefix: "/explore" },
   { href: "/events", icon: "stadium", label: "Events", prefix: "/events" },
   { href: "/friends", icon: "group", label: "Friends", prefix: "/friends" },
-  { href: "/admin/events", icon: "admin_panel_settings", label: "Organizer", prefix: "/admin" },
+  { href: "/admin/events", icon: "admin_panel_settings", label: "Organizer", prefix: "/admin/events" },
+  { href: "/admin/venues", icon: "location_on", label: "Venues", prefix: "/admin/venues" },
 ];
 
 const ACCOUNT: NavItem[] = [
