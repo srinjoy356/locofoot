@@ -100,7 +100,7 @@ export default function RegistrationManagementPage({ params }: { params: Promise
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${sessionToken}`
+          "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
         },
         body: JSON.stringify({ invited_user_id: friendId })
       });
@@ -141,7 +141,7 @@ export default function RegistrationManagementPage({ params }: { params: Promise
       const res = await fetch(`/api/v1/events/${event.id}/registrations/${registration.id}/submit`, {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${sessionToken}`
+          "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
         }
       });
       if (!res.ok) {
