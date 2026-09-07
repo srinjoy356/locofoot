@@ -7,6 +7,7 @@ import { TurfHero } from "@/components/shared/TurfHero";
 export default function VenuesPage() {
   const [venues, setVenues] = useState<any[]>([]);
   const [newVenueName, setNewVenueName] = useState("");
+  const [newVenueAddress, setNewVenueAddress] = useState("");
   const supabase = createClient();
 
   async function load() {
@@ -24,9 +25,10 @@ export default function VenuesPage() {
     await fetch("/api/v1/venues", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token}` },
-      body: JSON.stringify({ name: newVenueName })
+      body: JSON.stringify({ name: newVenueName, address: newVenueAddress || "TBD" })
     });
     setNewVenueName("");
+    setNewVenueAddress("");
     load();
   }
 
@@ -58,6 +60,12 @@ export default function VenuesPage() {
             className="flex-1 p-4 bg-background border border-outline-variant focus:outline-none focus:border-primary-container font-body-md text-on-surface transition-colors"
             value={newVenueName}
             onChange={e => setNewVenueName(e.target.value)}
+          />
+          <input
+            placeholder="ADDRESS (Optional)"
+            className="flex-1 p-4 bg-background border border-outline-variant focus:outline-none focus:border-primary-container font-body-md text-on-surface transition-colors"
+            value={newVenueAddress}
+            onChange={e => setNewVenueAddress(e.target.value)}
           />
           <button className="bg-primary-container text-on-primary-container px-6 py-3 font-label-caps text-label-caps uppercase tracking-widest hover:bg-primary-fixed transition-colors whitespace-nowrap">
             Create Venue
