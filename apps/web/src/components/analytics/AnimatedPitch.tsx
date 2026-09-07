@@ -55,7 +55,7 @@ export function AnimatedPitch({ activeEvent, homeStarters = [], awayStarters = [
 
     // General FX state
   const [ball, setBall] = useState<any>({ left: '50%', top: '50%', opacity: 0, scale: 1, rotate: 0, boxShadow: 'none', zIndex: 20 });
-  const [fx, setFx] = useState({ text: '', left: '50%', top: '50%', opacity: 0, className: '', scale: 1 });
+  const [fx, setFx] = useState<{ text: string; left: string; top: string; opacity: number; className: string; scale?: number }>({ text: '', left: '50%', top: '50%', opacity: 0, className: '', scale: 1 });
   
   // Specific actor overrides for choreography
   const [actorOverride, setActorOverride] = useState<any>(null);
