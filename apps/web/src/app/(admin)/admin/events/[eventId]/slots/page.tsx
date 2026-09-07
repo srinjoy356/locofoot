@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Loader2, Calendar, Clock, CheckCircle2, AlertCircle, X, Calculator, Edit, Save, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { isoToLocalDatetimeLocal } from '@/lib/utils';
 
 export default function AdminSlotsPage() {
   const params = useParams();
@@ -141,8 +142,8 @@ export default function AdminSlotsPage() {
 
   const handleEditSlot = (index: number) => {
     setEditingSlotIndex(index);
-    setEditStart(slots[index].start.substring(0, 16));
-    setEditEnd(slots[index].end.substring(0, 16));
+    setEditStart(isoToLocalDatetimeLocal(slots[index].start));
+    setEditEnd(isoToLocalDatetimeLocal(slots[index].end));
   };
 
   const handleCancelEdit = () => {

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Users, UserPlus, Shield, Activity, Settings2, Clock } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { TurfHero } from "@/components/shared/TurfHero";
+import { isoToLocalDatetimeLocal } from "@/lib/utils";
 
 export default function EventDetailsPage({ params }: { params: Promise<{ eventId: string }> }) {
   const { eventId } = use(params);
@@ -319,7 +320,7 @@ export default function EventDetailsPage({ params }: { params: Promise<{ eventId
                 <input 
                   type="datetime-local" 
                   className="w-full bg-background border border-outline-variant text-on-surface font-mono text-sm p-3 rounded-none focus:outline-none focus:border-primary-container transition-colors" 
-                  value={event.registration_deadline?.substring(0,16) || ''} 
+                  value={isoToLocalDatetimeLocal(event.registration_deadline)} 
                   onChange={e => setEvent({...event, registration_deadline: new Date(e.target.value).toISOString()})} 
                 />
               </div>

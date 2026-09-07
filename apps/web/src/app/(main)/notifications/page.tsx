@@ -6,6 +6,7 @@ import { TurfHero } from "@/components/shared/TurfHero";
 
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<any[]>([]);
+  const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
   const supabase = createClient();
 
   async function load() {
@@ -25,41 +26,69 @@ export default function NotificationsPage() {
   useEffect(() => { load(); }, [supabase]);
 
   async function acceptRefereeAssignment(matchId: string, notifId: string) {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
+    if (processingIds.has(notifId)) return;
+    setProcessingIds(prev => new Set(prev).add(notifId));
     
-    // Update match_referees status
-    const { error } = await supabase
-      .from('match_referees')
-      .update({ status: 'ACCEPTED', responded_at: new Date().toISOString() })
-      .eq('match_id', matchId)
-      .eq('user_id', session.user.id);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
       
-    if (error) {
-      alert("Failed to accept assignment: " + error.message);
-      return;
+      // Update match_referees status
+      const { error } = await supabase
+        .from('match_referees')
+        .update({ status: 'ACCEPTED', responded_at: new Date().toISOString() })
+        .eq('match_id', matchId)
+        .eq('user_id', session.user.id);
+        
+      if (error) {
+        alert("Failed to accept assignment: " + error.message);
+        return;
+      }
+      
+      // mark notification as read
+      await supabase.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', notifId);
+      await load();
+    } finally {
+      setProcessingIds(prev => {
+        const next = new Set(prev);
+        next.delete(notifId);
+        return next;
+      });
     }
-    
-    // mark notification as read
-    await supabase.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', notifId);
-    load();
   }
 
   async function acceptInvite(eventId: string, regId: string, invId: string, notifId: string) {
-    const { data: { session } } = await supabase.auth.getSession();
-    const res = await fetch(`/api/v1/events/${eventId}/registrations/${regId}/invitations/${invId}/status`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token}` },
-      body: JSON.stringify({ status: "ACCEPTED" })
-    });
+    if (processingIds.has(notifId)) return;
+    setProcessingIds(prev => new Set(prev).add(notifId));
     
-    if (res.ok) {
-      // mark notification as read
-      await supabase.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', notifId);
-      load();
-    } else {
-      const err = await res.json();
-      alert("Failed to accept: " + (err.detail || JSON.stringify(err)));
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(`/api/v1/events/${eventId}/registrations/${regId}/invitations/${invId}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token}` },
+        body: JSON.stringify({ status: "ACCEPTED" })
+      });
+      
+      if (res.ok) {
+        // mark notification as read
+        await supabase.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', notifId);
+        await load();
+      } else {
+        const err = await res.json();
+        // If it was already accepted in a concurrent request, treat as success visually
+        if (err.message === 'Invitation is no longer pending' || err.code === 'P0001') {
+           await supabase.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', notifId);
+           await load();
+        } else {
+           alert("Failed to accept: " + (err.detail || JSON.stringify(err)));
+        }
+      }
+    } finally {
+      setProcessingIds(prev => {
+        const next = new Set(prev);
+        next.delete(notifId);
+        return next;
+      });
     }
   }
 
@@ -102,37 +131,59 @@ export default function NotificationsPage() {
                 </div>
                 <div className="flex gap-2 w-full sm:w-auto flex-wrap">
                   {n.type === 'PLAYER_INVITED' && !n.read_at && (
-                    <button onClick={() => acceptInvite(n.payload.event_id, n.payload.registration_id, n.payload.invitation_id, n.id)} className="flex-1 sm:flex-none border border-primary-container bg-primary-container/10 hover:bg-primary-container/20 text-primary-container px-4 py-2 font-label-caps text-[10px] uppercase tracking-widest transition-colors">
-                      Accept Invite
+                    <button 
+                      onClick={() => acceptInvite(n.payload.event_id, n.payload.registration_id, n.payload.invitation_id, n.id)} 
+                      disabled={processingIds.has(n.id)}
+                      className="flex-1 sm:flex-none border border-primary-container bg-primary-container/10 hover:bg-primary-container/20 text-primary-container px-4 py-2 font-label-caps text-[10px] uppercase tracking-widest transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                      {processingIds.has(n.id) ? 'PROCESSING...' : 'Accept Invite'}
                     </button>
                   )}
                   {n.type === 'REFEREE_ASSIGNED' && !n.read_at && (
-                    <button onClick={() => acceptRefereeAssignment(n.payload.match_id, n.id)} className="flex-1 sm:flex-none border border-[#eab308] bg-[#eab308]/10 hover:bg-[#eab308]/20 text-[#eab308] px-4 py-2 font-label-caps text-[10px] uppercase tracking-widest transition-colors">
-                      Accept Match
+                    <button 
+                      onClick={() => acceptRefereeAssignment(n.payload.match_id, n.id)} 
+                      disabled={processingIds.has(n.id)}
+                      className="flex-1 sm:flex-none border border-[#eab308] bg-[#eab308]/10 hover:bg-[#eab308]/20 text-[#eab308] px-4 py-2 font-label-caps text-[10px] uppercase tracking-widest transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                      {processingIds.has(n.id) ? 'PROCESSING...' : 'Accept Match'}
                     </button>
                   )}
                   {n.type === 'EVENT_REFEREE_ASSIGNED' && !n.read_at && (
                     <button onClick={async () => {
+                      if (processingIds.has(n.id)) return;
+                      setProcessingIds(prev => new Set(prev).add(n.id));
                       await supabase.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', n.id);
-                      load();
-                    }} className="flex-1 sm:flex-none border border-[#eab308] bg-[#eab308]/10 hover:bg-[#eab308]/20 text-[#eab308] px-4 py-2 font-label-caps text-[10px] uppercase tracking-widest transition-colors">
-                      Acknowledge
+                      await load();
+                      setProcessingIds(prev => {
+                        const next = new Set(prev);
+                        next.delete(n.id);
+                        return next;
+                      });
+                    }} disabled={processingIds.has(n.id)} className="flex-1 sm:flex-none border border-[#eab308] bg-[#eab308]/10 hover:bg-[#eab308]/20 text-[#eab308] px-4 py-2 font-label-caps text-[10px] uppercase tracking-widest transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                      {processingIds.has(n.id) ? 'PROCESSING...' : 'Acknowledge'}
                     </button>
                   )}
                   {n.type === 'FRIEND_REQUEST' && !n.read_at && (
                     <button onClick={async () => {
+                      if (processingIds.has(n.id)) return;
+                      setProcessingIds(prev => new Set(prev).add(n.id));
                       await supabase.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', n.id);
                       window.location.href = '/friends';
-                    }} className="flex-1 sm:flex-none border border-primary-container bg-primary-container/10 hover:bg-primary-container/20 text-primary-container px-4 py-2 font-label-caps text-[10px] uppercase tracking-widest transition-colors">
-                      View Request
+                    }} disabled={processingIds.has(n.id)} className="flex-1 sm:flex-none border border-primary-container bg-primary-container/10 hover:bg-primary-container/20 text-primary-container px-4 py-2 font-label-caps text-[10px] uppercase tracking-widest transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                      {processingIds.has(n.id) ? 'PROCESSING...' : 'View Request'}
                     </button>
                   )}
                   {!['PLAYER_INVITED', 'REFEREE_ASSIGNED', 'EVENT_REFEREE_ASSIGNED', 'FRIEND_REQUEST'].includes(n.type) && !n.read_at && (
                     <button onClick={async () => {
+                      if (processingIds.has(n.id)) return;
+                      setProcessingIds(prev => new Set(prev).add(n.id));
                       await supabase.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', n.id);
-                      load();
-                    }} className="flex-1 sm:flex-none border border-outline-variant bg-surface hover:border-on-surface hover:text-on-surface text-on-surface-variant px-4 py-2 font-label-caps text-[10px] uppercase tracking-widest transition-colors">
-                      Dismiss
+                      await load();
+                      setProcessingIds(prev => {
+                        const next = new Set(prev);
+                        next.delete(n.id);
+                        return next;
+                      });
+                    }} disabled={processingIds.has(n.id)} className="flex-1 sm:flex-none border border-outline-variant bg-surface hover:border-on-surface hover:text-on-surface text-on-surface-variant px-4 py-2 font-label-caps text-[10px] uppercase tracking-widest transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                      {processingIds.has(n.id) ? 'DISMISSING...' : 'Dismiss'}
                     </button>
                   )}
                 </div>

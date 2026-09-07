@@ -27,8 +27,15 @@ export default async function ExplorePage() {
     .select("id, name, slug, status, start_date, end_date, created_at, event_team_registrations(count)")
     .order("created_at", { ascending: false });
 
+  // Use service role client to bypass RLS for public players search
+  const { createClient: createAdminClient } = await import("@supabase/supabase-js");
+  const adminSupabase = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
   // Fetch all public players (must have a public profile setting to be visible)
-  const { data: playersData } = await supabase
+  const { data: playersData } = await adminSupabase
     .from("users")
     .select("id, unique_code, display_name, avatar_media_id, media_assets(secure_url), user_privacy_settings!inner(profile_public)")
     .eq("user_privacy_settings.profile_public", true)
