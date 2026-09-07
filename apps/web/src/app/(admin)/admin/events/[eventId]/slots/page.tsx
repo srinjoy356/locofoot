@@ -34,9 +34,12 @@ export default function AdminSlotsPage() {
   useEffect(() => {
     async function loadEventData() {
       try {
-        const { data: eData } = await supabase.from('events').select('slot_structure_state, venue_id').eq('id', eventId).single();
+        const { data: eData } = await supabase.from('events').select('slot_structure_state, venue_id, start_date').eq('id', eventId).single();
         if (eData?.slot_structure_state === 'FINALIZED') {
           setIsFinalized(true);
+        }
+        if (eData?.start_date) {
+          setBatchStart(isoToLocalDatetimeLocal(eData.start_date));
         }
 
         const { data: settings } = await supabase.from('event_settings').select('*').eq('event_id', eventId).single();
