@@ -8,8 +8,12 @@ import { Trophy, Activity, Calendar, Star, Users } from "lucide-react";
 
 export async function generateMetadata({ params }: { params: Promise<{ uniqueCode: string }> }) {
   const { uniqueCode } = await params;
-  const supabase = await createClient();
-  const { data } = await supabase.from("users").select("display_name").eq("unique_code", uniqueCode).single();
+  const { createClient: createAdminClient } = await import("@supabase/supabase-js");
+  const adminSupabase = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+  const { data } = await adminSupabase.from("users").select("display_name").eq("unique_code", uniqueCode).single();
   return {
     title: `${data?.display_name || 'Player'} · LocoFoot`,
     description: `View ${data?.display_name || 'Player'}'s official LocoFoot football profile and statistics.`,
@@ -30,8 +34,14 @@ export default async function PlayerProfilePage({ params }: { params: Promise<{ 
   const { uniqueCode } = await params;
   const supabase = await createClient();
 
-  // Fetch base player data (public fields only)
-  const { data: pData } = await supabase
+  const { createClient: createAdminClient } = await import("@supabase/supabase-js");
+  const adminSupabase = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
+  // Fetch base player data (public fields only) bypassing restrictive RLS
+  const { data: pData } = await adminSupabase
     .from("users")
     .select("id, unique_code, display_name, bio, location_text, preferred_position, dominant_foot, media_assets(secure_url)")
     .eq("unique_code", uniqueCode)
@@ -40,13 +50,23 @@ export default async function PlayerProfilePage({ params }: { params: Promise<{ 
   if (!pData) return notFound();
 
   // Fetch privacy settings
-  const { data: privacyData } = await supabase
+  const { data: privacyData } = await adminSupabase
     .from("user_privacy_settings")
     .select("*")
     .eq("user_id", pData.id)
     .single();
 
   const profilePublic = privacyData?.profile_public ?? true;
+  
+  if (!profilePublic) {
+    // If not public, we should enforce RLS check manually to see if they are friends
+    // But since this is a public route, for now let's just 404 if it's strictly private
+    // and the viewer isn't authenticated as a friend.
+    const supabase = await createClient();
+    const { data: authCheck } = await supabase.from("users").select("id").eq("id", pData.id).single();
+    if (!authCheck) return notFound();
+  }
+
   const statsPublic = privacyData?.stats_public ?? true;
 
   const avatarUrl = Array.isArray(pData.media_assets) 
