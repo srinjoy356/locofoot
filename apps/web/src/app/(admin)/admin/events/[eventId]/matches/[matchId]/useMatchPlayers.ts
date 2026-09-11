@@ -46,6 +46,7 @@ export function useMatchPlayers(matchId: string) {
         .select(`
           id,
           user_id,
+          guest_name,
           jersey_number,
           event_registration_id
         `)
@@ -57,21 +58,25 @@ export function useMatchPlayers(matchId: string) {
       }
 
       if (teamPlayers) {
-        // 3. Fetch user display names
-        const userIds = teamPlayers.map(p => p.user_id);
-        const { data: usersData, error: uError } = await supabase
-          .from('users')
-          .select('id, display_name')
-          .in('id', userIds);
-          
-        if (uError) {
-          console.error("Error fetching users:", uError);
+        // 3. Fetch user display names for non-guest players
+        const userIds = teamPlayers.map(p => p.user_id).filter(Boolean);
+        let usersData = null;
+        
+        if (userIds.length > 0) {
+          const { data, error: uError } = await supabase
+            .from('users')
+            .select('id, display_name')
+            .in('id', userIds);
+            
+          if (uError) {
+            console.error("Error fetching users:", uError);
+          }
+          usersData = data;
         }
-        console.log("Fetched users:", usersData);
 
         const userMap = new Map();
         if (usersData) {
-          usersData.forEach(u => userMap.set(u.id, u.display_name));
+          usersData.forEach((u: any) => userMap.set(u.id, u.display_name));
         }
 
         const { data: participationData } = await supabase
@@ -92,7 +97,7 @@ export function useMatchPlayers(matchId: string) {
           const player: MatchPlayer = {
             id: p.id,
             user_id: p.user_id,
-            name: userMap.get(p.user_id) || 'Unknown Player',
+            name: p.user_id ? (userMap.get(p.user_id) || 'Unknown Player') : (p.guest_name || 'Guest Player'),
             jersey_number: p.jersey_number,
             registration_id: p.event_registration_id,
             team: isHome ? 'home' : 'away',

@@ -160,3 +160,14 @@ class EventService:
         supabase_admin.table('event_roles').delete().eq('id', role_id).execute()
         EventService._log_audit(user_id, "REVOKE_EVENT_ROLE", "event_roles", role_id, current.data, None)
         return {"status": "deleted"}
+
+    @staticmethod
+    def delete_event(event_id: str, user_id: str):
+        EventService._require_owner(event_id, user_id)
+        current = supabase_admin.table('events').select('*').eq('id', event_id).single().execute()
+        if not current.data:
+            raise HTTPException(404, "Event not found")
+            
+        supabase_admin.table('events').delete().eq('id', event_id).execute()
+        EventService._log_audit(user_id, "DELETE_EVENT", "events", event_id, current.data, None)
+        return {"status": "deleted"}

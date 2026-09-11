@@ -14,6 +14,13 @@ def create_event(
 ):
     return EventService.create_event(event_data, current_user["id"])
 
+@router.delete("/{event_id}")
+def delete_event(
+    event_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    return EventService.delete_event(event_id, current_user["id"])
+
 @router.patch("/{event_id}")
 def update_event(
     event_id: str,

@@ -22,6 +22,7 @@ export default function RefereePage({ params }: { params: Promise<{ eventId: str
   const supabase = createClient();
 
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
+  const [eventType, setEventType] = useState<string>('');
   const { elapsed, formatClock, matchState, isHalfTimeAllowed, isFullTimeAllowed, previousActiveState, getPeriod } = useMatchClock(eventId, matchId);
   const { players, loading: playersLoading } = useMatchPlayers(matchId);
 
@@ -34,13 +35,30 @@ export default function RefereePage({ params }: { params: Promise<{ eventId: str
         setIsAuthorized(false);
         return;
       }
+
+      const { data: eventData } = await supabase.from('events').select('type').eq('id', eventId).single();
+      if (eventData) {
+        setEventType(eventData.type);
+      }
       const { data: refData } = await supabase.from('match_referees')
         .select('id')
         .eq('match_id', matchId)
         .eq('user_id', session.user.id)
         .maybeSingle();
 
-      setIsAuthorized(!!refData);
+      if (refData) {
+        setIsAuthorized(true);
+        return;
+      }
+
+      const { data: roles } = await supabase.from('event_roles')
+        .select('role')
+        .eq('event_id', eventId)
+        .eq('user_id', session.user.id)
+        .in('role', ['EVENT_OWNER', 'EVENT_ADMIN', 'REFEREE'])
+        .limit(1);
+
+      setIsAuthorized(roles && roles.length > 0);
     };
     checkAuth();
   }, [matchId]);
@@ -208,7 +226,7 @@ export default function RefereePage({ params }: { params: Promise<{ eventId: str
           </div>
         ) : (
           <>
-            {matchState === 'SCHEDULED' && (
+            {matchState === 'SCHEDULED' && eventType !== 'QUICK_MATCH' && (
               <div className="col-span-2 mb-2">
                 <RefereeLineupManager eventId={eventId} matchId={matchId} />
               </div>

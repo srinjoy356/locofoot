@@ -230,7 +230,7 @@ export default async function PlayerProfilePage({ params }: { params: Promise<{ 
         {/* Tournament History */}
         <div className="mt-8">
           <h2 className="font-headline-lg-mobile text-headline-lg-mobile uppercase text-on-surface tracking-tighter mb-6 flex items-center gap-2">
-            Tournament History
+            Match & Tournament History
           </h2>
           
           {eventStats.length === 0 ? (

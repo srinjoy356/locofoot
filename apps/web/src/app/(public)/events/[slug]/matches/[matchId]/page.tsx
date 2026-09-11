@@ -7,6 +7,8 @@ import Link from 'next/link';
 import { ShareButton } from '@/components/shared/ShareButton';
 import { QRCodeBlock } from '@/components/shared/QRCodeBlock';
 import { AnimatedPitch } from '@/components/analytics/AnimatedPitch';
+import { LineupDisplay } from '@/components/analytics/LineupDisplay';
+import { DeleteMatchButton } from '@/components/DeleteMatchButton';
 
 import { useMatchClock } from '@/app/(admin)/admin/events/[eventId]/matches/[matchId]/useMatchClock';
 
@@ -77,6 +79,7 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
           away_score,
           home_registration_id,
           away_registration_id,
+          events (type),
           home_team:event_team_registrations!home_registration_id(id, team_name, logo_media_id),
           away_team:event_team_registrations!away_registration_id(id, team_name, logo_media_id)
         `)
@@ -133,20 +136,27 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
           if (captainStatus && captainStatus.length > 0) {
             setIsCaptain(true);
           }
+        }
+      }
 
-            // Fetch all players for these teams to get their names
-            const { data: playersData } = await supabase
-              .from('event_team_players')
-              .select('id, user_id, event_registration_id')
-              .in('event_registration_id', [match.home_registration_id, match.away_registration_id]);
+      if (match?.home_registration_id && match?.away_registration_id) {
+        // Fetch all players for these teams to get their names
+        const { data: playersData } = await supabase
+          .from('event_team_players')
+          .select('id, user_id, event_registration_id, guest_name')
+          .in('event_registration_id', [match.home_registration_id, match.away_registration_id]);
 
-            if (playersData && playersData.length > 0) {
-              const userIds = playersData.map(p => p.user_id).filter(Boolean);
-              if (userIds.length > 0) {
-                const { data: usersData } = await supabase
-                  .from('users')
-                  .select('id, display_name')
-                  .in('id', userIds);
+        if (playersData && playersData.length > 0) {
+          const userIds = playersData.map(p => p.user_id).filter(Boolean);
+          let usersData = null;
+          
+          if (userIds.length > 0) {
+            const { data } = await supabase
+              .from('users')
+              .select('id, display_name')
+              .in('id', userIds);
+            usersData = data;
+          }
                   
                 const tempMap: Record<string, string> = {};
                 playersData.forEach(p => {
@@ -193,7 +203,7 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
                   const mapped = {
                     id: p.id,
                     user_id: p.user_id,
-                    name: user?.display_name || 'Unknown',
+                    name: user?.display_name || p.guest_name || 'Unknown',
                     team: isHome ? 'home' : 'away'
                   };
                   if (isHome) {
@@ -209,9 +219,7 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
                 setAwayStarters(aStarters);
                 setHomeSubs(hSubs);
                 setAwaySubs(aSubs);
-              }
-            }
-          }
+        }
       }
       setIsLoading(false);
     }
@@ -298,14 +306,17 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
             <span className="material-symbols-outlined text-sm">sports</span> Referee Dashboard
           </Link>
           {isAdmin && (
-            <Link href={`/admin/events/${matchData.event_id || slug}/matches/${matchId}/recorder`} className="bg-surface-variant text-on-surface border border-outline-variant px-4 py-2 font-label-caps text-label-caps uppercase tracking-widest flex items-center gap-2 shrink-0 hover:bg-surface-container-highest transition-colors">
-              Event Recorder
-            </Link>
+            <>
+              <Link href={`/admin/events/${matchData.event_id || slug}/matches/${matchId}/recorder`} className="bg-surface-variant text-on-surface border border-outline-variant px-4 py-2 font-label-caps text-label-caps uppercase tracking-widest flex items-center gap-2 shrink-0 hover:bg-surface-container-highest transition-colors">
+                Event Recorder
+              </Link>
+              <DeleteMatchButton eventId={matchData.event_id || slug} />
+            </>
           )}
         </div>
       )}
 
-      {isAdmin && matchData.match_state === 'SCHEDULED' && (
+      {isAdmin && matchData.match_state === 'SCHEDULED' && matchData.events?.type !== 'QUICK_MATCH' && (
         <div className="flex flex-col sm:flex-row p-4 border-b border-outline-variant gap-4 bg-surface shrink-0">
           <Link 
             href={`/events/${matchData.event_id || slug}/matches/${matchId}/lineup?teamId=${matchData.home_registration_id}`}
@@ -322,7 +333,7 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
         </div>
       )}
 
-      {(!isAdmin && isCaptain) && matchData.match_state === 'SCHEDULED' && (
+      {(!isAdmin && isCaptain) && matchData.match_state === 'SCHEDULED' && matchData.events?.type !== 'QUICK_MATCH' && (
         <div className="p-4 border-b border-outline-variant bg-surface shrink-0">
           <Link 
             href={`/events/${matchData.event_id || slug}/matches/${matchId}/lineup`}

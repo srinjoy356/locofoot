@@ -17,6 +17,10 @@ class QuickMatchCreate(BaseModel):
     venue_field_id: Optional[str] = None
     referee_id: Optional[str] = None
     scorer_id: Optional[str] = None
+    players_on_field: Optional[int] = 5
+    substitutes_allowed: Optional[int] = 3
+    first_half_minutes: Optional[int] = 15
+    second_half_minutes: Optional[int] = 15
     team_a: QuickMatchTeam
     team_b: QuickMatchTeam
 
