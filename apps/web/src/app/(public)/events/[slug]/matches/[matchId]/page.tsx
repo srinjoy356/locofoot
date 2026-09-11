@@ -7,7 +7,6 @@ import Link from 'next/link';
 import { ShareButton } from '@/components/shared/ShareButton';
 import { QRCodeBlock } from '@/components/shared/QRCodeBlock';
 import { AnimatedPitch } from '@/components/analytics/AnimatedPitch';
-import { LineupDisplay } from '@/components/analytics/LineupDisplay';
 import { DeleteMatchButton } from '@/components/DeleteMatchButton';
 
 import { useMatchClock } from '@/app/(admin)/admin/events/[eventId]/matches/[matchId]/useMatchClock';
