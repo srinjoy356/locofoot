@@ -37,7 +37,8 @@ class EventTeamInvitationStatusUpdate(BaseModel):
     status: InvitationStatus
 
 class EventRosterPlayerAdd(BaseModel):
-    user_id: str
+    user_id: Optional[str] = None
+    guest_name: Optional[str] = None
     jersey_number: Optional[int] = None
     position: Optional[str] = None
     is_captain_for_event: Optional[bool] = False

@@ -31,9 +31,26 @@ class TournamentFormat(str, Enum):
     SWISS = 'SWISS'
     CUSTOM = 'CUSTOM'
 
-class EventCreate(BaseModel):
+class EventType(str, Enum):
+    TOURNAMENT = 'TOURNAMENT'
+    QUICK_MATCH = 'QUICK_MATCH'
+
+class EventBase(BaseModel):
     name: str
     description: str
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
+    registration_deadline: Optional[datetime] = None
+    status: EventStatus = EventStatus.DRAFT
+    type: EventType = EventType.TOURNAMENT
+    venue_id: Optional[str] = None
+    organizer_id: Optional[str] = None
+    logo_media_id: Optional[str] = None
+    banner_media_id: Optional[str] = None
+    rules: Optional[str] = None
+
+class EventCreate(EventBase):
+    pass
 
 class EventUpdate(BaseModel):
     name: Optional[str] = None

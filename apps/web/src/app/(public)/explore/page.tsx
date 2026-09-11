@@ -21,10 +21,11 @@ export const metadata = {
 export default async function ExplorePage() {
   const supabase = await createClient();
 
-  // Fetch all public events
+  // Fetch all public events (Tournaments only)
   const { data: eventsData } = await supabase
     .from("events")
     .select("id, name, slug, status, start_date, end_date, created_at, event_team_registrations(count)")
+    .eq("type", "TOURNAMENT")
     .order("created_at", { ascending: false });
 
   // Use service role client to bypass RLS for public players search
@@ -43,7 +44,7 @@ export default async function ExplorePage() {
     .order("created_at", { ascending: false })
     .limit(100);
 
-  // Fetch recent matches for the ticker
+  // Fetch recent matches for the ticker (from Tournaments only)
   const { data: matchesData } = await supabase
     .from("matches")
     .select(`
@@ -55,9 +56,10 @@ export default async function ExplorePage() {
       venue_fields ( name ),
       home_registration:event_team_registrations!matches_home_registration_id_fkey ( team:teams(name) ),
       away_registration:event_team_registrations!matches_away_registration_id_fkey ( team:teams(name) ),
-      event:events(slug, name)
+      event:events!inner(slug, name, type)
     `)
     .in("status", ["LIVE", "SCHEDULED", "COMPLETED"])
+    .eq("event.type", "TOURNAMENT")
     .order("created_at", { ascending: false })
     .limit(10);
 
