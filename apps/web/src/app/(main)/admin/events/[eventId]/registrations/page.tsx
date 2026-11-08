@@ -23,36 +23,37 @@ export default function AdminEventRegistrationsPage({ params }: { params: Promis
 
   useEffect(() => { loadData(); }, [eventId, supabase]);
 
-  async function changeStatus(regId: string, status: string) {
+  // Inline errors rather than alert(), which embedded and in-app browsers block.
+  const [error, setError] = useState("");
+
+  // a rejected seed is shown next to its own box, and the box is reset, instead of at the top of a long page
+  const [seedError, setSeedError] = useState<{ id: string; text: string } | null>(null);
+  const [resetKey, setResetKey] = useState(0);
+
+  async function act(path: string, method: string, body?: unknown): Promise<string | null> {
+    setError("");
     const { data: { session } } = await supabase.auth.getSession();
-    const res = await fetch(`/api/v1/events/${eventId}/registrations/${regId}/status`, {
-      method: "PUT",
+    const res = await fetch(`/api/v1/events/${eventId}/registrations/${path}`, {
+      method,
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token}` },
-      body: JSON.stringify({ status })
+      body: body === undefined ? undefined : JSON.stringify(body)
     });
-    if (res.ok) loadData();
-    else alert("Failed to change status: " + JSON.stringify(await res.json()));
+    if (res.ok) { loadData(); return null; }
+    const data = await res.json().catch(() => ({}));
+    const text = typeof data.detail === "string" ? data.detail : "That did not work. Please try again.";
+    loadData();
+    return text;
   }
 
-  async function unlockRoster(regId: string) {
-    const { data: { session } } = await supabase.auth.getSession();
-    const res = await fetch(`/api/v1/events/${eventId}/registrations/${regId}/unlock`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${session?.access_token}` }
-    });
-    if (res.ok) loadData();
-    else alert("Failed to unlock: " + JSON.stringify(await res.json()));
-  }
-
-  async function lockRoster(regId: string) {
-    const { data: { session } } = await supabase.auth.getSession();
-    const res = await fetch(`/api/v1/events/${eventId}/registrations/${regId}/lock`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${session?.access_token}` }
-    });
-    if (res.ok) loadData();
-    else alert("Failed to lock: " + JSON.stringify(await res.json()));
-  }
+  const report = async (p: Promise<string | null>) => { const text = await p; if (text) setError(text); };
+  const changeStatus = (regId: string, status: string) => report(act(`${regId}/status`, "PUT", { status }));
+  const unlockRoster = (regId: string) => report(act(`${regId}/unlock`, "POST"));
+  const lockRoster = (regId: string) => report(act(`${regId}/lock`, "POST"));
+  const setSeed = async (regId: string, value: string) => {
+    setSeedError(null);
+    const text = await act(`${regId}/seed`, "PUT", { seed: value === "" ? null : Number(value) });
+    if (text) { setSeedError({ id: regId, text }); setResetKey(k => k + 1); }
+  };
 
   return (
     <div className="w-full bg-background min-h-[calc(100vh-64px)] text-on-surface">
@@ -83,6 +84,8 @@ export default function AdminEventRegistrationsPage({ params }: { params: Promis
           </div>
         </div>
 
+        {error && <div role="alert" className="border border-error bg-error/10 text-error font-body-md p-3">{error}</div>}
+
         <div className="grid gap-6">
           {registrations.map(reg => (
             <div key={reg.id} className="border border-outline-variant bg-surface p-6 space-y-4">
@@ -90,6 +93,15 @@ export default function AdminEventRegistrationsPage({ params }: { params: Promis
                 <div>
                   <h3 className="font-headline-sm uppercase tracking-tighter text-on-surface">{reg.team_name}</h3>
                   <p className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant mt-1">Status: <span className="text-on-surface">{reg.status}</span> {reg.roster_locked && '🔒 (Locked)'}</p>
+                  <label className="flex items-center gap-2 mt-2 font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">
+                    Seed (1 = strongest)
+                    <input
+                      type="number" min={1} max={64} defaultValue={reg.seed ?? ""} key={`${reg.id}-${reg.seed ?? ""}-${resetKey}`}
+                      onBlur={e => { if (e.target.value !== String(reg.seed ?? "")) setSeed(reg.id, e.target.value); }}
+                      className="w-20 p-1.5 bg-background border border-outline-variant focus:outline-none focus:border-primary-container text-on-surface font-mono"
+                    />
+                  </label>
+                  {seedError && seedError.id === reg.id && <p role="alert" className="mt-1 font-body-md text-error normal-case tracking-normal">{seedError.text}</p>}
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {(reg.status === 'PENDING_APPROVAL' || reg.status === 'APPROVED') && (
@@ -113,9 +125,9 @@ export default function AdminEventRegistrationsPage({ params }: { params: Promis
                   {reg.players?.map((p: any) => (
                     <li key={p.id} className="flex gap-2 items-center font-body-sm text-on-surface">
                       <span className="w-8 text-center shrink-0 bg-surface-variant border border-outline-variant text-on-surface-variant font-mono text-xs py-0.5">{p.jersey_number || '-'}</span>
-                      <span className="text-on-surface truncate">{p.user?.display_name || p.user?.email}</span>
-                      {p.is_captain && <span className="border border-primary-container text-primary-container text-[10px] px-1 font-label-caps uppercase tracking-widest">C</span>}
-                      {p.is_vice_captain && <span className="border border-outline-variant text-on-surface-variant text-[10px] px-1 font-label-caps uppercase tracking-widest">VC</span>}
+                      <span className="text-on-surface truncate">{p.user?.display_name || p.user?.email || p.guest_name}</span>
+                      {p.is_captain_for_event && <span className="border border-primary-container text-primary-container text-[10px] px-1 font-label-caps uppercase tracking-widest">C</span>}
+                      {p.is_vice_captain_for_event &&<span className="border border-outline-variant text-on-surface-variant text-[10px] px-1 font-label-caps uppercase tracking-widest">VC</span>}
                     </li>
                   ))}
                 </ul>

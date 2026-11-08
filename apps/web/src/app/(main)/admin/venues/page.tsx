@@ -4,6 +4,27 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { TurfHero } from "@/components/shared/TurfHero";
 
+// An inline input instead of window.prompt(), which embedded and mobile webviews do not support.
+function AddFieldForm({ onAdd }: { onAdd: (name: string) => void }) {
+  const [name, setName] = useState("");
+  return (
+    <form
+      onSubmit={e => { e.preventDefault(); if (name.trim()) { onAdd(name.trim()); setName(""); } }}
+      className="flex flex-col sm:flex-row gap-3"
+    >
+      <input
+        placeholder="FIELD NAME (e.g. Pitch A)"
+        value={name}
+        onChange={e => setName(e.target.value)}
+        className="flex-1 p-3 bg-background border border-outline-variant focus:outline-none focus:border-primary-container font-body-md text-on-surface transition-colors"
+      />
+      <button className="border border-outline-variant bg-surface hover:bg-surface-variant text-on-surface px-4 py-2 font-label-caps text-label-caps uppercase tracking-widest transition-colors">
+        Add Field
+      </button>
+    </form>
+  );
+}
+
 export default function VenuesPage() {
   const [venues, setVenues] = useState<any[]>([]);
   const [newVenueName, setNewVenueName] = useState("");
@@ -86,12 +107,7 @@ export default function VenuesPage() {
                 ))}
               </div>
 
-              <button onClick={() => {
-                const fName = prompt("Field name:");
-                if (fName) createField(v.id, fName);
-              }} className="border border-outline-variant bg-surface hover:bg-surface-variant text-on-surface px-4 py-2 font-label-caps text-label-caps uppercase tracking-widest transition-colors">
-                Add Field
-              </button>
+              <AddFieldForm onAdd={name => createField(v.id, name)} />
             </div>
           ))}
         </div>

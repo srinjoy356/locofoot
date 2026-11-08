@@ -66,7 +66,9 @@ from app.schemas.registrations import (
     TeamRegistrationCreate, 
     TeamRegistrationStatusUpdate, 
     EventTeamInvitationCreate, 
-    EventTeamInvitationStatusUpdate
+    EventTeamInvitationStatusUpdate,
+    GuestPlayerAdd,
+    TeamSeedUpdate
 )
 from app.services.registration_service import RegistrationService
 
@@ -113,6 +115,24 @@ def remove_player(
 ):
     return RegistrationService.remove_player(event_id, reg_id, player_user_id, current_user["id"])
 
+@router.post("/{event_id}/registrations/{reg_id}/guest-players", status_code=status.HTTP_201_CREATED)
+def add_guest_player(
+    event_id: str,
+    reg_id: str,
+    data: GuestPlayerAdd,
+    current_user: dict = Depends(get_current_user)
+):
+    return RegistrationService.add_guest_player(event_id, reg_id, data, current_user["id"])
+
+@router.delete("/{event_id}/registrations/{reg_id}/guest-players/{player_id}")
+def remove_guest_player(
+    event_id: str,
+    reg_id: str,
+    player_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    return RegistrationService.remove_guest_player(event_id, reg_id, player_id, current_user["id"])
+
 @router.post("/{event_id}/registrations/{reg_id}/submit")
 def submit_registration(
     event_id: str,
@@ -129,6 +149,15 @@ def update_registration_status(
     current_user: dict = Depends(get_current_user)
 ):
     return RegistrationService.update_registration_status(event_id, reg_id, data, current_user["id"])
+
+@router.put("/{event_id}/registrations/{reg_id}/seed")
+def set_seed(
+    event_id: str,
+    reg_id: str,
+    data: TeamSeedUpdate,
+    current_user: dict = Depends(get_current_user)
+):
+    return RegistrationService.set_seed(event_id, reg_id, data, current_user["id"])
 
 @router.post("/{event_id}/registrations/{reg_id}/lock")
 def lock_roster(

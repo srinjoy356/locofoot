@@ -1,4 +1,5 @@
 import React from 'react';
+import { eventKey } from '@/lib/utils';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { GranularDashboard } from '@/components/analytics/GranularDashboard';
@@ -16,7 +17,7 @@ async function GranularAnalyticsContent({ slug }: { slug: string }) {
     eventId = data.id;
     eventData = data;
   } else {
-    const { data } = await supabase.from('events').select('id, name').eq('id', slug).maybeSingle();
+    const { data } = await supabase.from('events').select('id, name').eq(...eventKey(slug)).maybeSingle();
     if (!data) notFound();
     eventData = data;
   }

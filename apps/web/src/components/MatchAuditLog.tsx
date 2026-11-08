@@ -31,12 +31,20 @@ export function MatchAuditLog({ matchId, eventId, eventType }: { matchId: string
   }, [matchId, eventType]);
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this event? This will be logged as a correction.")) return;
+    if (!confirm("Are you sure you want to delete this event? This is logged in the audit trail.")) return;
 
     // We submit a correction request to the API with an empty payload or a specific 'DELETED' flag.
     // For now, we will mark it as deleted in metadata.
     const log = logs.find(l => l.id === id);
     if (!log) return;
+
+    if (eventType === 'timeline') {
+      // Real removal (snapshotted into audit_logs server-side): a 'deleted' flag would keep the event in every stat.
+      const token = (await supabase.auth.getSession()).data.session?.access_token;
+      const res = await fetch(`/api/v1/events/${eventId}/matches/${matchId}/timeline/event/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+      if (!res.ok) alert('Could not undo that event. Check your connection and try again.');
+      return;
+    }
 
     // Make sure we only send the metadata block, not the entire row.
     // We strip out 'result' (e.g. 'GOAL') so the atomic Postgres trigger automatically decrements the match score.
@@ -65,6 +73,9 @@ export function MatchAuditLog({ matchId, eventId, eventType }: { matchId: string
               <span className="font-bold">{log.event_type}</span>
               {log.event_type === 'SUBSTITUTION' && log.metadata?.player_in_name && log.metadata?.player_out_name && (
                 <span className="ml-2 text-slate-600 dark:text-zinc-400 text-xs">({log.metadata.player_out_name} &rarr; {log.metadata.player_in_name})</span>
+              )}
+              {log.event_type !== 'SUBSTITUTION' && (log.metadata?.player_name || log.metadata?.committed_by_player_name) && (
+                <span className="ml-2 text-slate-600 dark:text-zinc-400 text-xs">({log.metadata.player_name || log.metadata.committed_by_player_name}{log.metadata.reason ? `, ${log.metadata.reason.toLowerCase()}` : ''})</span>
               )}
             </div>
             {!log.metadata?.deleted && (

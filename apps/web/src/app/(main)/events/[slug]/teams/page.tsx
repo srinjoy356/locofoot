@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, use } from "react";
+import { eventKey } from '@/lib/utils';
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { TurfHero } from "@/components/shared/TurfHero";
@@ -15,7 +16,7 @@ export default function PublicEventTeamsPage({ params }: { params: Promise<{ slu
     async function load() {
       // Find event
       let eventData;
-      const { data } = await supabase.from('events').select('*').eq('id', slug).single();
+      const { data } = await supabase.from('events').select('*').eq(...eventKey(slug)).single();
       if (data) eventData = data;
       else {
         const { data: bySlug } = await supabase.from('events').select('*').eq('slug', slug).single();

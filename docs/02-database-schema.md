@@ -199,7 +199,8 @@ per `event_id` — i.e. a player can't represent two teams in the same tournamen
 ### `brackets`
 `id` · `event_id` fk · `round_name` text (`QF`, `SF`, `FINAL`, `THIRD_PLACE`, custom) ·
 `position` int · `home_source` jsonb (`{"type":"team","registration_id":...}` or
-`{"type":"winner_of","match_id":...}` or `{"type":"group_position","group_id":...,"position":1}`) ·
+`{"type":"winner_of","match_id":...}`, `{"type":"loser_of","match_id":...}` (third-place match) or
+`{"type":"group_position","group_id":...,"position":1}`) ·
 `away_source` jsonb (same shape) · `match_id` fk `matches`, null.
 
 ---

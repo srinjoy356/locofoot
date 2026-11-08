@@ -84,11 +84,23 @@ def users():
     
     return user_dict
 
+class _AuthedClient:
+    """Shares the session TestClient (one event loop, which the cached async Supabase client needs)
+    and injects this role's bearer token on every call."""
+    def __init__(self, client, token):
+        self._client, self._token = client, token
+
+    def __getattr__(self, name):
+        method = getattr(self._client, name)
+
+        def call(*args, **kwargs):
+            kwargs["headers"] = {"Authorization": f"Bearer {self._token}", **kwargs.get("headers", {})}
+            return method(*args, **kwargs)
+        return call
+
+
 @pytest.fixture
-def auth_client(users):
+def auth_client(users, test_client):
     def _client(role: str):
-        token = users[role]["token"]
-        client = TestClient(app)
-        client.headers.update({"Authorization": f"Bearer {token}"})
-        return client
+        return _AuthedClient(test_client, users[role]["token"])
     return _client

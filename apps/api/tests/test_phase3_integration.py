@@ -106,7 +106,7 @@ def test_golden_path_6_teams(auth_client, users, run_id):
         assert assigned_count == 15
         
         # Verify No-Back-To-Back locally
-        assignments = supabase_admin.table('slot_field_assignments').select('*, schedule_slots(sequence_number), matches(*)').eq('schedule_slots.event_id', ev['id']).order('schedule_slots(sequence_number)').execute()
+        assignments = supabase_admin.table('slot_field_assignments').select('*, schedule_slots!inner(sequence_number), matches(*)').eq('schedule_slots.event_id', ev['id']).order('schedule_slots(sequence_number)').execute()
         
         prev_teams = set()
         for a in assignments.data:

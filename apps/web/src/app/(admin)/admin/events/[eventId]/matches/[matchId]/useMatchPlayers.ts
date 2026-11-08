@@ -9,6 +9,7 @@ export type MatchPlayer = {
   registration_id: string;
   team: 'home' | 'away';
   participationStatus?: string | null;
+  position?: string | null;
 };
 
 export function useMatchPlayers(matchId: string) {
@@ -48,6 +49,7 @@ export function useMatchPlayers(matchId: string) {
           user_id,
           guest_name,
           jersey_number,
+          position,
           event_registration_id
         `)
         .in('event_registration_id', [match.home_registration_id, match.away_registration_id])
@@ -99,6 +101,7 @@ export function useMatchPlayers(matchId: string) {
             user_id: p.user_id,
             name: p.user_id ? (userMap.get(p.user_id) || 'Unknown Player') : (p.guest_name || 'Guest Player'),
             jersey_number: p.jersey_number,
+            position: p.position,
             registration_id: p.event_registration_id,
             team: isHome ? 'home' : 'away',
             participationStatus: partMap.get(p.id) || null

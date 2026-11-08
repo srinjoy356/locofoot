@@ -1,4 +1,5 @@
 import React from 'react';
+import { eventKey } from '@/lib/utils';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
@@ -17,7 +18,7 @@ export default async function TournamentTeamsHubPage({ params }: { params: Promi
     eventId = data.id;
     eventData = data;
   } else {
-    const { data } = await supabase.from('events').select('id, name').eq('id', slug).maybeSingle();
+    const { data } = await supabase.from('events').select('id, name').eq(...eventKey(slug)).maybeSingle();
     if (!data) notFound();
     eventData = data;
   }

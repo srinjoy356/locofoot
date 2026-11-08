@@ -83,3 +83,14 @@ one of these four engines (plus a thin "Platform Admin" layer that cuts across a
 4. **Run development servers:**
    - FastAPI: `cd apps/api && uv run uvicorn app.main:app --reload`
    - Next.js: `cd apps/web && pnpm dev`
+
+
+## Testing locally
+
+```bash
+bash scripts/test-api-local.sh      # starts a local Supabase (Docker), applies every migration, runs pytest
+cd apps/web && npx vitest run       # unit tests (formats, pitch geometry)
+```
+
+The API tests create and delete their own `TEST__` data; they must never be pointed at the hosted project.
+The format maths (`apps/api/tests/test_tournament_format.py`) needs no database: `pytest tests/test_tournament_format.py --noconftest`.

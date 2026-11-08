@@ -6,7 +6,9 @@ from app.schemas.registrations import (
     TeamRegistrationStatusUpdate,
     EventTeamInvitationCreate,
     EventTeamInvitationStatusUpdate,
-    EventRosterPlayerUpdate
+    EventRosterPlayerUpdate,
+    GuestPlayerAdd,
+    TeamSeedUpdate
 )
 
 class RegistrationService:
@@ -125,8 +127,11 @@ class RegistrationService:
                 if not res.data:
                     raise HTTPException(400, "Failed to accept invitation.")
                 return {"status": "ACCEPTED", "player_id": res.data}
+            except HTTPException:
+                raise
             except Exception as e:
-                raise HTTPException(400, str(e))
+                # PostgREST errors carry a readable .message; str(e) would be a raw dict
+                raise HTTPException(400, getattr(e, "message", None) or str(e))
             
         elif data.status.value in ["DECLINED", "CANCELLED"]:
             # Standard decline/cancel logic
@@ -165,7 +170,7 @@ class RegistrationService:
         settings = supabase_admin.table('event_settings').select('min_squad').eq('event_id', event_id).single().execute()
         
         if roster.count < settings.data['min_squad']:
-            raise HTTPException(400, f"Minimum squad size is {settings.data['min_squad']}, but only {roster.count} players are in the squad.")
+            raise HTTPException(400, f"Minimum squad size is {settings.data['min_squad']}, but only {roster.count} {'player is' if roster.count == 1 else 'players are'} in the squad.")
 
         res = supabase_admin.table('event_team_registrations').update({"status": "PENDING_APPROVAL"}).eq('id', reg_id).execute()
         RegistrationService._log_audit(user_id, "SUBMIT_REGISTRATION", "event_team_registrations", reg_id, reg.data, res.data[0])
@@ -195,6 +200,21 @@ class RegistrationService:
             }).execute()
 
         RegistrationService._log_audit(user_id, "UPDATE_REGISTRATION_STATUS", "event_team_registrations", reg_id, current.data, res.data[0])
+        return res.data[0]
+
+    @staticmethod
+    def set_seed(event_id: str, reg_id: str, data: TeamSeedUpdate, user_id: str):
+        if not RegistrationService._is_event_admin(event_id, user_id):
+            raise HTTPException(403, "Not authorized.")
+        current = supabase_admin.table('event_team_registrations').select('*').eq('id', reg_id).eq('event_id', event_id).execute().data
+        if not current:
+            raise HTTPException(404, "Registration not found.")
+        if data.seed is not None:
+            clash = supabase_admin.table('event_team_registrations').select('team_name').eq('event_id', event_id).eq('seed', data.seed).neq('id', reg_id).execute().data
+            if clash:
+                raise HTTPException(409, f"Seed {data.seed} already belongs to {clash[0]['team_name']}.")
+        res = supabase_admin.table('event_team_registrations').update({"seed": data.seed}).eq('id', reg_id).execute()
+        RegistrationService._log_audit(user_id, "SET_SEED", "event_team_registrations", reg_id, {"seed": current[0].get('seed')}, {"seed": data.seed})
         return res.data[0]
 
     @staticmethod
@@ -235,11 +255,28 @@ class RegistrationService:
     def get_squad(event_id: str, reg_id: str, user_id: str):
         # We fetch the squad using service role to bypass RLS for the users table
         # This is needed because users are hidden from non-friends, but team members need to see each other
+        if not supabase_admin.table('event_team_registrations').select('id').eq('id', reg_id).eq('event_id', event_id).execute().data:
+            raise HTTPException(404, "Registration not found in this event.")
         res = supabase_admin.table('event_team_players').select('*, users(id, display_name, username, unique_code)').eq('event_registration_id', reg_id).execute()
         return res.data
 
     @staticmethod
+    def _can_manage_registration(event_id: str, reg_id: str, user_id: str) -> bool:
+        """Event admins, the registering captain, or the event captain / vice-captain of the team."""
+        if RegistrationService._is_event_admin(event_id, user_id):
+            return True
+        reg = supabase_admin.table('event_team_registrations').select('captain_id').eq('id', reg_id).eq('event_id', event_id).execute().data
+        if not reg:
+            return False
+        if reg[0].get('captain_id') == user_id:
+            return True
+        lead = supabase_admin.table('event_team_players').select('id').eq('event_registration_id', reg_id).eq('user_id', user_id)             .or_('is_captain_for_event.eq.true,is_vice_captain_for_event.eq.true').execute().data
+        return bool(lead)
+
+    @staticmethod
     def get_invitations(event_id: str, reg_id: str, user_id: str):
+        if not RegistrationService._can_manage_registration(event_id, reg_id, user_id):
+            raise HTTPException(403, "Not authorized to view invitations.")
         res = supabase_admin.table('event_team_invitations').select('*').eq('registration_id', reg_id).eq('status', 'PENDING').execute()
         return res.data
 
@@ -248,8 +285,53 @@ class RegistrationService:
         if not RegistrationService._is_event_admin(event_id, user_id):
             raise HTTPException(403, "Not authorized to view registrations.")
             
-        res = supabase_admin.table('event_team_registrations').select('*, players:event_team_players(*, user:users(id, display_name, username, email, unique_code))').eq('event_id', event_id).execute()
+        res = supabase_admin.table('event_team_registrations').select('*, players:event_team_players(*, user:users(id, display_name, username, email, unique_code))').eq('event_id', event_id).order('registered_at').execute()
         return res.data
+
+    @staticmethod
+    def _draft_registration_for_captain(event_id: str, reg_id: str, user_id: str) -> dict:
+        reg = supabase_admin.table('event_team_registrations').select('*').eq('id', reg_id).eq('event_id', event_id).execute().data
+        if not reg:
+            raise HTTPException(404, "Registration not found.")
+        if reg[0]['captain_id'] != user_id:
+            raise HTTPException(403, "Only the team captain can change the squad.")
+        if reg[0].get('roster_locked'):
+            raise HTTPException(400, "The team roster is locked by the organizer.")
+        if reg[0]['status'] != 'DRAFT':
+            raise HTTPException(400, "The squad can only be changed while the registration is in DRAFT.")
+        return reg[0]
+
+    @staticmethod
+    def add_guest_player(event_id: str, reg_id: str, data: GuestPlayerAdd, user_id: str):
+        """A player who has no account (most grassroots squads have some). They are listed by name and can be fielded and scored like anyone else."""
+        RegistrationService._draft_registration_for_captain(event_id, reg_id, user_id)
+        name = data.guest_name.strip()
+        if not name:
+            raise HTTPException(400, "Player name is required.")
+        settings = supabase_admin.table('event_settings').select('max_squad, allow_duplicate_jersey_numbers').eq('event_id', event_id).single().execute().data
+        squad = supabase_admin.table('event_team_players').select('id, jersey_number, guest_name').eq('event_registration_id', reg_id).in_('status', ['PENDING_APPROVAL', 'APPROVED']).execute().data
+        if settings.get('max_squad') and len(squad) >= settings['max_squad']:
+            raise HTTPException(400, f"Maximum squad size of {settings['max_squad']} reached.")
+        if data.jersey_number is not None and not settings.get('allow_duplicate_jersey_numbers') and any(p['jersey_number'] == data.jersey_number for p in squad):
+            raise HTTPException(400, f"Jersey number {data.jersey_number} is already taken in this squad.")
+        if any((p.get('guest_name') or '').lower() == name.lower() for p in squad):
+            raise HTTPException(400, f"{name} is already in the squad.")
+        res = supabase_admin.table('event_team_players').insert({
+            "event_registration_id": reg_id, "guest_name": name, "jersey_number": data.jersey_number,
+            "position": data.position, "status": "APPROVED",
+        }).execute()
+        RegistrationService._log_audit(user_id, "ADD_GUEST_PLAYER", "event_team_players", res.data[0]['id'], None, res.data[0])
+        return res.data[0]
+
+    @staticmethod
+    def remove_guest_player(event_id: str, reg_id: str, player_id: str, user_id: str):
+        RegistrationService._draft_registration_for_captain(event_id, reg_id, user_id)
+        row = supabase_admin.table('event_team_players').select('*').eq('id', player_id).eq('event_registration_id', reg_id).execute().data
+        if not row or row[0].get('user_id'):
+            raise HTTPException(404, "Guest player not found in this squad.")
+        supabase_admin.table('event_team_players').delete().eq('id', player_id).execute()
+        RegistrationService._log_audit(user_id, "REMOVE_GUEST_PLAYER", "event_team_players", player_id, row[0], None)
+        return {"status": "success"}
 
     @staticmethod
     def remove_player(event_id: str, reg_id: str, player_user_id: str, current_user_id: str):

@@ -7,9 +7,10 @@ type InteractiveMatchTimelineProps = {
   timeline: any[];
   matchData: any;
   playerNames: Record<string, string>;
+  squads?: { homeStarters: any[]; awayStarters: any[]; homeSubs: any[]; awaySubs: any[] };
 };
 
-export function InteractiveMatchTimeline({ timeline, matchData, playerNames }: InteractiveMatchTimelineProps) {
+export function InteractiveMatchTimeline({ timeline, matchData, playerNames, squads }: InteractiveMatchTimelineProps) {
   const [activeEvent, setActiveEvent] = useState<any>(null);
   const [activeIndex, setActiveIndex] = useState<number>(-1);
 
@@ -35,7 +36,9 @@ export function InteractiveMatchTimeline({ timeline, matchData, playerNames }: I
         id: targetId,
         name: targetName,
       },
-      minute: e.display_minute
+      minute: e.display_minute,
+      result: e.metadata?.result ?? null,
+      metadata: e.metadata ?? null,
     });
   };
 
@@ -47,7 +50,7 @@ export function InteractiveMatchTimeline({ timeline, matchData, playerNames }: I
       
       {/* Animated Pitch Section */}
       <div className="p-4 bg-surface border-b border-outline-variant shrink-0 relative">
-         <AnimatedPitch activeEvent={activeEvent} />
+         <AnimatedPitch activeEvent={activeEvent} homeStarters={squads?.homeStarters} awayStarters={squads?.awayStarters} homeSubs={squads?.homeSubs} awaySubs={squads?.awaySubs} />
          {timeline.length > 0 && activeIndex === -1 && (
            <div className="absolute inset-0 bg-surface/50 backdrop-blur-[2px] flex items-center justify-center pointer-events-none z-50">
              <div className="bg-surface-container-high px-4 py-2 rounded-full text-sm font-bold shadow-lg border border-outline-variant">

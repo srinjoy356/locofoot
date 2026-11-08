@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { TurfHero } from '@/components/shared/TurfHero';
 import { InteractiveMatchTimeline } from '@/components/analytics/InteractiveMatchTimeline';
+import { matchStory } from '@/lib/matchStory';
 
 export default async function MatchStatsPage({ params }: { params: Promise<{ slug: string, matchId: string }> }) {
   const supabase = await createClient();
@@ -77,23 +78,16 @@ export default async function MatchStatsPage({ params }: { params: Promise<{ slu
     playerNames[p.player_id] = p.player_name;
   });
 
-  // Process Goals for Score Summary
-  const homeGoals = timelineEvents.filter((e: any) => e.event_type === 'GOAL' && e.actor_registration_id === matchData.home_registration_id);
-  const awayGoals = timelineEvents.filter((e: any) => e.event_type === 'GOAL' && e.actor_registration_id === matchData.away_registration_id);
-
-  // Group goals by minute (for UI)
-  const homeScorers = homeGoals.map((g: any) => ({
+  // Goals are SHOT events whose result is GOAL. Scorers are listed with minute, penalty flag and assist.
+  const goalEvents = timelineEvents.filter((e: any) => e.event_type === 'SHOT' && e.metadata?.result === 'GOAL');
+  const toScorer = (g: any) => ({
     name: playerNames[g.actor_player_id as string] || 'Unknown',
     minute: g.display_minute,
     isPenalty: g.metadata?.situation === 'PENALTY',
-    isOwnGoal: false // TODO
-  }));
-  const awayScorers = awayGoals.map((g: any) => ({
-    name: playerNames[g.actor_player_id as string] || 'Unknown',
-    minute: g.display_minute,
-    isPenalty: g.metadata?.situation === 'PENALTY',
-    isOwnGoal: false
-  }));
+    assist: g.assist_player_id ? playerNames[g.assist_player_id as string] || null : null,
+  });
+  const homeScorers = goalEvents.filter((e: any) => e.actor_registration_id === matchData.home_registration_id).map(toScorer);
+  const awayScorers = goalEvents.filter((e: any) => e.actor_registration_id === matchData.away_registration_id).map(toScorer);
 
   // Identify key timeline moments (Goals, Cards, Subs, Big chances)
   // Let's get referee events too (Cards)
@@ -124,6 +118,29 @@ export default async function MatchStatsPage({ params }: { params: Promise<{ slu
     ...uniqueRefEvents
   ].sort((a: any, b: any) => a.elapsed_seconds - b.elapsed_seconds);
 
+  // Who started, who came on: needed so the replay pitch is not empty
+  const { data: partData } = await supabase.from('match_participation').select('event_player_id, event_registration_id, status, entry_elapsed_seconds').eq('match_id', matchId);
+  const { data: rosterData } = await supabase.from('event_team_players').select('id, jersey_number, position, event_registration_id')
+    .in('event_registration_id', [matchData.home_registration_id, matchData.away_registration_id].filter(Boolean));
+  const rosterById = new Map((rosterData || []).map((r: any) => [r.id, r]));
+  const squadOf = (regId: string | null, starters: boolean) => (partData || [])
+    .filter((p: any) => p.event_registration_id === regId && ((p.entry_elapsed_seconds === 0 || p.status === 'STARTER') === starters))
+    .filter((p: any) => starters || p.entry_elapsed_seconds !== null || p.status !== 'SUBSTITUTE')
+    .map((p: any) => ({ id: p.event_player_id, name: playerNames[p.event_player_id] || 'Player', jersey_number: rosterById.get(p.event_player_id)?.jersey_number ?? null,
+      position: rosterById.get(p.event_player_id)?.position ?? null, team: regId === matchData.home_registration_id ? 'home' : 'away' }));
+  const squads = {
+    homeStarters: squadOf(matchData.home_registration_id, true), awayStarters: squadOf(matchData.away_registration_id, true),
+    homeSubs: squadOf(matchData.home_registration_id, false), awaySubs: squadOf(matchData.away_registration_id, false),
+  };
+  const mvp = playerPerformance.find((p: any) => p.is_mvp);
+  const story = matchData.match_state === 'COMPLETED' || matchData.match_state === 'FULL_TIME' ? matchStory({
+    homeName: matchData.home?.team_name || 'Home', awayName: matchData.away?.team_name || 'Away',
+    homeScore: matchData.home_score ?? 0, awayScore: matchData.away_score ?? 0,
+    goals: goalEvents.map((g: any) => ({ team: g.actor_registration_id === matchData.home_registration_id ? 'home' as const : 'away' as const, scorer: playerNames[g.actor_player_id] || 'Unknown', minute: g.display_minute })),
+    mvp: mvp ? { name: mvp.player_name, rating: mvp.rating, goals: mvp.goals, assists: mvp.assists } : null,
+    homeCards: matchStats?.home_yellow_cards, awayCards: matchStats?.away_yellow_cards, redCards: (matchStats?.home_red_cards ?? 0) + (matchStats?.away_red_cards ?? 0),
+  }) : '';
+
   return (
     <div className="w-full flex flex-col bg-background text-on-surface min-h-screen">
       <TurfHero
@@ -147,7 +164,7 @@ export default async function MatchStatsPage({ params }: { params: Promise<{ slu
             <div className="text-sm text-on-surface-variant mt-2 flex flex-col items-end gap-1">
               {homeScorers.map((g: any, i: number) => (
                 <div key={i} className="flex gap-2 items-center">
-                  <span>{g.name} {g.minute}' {g.isPenalty ? '(P)' : ''}</span>
+                  <span>{g.name} {g.minute}' {g.isPenalty ? '(P)' : ''}{g.assist ? <span className="text-on-surface-variant/70"> (ast. {g.assist})</span> : null}</span>
                   ⚽
                 </div>
               ))}
@@ -157,8 +174,13 @@ export default async function MatchStatsPage({ params }: { params: Promise<{ slu
           {/* SCORE */}
           <div className="px-12">
              <div className="text-5xl font-black font-mono bg-surface-container-high border border-outline-variant px-6 py-4 tracking-tighter tabular-nums text-on-surface">
-               {matchStats ? `${matchStats.home_goals} - ${matchStats.away_goals}` : '0 - 0'}
+               {matchData.home_score ?? 0} - {matchData.away_score ?? 0}
              </div>
+             {matchData.metadata?.shootout && (
+               <div className="mt-2 font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant">
+                 {matchData.metadata.shootout.home > matchData.metadata.shootout.away ? matchData.home?.team_name : matchData.away?.team_name} win {Math.max(matchData.metadata.shootout.home, matchData.metadata.shootout.away)}-{Math.min(matchData.metadata.shootout.home, matchData.metadata.shootout.away)} on penalties
+               </div>
+             )}
           </div>
           
           {/* AWAY TEAM */}
@@ -168,13 +190,20 @@ export default async function MatchStatsPage({ params }: { params: Promise<{ slu
               {awayScorers.map((g: any, i: number) => (
                 <div key={i} className="flex gap-2 items-center">
                   ⚽
-                  <span>{g.name} {g.minute}' {g.isPenalty ? '(P)' : ''}</span>
+                  <span>{g.name} {g.minute}' {g.isPenalty ? '(P)' : ''}{g.assist ? <span className="text-on-surface-variant/70"> (ast. {g.assist})</span> : null}</span>
                 </div>
               ))}
             </div>
           </div>
         </div>
       </div>
+
+      {story && (
+        <div className="border border-outline-variant bg-surface-container p-6">
+          <div className="mb-2 font-label-caps text-label-caps uppercase tracking-widest text-primary-container">Match report</div>
+          <p className="font-body-md text-on-surface">{story}</p>
+        </div>
+      )}
 
       {/* TABS */}
       <div className="border-b border-outline-variant pb-2 flex gap-6 px-2">
@@ -307,6 +336,7 @@ export default async function MatchStatsPage({ params }: { params: Promise<{ slu
                timeline={combinedTimeline} 
                matchData={matchData} 
                playerNames={playerNames} 
+               squads={squads}
              />
            </div>
 

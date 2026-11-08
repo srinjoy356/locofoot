@@ -1,6 +1,7 @@
 from typing import Dict, Any, Optional
 from uuid import UUID
 from fastapi import HTTPException
+from postgrest.exceptions import APIError
 from supabase import AsyncClient
 from ..schemas.match_operations import (
     MatchState,
@@ -11,9 +12,47 @@ from ..schemas.match_operations import (
     MatchForfeitRequest
 )
 
+def _already_recorded(e: APIError, event_id) -> Dict[str, Any] | None:
+    """A retried request carries the same client id, so a unique violation means it already landed.
+    Any other database error must reach the recorder, never be reported as success."""
+    if getattr(e, "code", None) == "23505":
+        return {"status": "success", "event_id": str(event_id), "duplicate": True}
+    raise HTTPException(status_code=400, detail=f"Could not record event: {getattr(e, 'message', e)}")
+
+
+# Where a match may go next. Finished matches stay finished; a started match cannot be un-started.
+ALLOWED_TRANSITIONS: Dict[str, set] = {
+    "SCHEDULED": {"PRE_MATCH", "READY", "LIVE", "POSTPONED", "CANCELLED"},
+    "PRE_MATCH": {"READY", "LIVE", "POSTPONED", "CANCELLED"},
+    "READY": {"LIVE", "POSTPONED", "CANCELLED"},
+    "POSTPONED": {"SCHEDULED", "CANCELLED"},
+    "LIVE": {"PAUSED", "HALF_TIME", "FULL_TIME", "ABANDONED"},
+    "PAUSED": {"LIVE", "SECOND_HALF", "EXTRA_TIME_1", "EXTRA_TIME_2", "HALF_TIME", "FULL_TIME", "ABANDONED"},
+    "HALF_TIME": {"SECOND_HALF", "LIVE", "FULL_TIME", "ABANDONED"},
+    "SECOND_HALF": {"PAUSED", "FULL_TIME", "ABANDONED"},
+    "FULL_TIME": {"COMPLETED", "EXTRA_TIME_1", "PENALTY_SHOOTOUT"},
+    "EXTRA_TIME_1": {"PAUSED", "EXTRA_TIME_BREAK", "EXTRA_TIME_2", "FULL_TIME", "ABANDONED"},
+    "EXTRA_TIME_BREAK": {"EXTRA_TIME_2", "FULL_TIME", "ABANDONED"},
+    "EXTRA_TIME_2": {"PAUSED", "FULL_TIME", "PENALTY_SHOOTOUT", "ABANDONED"},
+    "PENALTY_SHOOTOUT": {"FULL_TIME", "COMPLETED", "ABANDONED"},
+    "COMPLETED": set(), "ABANDONED": set(), "CANCELLED": set(),
+}
+KICK_OFF_FROM = {"SCHEDULED", "PRE_MATCH", "READY"}
+
+
 class MatchEngineService:
     def __init__(self, db: AsyncClient):
         self.db = db
+
+    async def _require_confirmed_lineups(self, match_id: UUID):
+        """Nobody kicks off without a confirmed XI for both teams: minutes, stats and substitutions all hang off it."""
+        m = (await self.db.table("matches").select("home_registration_id, away_registration_id").eq("id", str(match_id)).execute()).data[0]
+        teams = [t for t in (m["home_registration_id"], m["away_registration_id"]) if t]
+        confirmed = {r["team_registration_id"] for r in (await self.db.table("match_lineups").select("team_registration_id").eq("match_id", str(match_id)).eq("status", "CONFIRMED").execute()).data}
+        missing = [t for t in teams if t not in confirmed]
+        if missing:
+            names = {r["id"]: r["team_name"] for r in (await self.db.table("event_team_registrations").select("id, team_name").in_("id", missing).execute()).data}
+            raise HTTPException(status_code=409, detail=f"Confirm the lineup for {' and '.join(names.get(t, 'a team') for t in missing)} before kick-off.")
 
     async def _initialize_match_participation(self, match_id: UUID, start_time: str):
         # Fetch confirmed lineups
@@ -39,6 +78,26 @@ class MatchEngineService:
             await self.db.table("match_participation").delete().eq("match_id", str(match_id)).execute()
             await self.db.table("match_participation").insert(participation_inserts).execute()
 
+    async def _advance_bracket(self, match_id: UUID):
+        """A finished match may decide a group table or a knockout slot; failures must never block the result."""
+        try:
+            import asyncio
+            from ..services.tournament_service import tournament_service
+            res = await self.db.table("matches").select("event_id").eq("id", str(match_id)).execute()
+            if res.data:
+                await asyncio.to_thread(tournament_service.advance_bracket, UUID(res.data[0]["event_id"]))
+        except Exception as e:
+            print(f"Failed to advance bracket: {e}")
+
+    async def _settle_bets(self, match_id: UUID):
+        """Predictions are recomputed from the timeline after anything that can change a score or end a match."""
+        try:
+            import asyncio
+            from ..services.betting_service import betting_service
+            await asyncio.to_thread(betting_service.settle_match, str(match_id))
+        except Exception as e:
+            print(f"Failed to settle predictions: {e}")
+
     async def transition_state(self, match_id: UUID, actor_id: UUID, req: StateTransitionRequest) -> Dict[str, Any]:
         from datetime import datetime, timezone
         
@@ -49,7 +108,14 @@ class MatchEngineService:
         
         match_data = res.data[0]
         current_state = match_data["match_state"]
-        
+
+        if req.new_state.value == current_state:
+            return {"status": "success", "new_state": req.new_state}  # already there
+        if req.new_state.value not in ALLOWED_TRANSITIONS.get(current_state, set()):
+            raise HTTPException(status_code=409, detail=f"A match that is {current_state.replace('_', ' ').lower()} cannot move to {req.new_state.value.replace('_', ' ').lower()}.")
+        if current_state in KICK_OFF_FROM and req.new_state.value in ("LIVE", "READY"):
+            await self._require_confirmed_lineups(match_id)
+
         now = datetime.now(timezone.utc).isoformat()
         updates = {"match_state": req.new_state.value}
         if req.new_state.value == "COMPLETED":
@@ -93,10 +159,12 @@ class MatchEngineService:
                 # (e.g. 5400 for 90 mins) or just fetching the last timeline event's elapsed_seconds.
                 # For now, we will query the max elapsed_seconds.
                 max_res = await self.db.table("match_timeline_events").select("elapsed_seconds").eq("match_id", str(match_id)).order("elapsed_seconds", desc=True).limit(1).execute()
-                final_seconds = max_res.data[0]["elapsed_seconds"] if max_res.data else 0
+                last_event = max_res.data[0]["elapsed_seconds"] if max_res.data else 0
+                final_seconds = max(last_event, req.elapsed_seconds or 0)
+                # only players who actually took the pitch: an unused substitute has no entry time and no minutes
                 await self.db.table("match_participation").update({
                     "exit_elapsed_seconds": final_seconds
-                }).eq("match_id", str(match_id)).is_("exit_elapsed_seconds", "null").execute()
+                }).eq("match_id", str(match_id)).is_("exit_elapsed_seconds", "null").not_.is_("entry_elapsed_seconds", "null").execute()
 
         # 3. Update match state and timestamps
         await self.db.table("matches").update(updates).eq("id", str(match_id)).execute()
@@ -107,6 +175,7 @@ class MatchEngineService:
                 await self.db.rpc("compute_match_ratings_and_mvp", {"p_match_id": str(match_id)}).execute()
             except Exception as e:
                 print(f"Failed to compute match ratings: {e}")
+            await self._advance_bracket(match_id)
         
         # 4. Insert transition log
         try:
@@ -121,6 +190,8 @@ class MatchEngineService:
         except Exception:
             pass # ignore idempotency conflicts
             
+        if req.new_state.value in ("FULL_TIME", "COMPLETED", "ABANDONED", "CANCELLED"):
+            await self._settle_bets(match_id)
         return {"status": "success", "new_state": req.new_state}
 
 
@@ -166,6 +237,8 @@ class MatchEngineService:
             await self.db.rpc("compute_match_ratings_and_mvp", {"p_match_id": str(match_id)}).execute()
         except Exception:
             pass
+        await self._advance_bracket(match_id)
+        await self._settle_bets(match_id)
             
         # 5. Insert transition log
         try:
@@ -267,7 +340,7 @@ class MatchEngineService:
                         "event_player_id": str(req.event_player_id),
                         "event_registration_id": str(req.event_registration_id) if req.event_registration_id else None,
                         "target_player_id": None,
-                        "metadata": {"reason": "Second Yellow Card"}
+                        "metadata": {"reason": "Second Yellow Card", "player_name": req.metadata.get("player_name")}
                     }).execute()
                     
                     await self._upsert_participation(str(match_id), str(req.event_player_id), str(req.event_registration_id), {
@@ -275,41 +348,103 @@ class MatchEngineService:
                         "status": "SENT_OFF"
                     })
                 
-        except Exception as e:
-            pass # idempotent
+        except APIError as e:
+            return _already_recorded(e, req.id)
         
         return {"status": "success", "event_id": str(req.id)}
 
+    @staticmethod
+    def _timeline_row(match_id: UUID, actor_id: UUID, req: TimelineEventRequest) -> Dict[str, Any]:
+        return {
+            "id": str(req.id),
+            "match_id": str(match_id),
+            "event_type": req.event_type.value,
+            "period": req.period.value,
+            "elapsed_seconds": req.elapsed_seconds,
+            "display_minute": req.display_minute,
+            "display_second": req.display_second,
+            "actor_player_id": str(req.actor_player_id) if req.actor_player_id else None,
+            "actor_registration_id": str(req.actor_registration_id) if req.actor_registration_id else None,
+            "target_player_id": str(req.target_player_id) if req.target_player_id else None,
+            "target_registration_id": str(req.target_registration_id) if req.target_registration_id else None,
+            "x": req.x,
+            "y": req.y,
+            "referee_event_id": str(req.referee_event_id) if req.referee_event_id else None,
+            "is_big_chance": req.is_big_chance,
+            "related_event_id": str(req.related_event_id) if req.related_event_id else None,
+            "assist_player_id": str(req.assist_player_id) if req.assist_player_id else None,
+            "assist_event_id": str(req.assist_event_id) if req.assist_event_id else None,
+            "second_assist_player_id": str(req.second_assist_player_id) if req.second_assist_player_id else None,
+            "second_assist_event_id": str(req.second_assist_event_id) if req.second_assist_event_id else None,
+            "metadata": req.metadata,
+            "created_by": str(actor_id),
+        }
+
+    async def record_timeline_events(self, match_id: UUID, actor_id: UUID, reqs: list[TimelineEventRequest]) -> Dict[str, Any]:
+        """
+        A burst of events in one round trip (a recorder on a flaky connection catches up with a single request).
+        Order of ids is kept; a retried id is skipped, and when the batch is rejected as a whole every event is tried
+        alone so one bad event cannot hold back the rest.
+        """
+        rows = [self._timeline_row(match_id, actor_id, r) for r in reqs]
+        results: list[Dict[str, Any]] = []
+        try:
+            await self.db.table("match_timeline_events").upsert(rows, on_conflict="id", ignore_duplicates=True).execute()
+            results = [{"id": r["id"], "status": "ok"} for r in rows]
+        except APIError:
+            for row, req in zip(rows, reqs):
+                try:
+                    await self.db.table("match_timeline_events").insert(row).execute()
+                    results.append({"id": row["id"], "status": "ok"})
+                except APIError as e:
+                    if getattr(e, "code", None) == "23505":
+                        results.append({"id": row["id"], "status": "duplicate"})
+                    else:
+                        results.append({"id": row["id"], "status": "error", "message": str(getattr(e, "message", e))})
+        if any(r["status"] != "error" and q.event_type.value == "SHOT" and (q.metadata or {}).get("result") == "GOAL" for r, q in zip(results, reqs)):
+            await self._settle_bets(match_id)
+        return {"results": results}
+
     async def record_timeline_event(self, match_id: UUID, actor_id: UUID, req: TimelineEventRequest) -> Dict[str, Any]:
         try:
-            await self.db.table("match_timeline_events").insert({
-                "id": str(req.id),
-                "match_id": str(match_id),
-                "event_type": req.event_type.value,
-                "period": req.period.value,
-                "elapsed_seconds": req.elapsed_seconds,
-                "display_minute": req.display_minute,
-                "display_second": req.display_second,
-                "actor_player_id": str(req.actor_player_id) if req.actor_player_id else None,
-                "actor_registration_id": str(req.actor_registration_id) if req.actor_registration_id else None,
-                "target_player_id": str(req.target_player_id) if req.target_player_id else None,
-                "target_registration_id": str(req.target_registration_id) if req.target_registration_id else None,
-                "x": req.x,
-                "y": req.y,
-                "referee_event_id": str(req.referee_event_id) if req.referee_event_id else None,
-                "is_big_chance": req.is_big_chance,
-                "related_event_id": str(req.related_event_id) if req.related_event_id else None,
-                "assist_player_id": str(req.assist_player_id) if req.assist_player_id else None,
-                "assist_event_id": str(req.assist_event_id) if req.assist_event_id else None,
-                "second_assist_player_id": str(req.second_assist_player_id) if req.second_assist_player_id else None,
-                "second_assist_event_id": str(req.second_assist_event_id) if req.second_assist_event_id else None,
-                "metadata": req.metadata,
-                "created_by": str(actor_id)
-            }).execute()
-        except Exception:
-            pass # idempotent
+            await self.db.table("match_timeline_events").insert(self._timeline_row(match_id, actor_id, req)).execute()
+        except APIError as e:
+            return _already_recorded(e, req.id)
         
+        if req.event_type.value == "SHOT" and (req.metadata or {}).get("result") == "GOAL":
+            await self._settle_bets(match_id)  # closes "next goal" markets as soon as the goal is logged
         return {"status": "success", "event_id": str(req.id)}
+
+    async def undo_timeline_event(self, match_id: UUID, actor_id: UUID, timeline_event_id: UUID) -> Dict[str, Any]:
+        """
+        Remove a mis-recorded event. Stats and scores are derived from the timeline, so a soft 'deleted' flag
+        would keep counting it; the full row is snapshotted into audit_logs first so nothing is lost.
+        """
+        res = await self.db.table("match_timeline_events").select("*")             .eq("id", str(timeline_event_id)).eq("match_id", str(match_id)).execute()
+        if not res.data:
+            raise HTTPException(status_code=404, detail="Timeline event not found")
+        try:
+            await self.db.table("audit_logs").insert({
+                "actor_id": str(actor_id),
+                "action": "UNDO_TIMELINE_EVENT",
+                "entity_type": "match_timeline_events",
+                "entity_id": str(timeline_event_id),
+                "old_value": res.data[0],
+                "new_value": None,
+            }).execute()
+        except APIError as e:  # no audit trail, no deletion
+            raise HTTPException(status_code=500, detail=f"Could not write audit log: {getattr(e, 'message', e)}")
+        await self.db.table("match_timeline_events").delete().eq("id", str(timeline_event_id)).execute()
+        if res.data[0].get("event_type") == "SHOT":
+            await self._settle_bets(match_id)  # an undone goal re-opens its market and repairs any payouts
+
+        match_res = await self.db.table("matches").select("match_state").eq("id", str(match_id)).execute()
+        if match_res.data and match_res.data[0]["match_state"] == "COMPLETED":
+            try:
+                await self.db.rpc("compute_match_ratings_and_mvp", {"p_match_id": str(match_id)}).execute()
+            except Exception as e:
+                print(f"Failed to recompute match ratings on undo: {e}")
+        return {"status": "success"}
 
     async def correct_timeline_event(self, match_id: UUID, actor_id: UUID, req: CorrectionRequest) -> Dict[str, Any]:
         # 1. Fetch original
@@ -338,6 +473,7 @@ class MatchEngineService:
         await self.db.table("match_timeline_events").update({
             "metadata": req.corrected_payload
         }).eq("id", str(req.timeline_event_id)).execute()
+        await self._settle_bets(match_id)
         
         # 4. If the match is already COMPLETED, re-trigger rating/MVP calculation
         match_res = await self.db.table("matches").select("match_state").eq("id", str(match_id)).execute()

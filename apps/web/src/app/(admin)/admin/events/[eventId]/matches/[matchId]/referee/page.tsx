@@ -63,123 +63,85 @@ export default function RefereePage({ params }: { params: Promise<{ eventId: str
     checkAuth();
   }, [matchId]);
 
-  const changeState = async (newState: MatchState) => {
-    if (newState === 'HALF_TIME' && !isHalfTimeAllowed()) {
-      alert("Half time cannot be started until the base minutes have elapsed!");
-      return;
-    }
+  // Inline messages rather than alert()/confirm(), which embedded and in-app browsers block.
+  const [notice, setNotice] = useState<string | null>(null);
+  const [confirmForfeit, setConfirmForfeit] = useState<'home' | 'away' | null>(null);
 
+  // One place for every referee call: a refusal from the server is shown, never swallowed.
+  const post = async (path: string, body: object): Promise<boolean> => {
+    setNotice(null);
     try {
-      const res = await fetch(`/api/v1/events/${eventId}/matches/${matchId}/referee/state`, {
+      const res = await fetch(`/api/v1/events/${eventId}/matches/${matchId}/referee/${path}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}` },
-        body: JSON.stringify({ idempotency_key: generateUUID(), new_state: newState })
+        body: JSON.stringify(body),
       });
-      if (!res.ok) {
-        const text = await res.text();
-        alert(`API Error: ${res.status} ${text}`);
-      }
+      if (res.ok) return true;
+      const data = await res.json().catch(() => ({}));
+      setNotice(typeof data.detail === 'string' ? data.detail : `That did not work (${res.status}).`);
     } catch (e: any) {
-      alert(`Fetch Error: ${e.message}`);
+      setNotice('Network error. Check your connection and try again.');
     }
+    return false;
   };
 
-  const handleForfeit = async (team: 'home' | 'away') => {
-    if (!confirm(`Are you sure you want to declare a forfeit for the ${team.toUpperCase()} team? The match will end immediately, and the other team will be awarded a 3-0 win.`)) return;
-
-    try {
-      const res = await fetch(`/api/v1/events/${eventId}/matches/${matchId}/referee/forfeit`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}` },
-        body: JSON.stringify({ idempotency_key: generateUUID(), forfeiting_team: team, reason: `${team.toUpperCase()} team No Show` })
-      });
-      if (!res.ok) {
-        const text = await res.text();
-        alert(`API Error: ${res.status} ${text}`);
-      }
-    } catch (e: any) {
-      alert(`Fetch Error: ${e.message}`);
+  const changeState = async (newState: MatchState) => {
+    if (newState === 'HALF_TIME' && !isHalfTimeAllowed()) {
+      setNotice('Half time cannot be started until the base minutes have elapsed.');
+      return;
     }
+    await post('state', { idempotency_key: generateUUID(), new_state: newState, elapsed_seconds: elapsed });
+  };
+
+  // two taps instead of a confirm() dialog
+  const handleForfeit = async (team: 'home' | 'away') => {
+    if (confirmForfeit !== team) { setConfirmForfeit(team); return; }
+    setConfirmForfeit(null);
+    await post('forfeit', { idempotency_key: generateUUID(), forfeiting_team: team, reason: `${team.toUpperCase()} team No Show` });
   };
 
   const handleEventClick = (type: RefereeEventType) => {
     setPendingEvent({ type });
   };
 
+  const sendEvent = async (event_player_id: string | undefined, event_registration_id: string | undefined, event_type: string, metadata: object) => {
+    await post('event', {
+      id: generateUUID(),
+      event_type,
+      period: getPeriod(),
+      elapsed_seconds: elapsed,
+      display_minute: Math.floor(elapsed / 60),
+      display_second: elapsed % 60,
+      event_player_id,
+      event_registration_id,
+      metadata,
+    });
+    setPendingEvent(null);
+  };
+
   const confirmEvent = async (player: MatchPlayer | null) => {
     if (!pendingEvent) return;
-
-    await fetch(`/api/v1/events/${eventId}/matches/${matchId}/referee/event`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}` },
-      body: JSON.stringify({
-        id: generateUUID(),
-        event_type: pendingEvent.type,
-        period: getPeriod(),
-        elapsed_seconds: elapsed,
-        display_minute: Math.floor(elapsed / 60),
-        display_second: elapsed % 60,
-        event_player_id: player ? player.id : undefined,
-        event_registration_id: player ? player.registration_id : undefined,
-        metadata: {}
-      })
-    });
-
-    setPendingEvent(null);
+    await sendEvent(player?.id, player?.registration_id, pendingEvent.type, player ? { player_name: player.name } : {});
   };
 
   const confirmSubstitution = async (playerOut: MatchPlayer | null, playerIn: MatchPlayer | null, team: 'home' | 'away' | null) => {
     if (!pendingEvent) return;
-
-    await fetch(`/api/v1/events/${eventId}/matches/${matchId}/referee/event`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}` },
-      body: JSON.stringify({
-        id: generateUUID(),
-        event_type: pendingEvent.type,
-        period: getPeriod(),
-        elapsed_seconds: elapsed,
-        display_minute: Math.floor(elapsed / 60),
-        display_second: elapsed % 60,
-        event_player_id: playerOut ? playerOut.id : undefined,
-        event_registration_id: playerOut ? playerOut.registration_id : undefined,
-        metadata: {
-          player_in_id: playerIn ? playerIn.id : null,
-          player_in_name: playerIn ? playerIn.name : null,
-          player_out_name: playerOut ? playerOut.name : null,
-        }
-      })
+    await sendEvent(playerOut?.id, playerOut?.registration_id, pendingEvent.type, {
+      player_in_id: playerIn ? playerIn.id : null,
+      player_in_name: playerIn ? playerIn.name : null,
+      player_out_name: playerOut ? playerOut.name : null,
     });
-
-    setPendingEvent(null);
   };
 
   const confirmFoul = async (playerCommitting: MatchPlayer | null, playerReceiving: MatchPlayer | null, team: 'home' | 'away' | null, penaltyAwarded?: boolean) => {
     if (!pendingEvent) return;
-
-    await fetch(`/api/v1/events/${eventId}/matches/${matchId}/referee/event`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}` },
-      body: JSON.stringify({
-        id: generateUUID(),
-        event_type: pendingEvent.type,
-        period: getPeriod(),
-        elapsed_seconds: elapsed,
-        display_minute: Math.floor(elapsed / 60),
-        display_second: elapsed % 60,
-        event_player_id: playerCommitting ? playerCommitting.id : undefined,
-        event_registration_id: playerCommitting ? playerCommitting.registration_id : undefined,
-        metadata: {
-          received_by_player_id: playerReceiving ? playerReceiving.id : null,
-          received_by_registration_id: playerReceiving ? playerReceiving.registration_id : null,
-          received_by_player_name: playerReceiving ? playerReceiving.name : null,
-          committed_by_player_name: playerCommitting ? playerCommitting.name : null,
-          penaltyAwarded: penaltyAwarded || undefined,
-        }
-      })
+    await sendEvent(playerCommitting?.id, playerCommitting?.registration_id, pendingEvent.type, {
+      received_by_player_id: playerReceiving ? playerReceiving.id : null,
+      received_by_registration_id: playerReceiving ? playerReceiving.registration_id : null,
+      received_by_player_name: playerReceiving ? playerReceiving.name : null,
+      committed_by_player_name: playerCommitting ? playerCommitting.name : null,
+      penaltyAwarded: penaltyAwarded || undefined,
     });
-
-    setPendingEvent(null);
   };
 
   if (isAuthorized === null) return <div className="p-12 text-center text-on-surface-variant bg-background min-h-screen font-label-caps text-label-caps uppercase tracking-widest">Verifying Referee Assignment...</div>;
@@ -207,6 +169,8 @@ export default function RefereePage({ params }: { params: Promise<{ eventId: str
           <p className="text-on-surface-variant font-label-caps text-label-caps uppercase tracking-widest mt-2">{matchState}</p>
         </div>
       </div>
+
+      {notice && <div role="alert" className="mt-4 border border-error bg-error/10 p-3 font-body-md text-error">{notice}</div>}
 
       <div className="grid grid-cols-2 gap-4 mt-8">
         {matchState === 'FULL_TIME' || matchState === 'COMPLETED' ? (
@@ -271,13 +235,13 @@ export default function RefereePage({ params }: { params: Promise<{ eventId: str
                   onClick={() => handleForfeit('home')}
                   className="py-3 border border-error text-error hover:bg-error/10 font-label-caps text-label-caps uppercase tracking-widest transition-colors"
                 >
-                  Home No-Show (Forfeit)
+                  {confirmForfeit === 'home' ? 'Tap again to forfeit Home' : 'Home No-Show (Forfeit)'}
                 </button>
                 <button
                   onClick={() => handleForfeit('away')}
                   className="py-3 border border-error text-error hover:bg-error/10 font-label-caps text-label-caps uppercase tracking-widest transition-colors"
                 >
-                  Away No-Show (Forfeit)
+                  {confirmForfeit === 'away' ? 'Tap again to forfeit Away' : 'Away No-Show (Forfeit)'}
                 </button>
               </div>
             )}

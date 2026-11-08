@@ -7,6 +7,9 @@ import Link from 'next/link';
 import { ShareButton } from '@/components/shared/ShareButton';
 import { QRCodeBlock } from '@/components/shared/QRCodeBlock';
 import { AnimatedPitch } from '@/components/analytics/AnimatedPitch';
+import { PredictionPanel } from '@/components/predictions/PredictionPanel';
+import { ReactionBar } from '@/components/shared/ReactionBar';
+import { commentary, isKeyEvent } from '@/lib/commentary';
 import { DeleteMatchButton } from '@/components/DeleteMatchButton';
 
 import { useMatchClock } from '@/app/(admin)/admin/events/[eventId]/matches/[matchId]/useMatchClock';
@@ -34,6 +37,7 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
   const [homeSubs, setHomeSubs] = useState<any[]>([]);
   const [awaySubs, setAwaySubs] = useState<any[]>([]);
   
+  const [keyOnly, setKeyOnly] = useState(true);
   const supabase = createClient();
   
   // We use the event_id from matchData to power the clock, falling back to slug if it's a UUID
@@ -60,7 +64,9 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
           id: targetId,
           name: targetName,
         },
-        minute: rawActiveEvent.display_minute
+        minute: rawActiveEvent.display_minute,
+        result: rawActiveEvent.metadata?.result ?? null,
+        metadata: rawActiveEvent.metadata ?? null,
       });
     }
   }, [rawActiveEvent, matchData, playerMap]);
@@ -142,7 +148,7 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
         // Fetch all players for these teams to get their names
         const { data: playersData } = await supabase
           .from('event_team_players')
-          .select('id, user_id, event_registration_id, guest_name')
+          .select('id, user_id, event_registration_id, guest_name, jersey_number, position')
           .in('event_registration_id', [match.home_registration_id, match.away_registration_id]);
 
         if (playersData && playersData.length > 0) {
@@ -160,8 +166,9 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
                 const tempMap: Record<string, string> = {};
                 playersData.forEach(p => {
                   const user = usersData?.find(u => u.id === p.user_id);
-                  if (user?.display_name) {
-                    tempMap[p.id] = user.display_name;
+                  const name = user?.display_name || p.guest_name;
+                  if (name) {
+                    tempMap[p.id] = name;
                   }
                 });
                 setPlayerMap(tempMap);
@@ -203,6 +210,8 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
                     id: p.id,
                     user_id: p.user_id,
                     name: user?.display_name || p.guest_name || 'Unknown',
+                    jersey_number: p.jersey_number,
+                    position: p.position,
                     team: isHome ? 'home' : 'away'
                   };
                   if (isHome) {
@@ -244,6 +253,10 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'match_timeline_events', filter: `match_id=eq.${matchId}` }, (payload) => {
         setTimelineEvents(prev => prev.map(ev => ev.id === payload.new.id ? payload.new : ev));
       })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'match_timeline_events' }, (payload) => {
+        // an undone event leaves the feed (DELETE payloads carry only the key, so no match filter here)
+        setTimelineEvents(prev => prev.filter(ev => ev.id !== payload.old.id));
+      })
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'referee_events', filter: `match_id=eq.${matchId}` }, (payload) => {
         setRefereeEvents(prev => [payload.new, ...prev]);
         setRawActiveEvent(payload.new);
@@ -264,6 +277,7 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
   
   const allEvents = [...timelineEvents, ...refereeEvents]
     .filter(ev => !ev.metadata?.deleted)
+    .filter(ev => !keyOnly || isKeyEvent(ev.event_type, ev.metadata?.result))
     .sort((a, b) => b.elapsed_seconds - a.elapsed_seconds);
 
   const handleDisputeSubmit = async (e: React.FormEvent) => {
@@ -465,7 +479,7 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
         </h2>
 
         {/* Animated Pitch Section */}
-        <div className="mb-8 border border-outline-variant bg-surface relative h-[400px] overflow-hidden">
+        <div className="mb-8 border border-outline-variant bg-surface sticky top-2 z-30 h-[min(62vw,420px)] min-h-[260px] overflow-hidden shadow-2xl">
            <AnimatedPitch 
              activeEvent={activeEvent} 
              homeStarters={homeStarters}
@@ -482,6 +496,20 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
            )}
         </div>
 
+        <div className="mb-6"><ReactionBar matchId={matchId} /></div>
+
+        {matchData?.events?.type !== 'QUICK_MATCH' && (
+          <div className="mb-8"><PredictionPanel matchId={matchId} /></div>
+        )}
+
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">Commentary</h3>
+          <div className="flex gap-1" role="group" aria-label="Event filter">
+            {[[true, 'Key moments'], [false, 'Everything']].map(([v, l]) => (
+              <button key={String(l)} onClick={() => setKeyOnly(v as boolean)} aria-pressed={keyOnly === v} className={`border px-3 py-1 font-label-caps text-[10px] uppercase tracking-widest ${keyOnly === v ? 'border-primary-container text-primary-container' : 'border-outline-variant text-on-surface-variant'}`}>{l as string}</button>
+            ))}
+          </div>
+        </div>
         <div className="flex flex-col gap-0 border-t border-outline-variant">
           {allEvents.map((ev, i) => {
             const isGoal = ev.metadata?.result === 'GOAL';
@@ -497,7 +525,7 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
             return (
               <button 
                 key={ev.id || i} 
-                onClick={() => setRawActiveEvent(ev)}
+                onClick={() => setRawActiveEvent({ ...ev })} // fresh object so clicking the same event replays it
                 className={`w-full text-left flex items-center border-b border-outline-variant p-4 transition-colors hover:bg-surface-variant ${
                   isActive ? 'bg-primary-container/20 ring-inset ring-2 ring-primary-container relative z-10' : 
                   (isGoal ? 'bg-primary-container/5 border-l-4 border-l-primary-container' : 'bg-background')
@@ -507,6 +535,7 @@ export default function PublicMatchPage({ params }: { params: Promise<{ slug: st
                   {ev.display_minute}<span>'</span>
                 </div>
                 <div className="flex-1 ml-4">
+                    <div className="mb-1 text-sm text-on-surface">{commentary(ev.event_type, actorName, targetName, ev.metadata?.result)}</div>
                     <div className="flex items-center gap-3 mb-1">
                       <span className={`font-label-caps text-[10px] uppercase tracking-widest ${isActive ? 'text-primary' : 'text-on-surface'}`}>{ev.event_type.replace(/_/g, ' ')}</span>
                       {isGoal && <span className="bg-primary-container text-on-primary-container text-[9px] font-bold px-2 py-0.5 rounded-none uppercase tracking-widest">GOAL</span>}

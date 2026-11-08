@@ -17,6 +17,7 @@ const PRIMARY: NavItem[] = [
   { href: "/dashboard", icon: "space_dashboard", label: "Dashboard", prefix: "/dashboard" },
   { href: "/explore", icon: "travel_explore", label: "Explore", prefix: "/explore" },
   { href: "/events", icon: "stadium", label: "Events", prefix: "/events" },
+  { href: "/predict", icon: "emoji_events", label: "Predict", prefix: "/predict" },
   { href: "/friends", icon: "group", label: "Friends", prefix: "/friends" },
   { href: "/admin/events", icon: "admin_panel_settings", label: "Organizer", prefix: "/admin/events" },
   { href: "/admin/quick-match", icon: "bolt", label: "Quick Match", prefix: "/admin/quick-match" },
@@ -33,6 +34,7 @@ const MOBILE: NavItem[] = [
   { href: "/dashboard", icon: "space_dashboard", label: "Home", prefix: "/dashboard" },
   { href: "/explore", icon: "travel_explore", label: "Explore", prefix: "/explore" },
   { href: "/events", icon: "stadium", label: "Events", prefix: "/events" },
+  { href: "/predict", icon: "emoji_events", label: "Predict", prefix: "/predict" },
   { href: "/friends", icon: "group", label: "Friends", prefix: "/friends" },
 ];
 

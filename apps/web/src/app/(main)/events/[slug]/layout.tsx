@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { eventKey } from '@/lib/utils';
 
 type EventLayoutProps = {
   children: React.ReactNode;
@@ -14,7 +15,7 @@ export async function generateMetadata({ params }: EventLayoutProps) {
     const { data } = await supabase.from('events').select('name, description').eq('slug', slug).maybeSingle();
     eventData = data;
   } else {
-    const { data } = await supabase.from('events').select('name, description').eq('id', slug).maybeSingle();
+    const { data } = await supabase.from('events').select('name, description').eq(...eventKey(slug)).maybeSingle();
     eventData = data;
   }
 

@@ -1,4 +1,5 @@
 import React from 'react';
+import { eventKey } from '@/lib/utils';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
@@ -6,6 +7,7 @@ import { LeaderboardTable } from '@/components/LeaderboardTable';
 import { Card, CardContent } from '@/components/ui/card';
 import { ExportControls } from '@/components/shared/ExportControls';
 import { TurfHero } from '@/components/shared/TurfHero';
+import { TournamentOverview } from '@/components/events/TournamentOverview';
 
 export default async function TournamentStatsPage({ params }: { params: Promise<{ slug: string }> }) {
   const supabase = await createClient();
@@ -19,7 +21,7 @@ export default async function TournamentStatsPage({ params }: { params: Promise<
     eventId = data.id;
     eventData = data;
   } else {
-    const { data } = await supabase.from('events').select('*').eq('id', slug).maybeSingle();
+    const { data } = await supabase.from('events').select('*').eq(...eventKey(slug)).maybeSingle();
     if (!data) notFound();
     eventData = data;
   }
@@ -107,6 +109,9 @@ export default async function TournamentStatsPage({ params }: { params: Promise<
           </div>
         )}
 
+        {/* group tables and knockout bracket (renders nothing for a plain league) */}
+        <div className="mb-10 print:hidden"><TournamentOverview eventId={eventId} /></div>
+
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
           
           {/* STANDINGS (2 columns wide on XL) */}
@@ -152,11 +157,12 @@ export default async function TournamentStatsPage({ params }: { params: Promise<
                       const form = teamFormMap[t.team_registration_id] || teamFormMap[t.team_id] || [];
                       return (
                         <tr key={t.team_registration_id || t.team_id} className="hover:bg-surface-variant transition-colors">
-                          <td className="p-4 text-center text-on-surface-variant font-mono tabular-nums print:text-slate-600">{idx + 1}</td>
+                          <td className="p-4 text-center text-on-surface-variant font-mono tabular-nums print:text-slate-600">{t.position ?? idx + 1}</td>
                           <td className="p-4 font-headline-lg-mobile text-on-surface uppercase tracking-tighter print:text-black">
                             {t.team_registration_id ? (
                                <Link href={`/events/${slug}/teams/${t.team_registration_id}`} className="hover:text-primary-container transition-colors">{t.team_name}</Link>
                             ) : t.team_name}
+                            {t.group_name && <span className="ml-3 align-middle font-label-caps text-[9px] tracking-widest text-on-surface-variant">{t.group_name}</span>}
                           </td>
                           <td className="p-4 text-center text-on-surface-variant font-mono tabular-nums print:text-slate-700">{t.matches_played}</td>
                           <td className="p-4 text-center text-on-surface-variant font-mono tabular-nums print:text-slate-700">{t.wins || 0}</td>

@@ -75,6 +75,7 @@ class StateTransitionRequest(BaseModel):
     new_state: MatchState
     reason: Optional[str] = None
     announced_added_minutes: Optional[int] = None
+    elapsed_seconds: Optional[int] = Field(None, ge=0, le=60 * 300)  # match clock when the whistle went, used to close minutes played
 
 class MatchForfeitRequest(BaseModel):
     idempotency_key: UUID

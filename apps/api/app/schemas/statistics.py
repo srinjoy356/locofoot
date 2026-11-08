@@ -36,6 +36,8 @@ class TournamentStandingRow(BaseModel):
     goal_difference: int
     points: int
     fair_play_score: Optional[float] = None
+    position: Optional[int] = None  # rank inside its group (or the whole league)
+    group_name: Optional[str] = None
 
 class PlayerStatsResponse(BaseModel):
     event_player_id: UUID

@@ -14,7 +14,10 @@ export default function EventDetailsPage({ params }: { params: Promise<{ eventId
   const [venues, setVenues] = useState<any[]>([]);
   const [refereeCode, setRefereeCode] = useState('');
   const [eventReferees, setEventReferees] = useState<any[]>([]);
-  
+  const [grantRole, setGrantRole] = useState<'REFEREE' | 'SCORER'>('REFEREE');
+  // Inline message rather than alert(), which embedded and in-app browsers block.
+  const [rosterNotice, setRosterNotice] = useState<{ ok: boolean; text: string } | null>(null);
+
   const [saving, setSaving] = useState(false);
   
   const supabase = createClient();
@@ -39,7 +42,7 @@ export default function EventDetailsPage({ params }: { params: Promise<{ eventId
     const { data: rData } = await supabase.from('event_roles')
       .select('*, user:users!event_roles_user_id_fkey(*)')
       .eq('event_id', eventId)
-      .eq('role', 'REFEREE');
+      .in('role', ['REFEREE', 'SCORER']);
     if (rData) setEventReferees(rData);
   }
 
@@ -65,21 +68,33 @@ export default function EventDetailsPage({ params }: { params: Promise<{ eventId
     e.preventDefault();
     if (!refereeCode) return;
     const codeUpper = refereeCode.trim().toUpperCase();
-    if (eventReferees.find(r => r.user?.unique_code === codeUpper)) {
-      alert("THIS USER IS ALREADY A REFEREE FOR THIS TOURNAMENT.");
+    setRosterNotice(null);
+    const existing = eventReferees.find(r => (Array.isArray(r.user) ? r.user[0] : r.user)?.unique_code === codeUpper);
+    if (existing) {
+      setRosterNotice({ ok: false, text: `That user is already a ${existing.role.toLowerCase()} for this tournament.` });
       return;
     }
     try {
-      const { error: rpcError } = await supabase.rpc('invite_event_referee', {
-        p_event_id: eventId,
-        p_unique_code: refereeCode.trim().toUpperCase()
-      });
-      if (rpcError) throw new Error(rpcError.message);
-      alert(`REFEREE ROLE GRANTED TO ${refereeCode}!`);
+      if (grantRole === 'REFEREE') {
+        const { error: rpcError } = await supabase.rpc('invite_event_referee', { p_event_id: eventId, p_unique_code: codeUpper });
+        if (rpcError) throw new Error(rpcError.message);
+      } else {
+        // scorers have no dedicated RPC: look the person up by code, then use the roles endpoint
+        const { data: found } = await supabase.rpc('search_user_by_unique_code', { search_code: codeUpper });
+        if (!found?.length) throw new Error('No user has that code.');
+        const { data: { session } } = await supabase.auth.getSession();
+        const res = await fetch(`/api/v1/events/${eventId}/roles`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
+          body: JSON.stringify({ user_id: found[0].id, role: 'SCORER' }),
+        });
+        if (!res.ok) throw new Error((await res.json().catch(() => ({}))).detail || 'Could not grant the role.');
+      }
+      setRosterNotice({ ok: true, text: `${grantRole === 'REFEREE' ? 'Referee' : 'Scorer'} role granted to ${codeUpper}.` });
       setRefereeCode('');
       loadData();
     } catch (err: any) {
-      alert("ERROR: " + err.message);
+      setRosterNotice({ ok: false, text: err.message });
     }
   };
   
@@ -216,8 +231,8 @@ export default function EventDetailsPage({ params }: { params: Promise<{ eventId
             </button>
             
             <button onClick={() => router.push(`/admin/events/${eventId}/scheduling-live`)} className="p-6 text-left hover:bg-primary-container/5 transition-colors group">
-              <h3 className="font-label-caps text-[10px] uppercase tracking-widest text-primary-container mb-2">2. LIVE SCHEDULING</h3>
-              <p className="font-body-sm text-on-surface-variant">Assign fixtures and broadcast live schedules to participants.</p>
+              <h3 className="font-label-caps text-[10px] uppercase tracking-widest text-primary-container mb-2">2. FORMAT, FIXTURES &amp; LIVE SCHEDULING</h3>
+              <p className="font-body-sm text-on-surface-variant">Pick the format (league, knockout, groups + knockout), generate fixtures and the bracket in one click, then assign them to slots.</p>
             </button>
           </div>
         </div>
@@ -230,7 +245,16 @@ export default function EventDetailsPage({ params }: { params: Promise<{ eventId
           </div>
           <div className="flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-outline-variant">
             <div className="flex-1 p-6">
-              <p className="font-body-sm text-on-surface-variant mb-6">Grant referee status to users. Once granted, they can be assigned to matches.</p>
+              <p className="font-body-sm text-on-surface-variant mb-6">Grant referee or scorer status to users by their code. Referees can be assigned to matches; scorers can record any match.</p>
+              <div className="flex gap-2 mb-4" role="group" aria-label="Role to grant">
+                {(['REFEREE', 'SCORER'] as const).map(r => (
+                  <button key={r} type="button" onClick={() => setGrantRole(r)} aria-pressed={grantRole === r}
+                    className={`flex-1 border px-3 py-2 font-label-caps text-[10px] uppercase tracking-widest transition-colors ${grantRole === r ? 'border-primary-container bg-primary-container/10 text-primary-container' : 'border-outline-variant text-on-surface-variant hover:bg-surface-variant'}`}>
+                    {r === 'REFEREE' ? 'Referee' : 'Scorer'}
+                  </button>
+                ))}
+              </div>
+              {rosterNotice && <div role="status" className={`mb-4 border p-3 font-body-sm ${rosterNotice.ok ? 'border-primary-container bg-primary-container/10 text-primary-container' : 'border-error bg-error/10 text-error'}`}>{rosterNotice.text}</div>}
               <form onSubmit={handleInviteEventReferee} className="flex gap-4">
                 <input 
                   type="text" 
@@ -240,17 +264,17 @@ export default function EventDetailsPage({ params }: { params: Promise<{ eventId
                   onChange={e => setRefereeCode(e.target.value)}
                 />
                 <button type="submit" className="bg-on-surface text-surface hover:bg-on-surface-variant px-6 font-label-caps text-[10px] uppercase tracking-widest transition-colors flex items-center justify-center whitespace-nowrap">
-                  GRANT ROLE
+                  GRANT {grantRole}
                 </button>
               </form>
             </div>
             <div className="flex-1 p-0 bg-background">
               <div className="p-4 border-b border-outline-variant bg-surface-container">
-                <h3 className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">TOURNAMENT REFEREES ({eventReferees.length})</h3>
+                <h3 className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">TOURNAMENT OFFICIALS ({eventReferees.length})</h3>
               </div>
               {eventReferees.length === 0 ? (
                 <div className="p-6 text-center font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">
-                  NO REFEREES ADDED YET.
+                  NO OFFICIALS ADDED YET.
                 </div>
               ) : (
                 <ul className="divide-y divide-outline-variant">
@@ -261,6 +285,7 @@ export default function EventDetailsPage({ params }: { params: Promise<{ eventId
                         <span className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant ml-4 border border-outline-variant px-2 py-0.5 bg-surface inline-block">
                           {(Array.isArray(r.user) ? r.user[0] : r.user)?.unique_code || 'NO CODE'}
                         </span>
+                        <span className="font-label-caps text-[10px] uppercase tracking-widest text-primary-container ml-2">{r.role}</span>
                       </span>
                     </li>
                   ))}
@@ -337,8 +362,10 @@ export default function EventDetailsPage({ params }: { params: Promise<{ eventId
                   value={settings?.tournament_format || ''} 
                   onChange={e => setSettings({...settings, tournament_format: e.target.value})}
                 >
-                  <option value="ROUND_ROBIN">ROUND_ROBIN</option>
+                  <option value="ROUND_ROBIN">LEAGUE (ROUND ROBIN)</option>
+                  <option value="DOUBLE_ROUND_ROBIN">HOME & AWAY LEAGUE</option>
                   <option value="KNOCKOUT">KNOCKOUT</option>
+                  <option value="GROUP_KNOCKOUT">GROUPS + KNOCKOUT</option>
                 </select>
               </div>
               

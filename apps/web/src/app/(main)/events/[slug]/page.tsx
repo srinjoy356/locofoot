@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, use } from "react";
+import { eventKey } from '@/lib/utils';
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
@@ -27,7 +28,7 @@ export default function PublicEventPage({ params }: { params: Promise<{ slug: st
       const { data: { session } } = await supabase.auth.getSession();
       
       let ev = null;
-      const { data } = await supabase.from('events').select('*').eq('id', slug).single();
+      const { data } = await supabase.from('events').select('*').eq(...eventKey(slug)).single();
       if (data) ev = data;
       else {
         const { data: bySlug } = await supabase.from('events').select('*').eq('slug', slug).single();

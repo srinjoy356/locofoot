@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, use } from "react";
+import { eventKey } from '@/lib/utils';
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
@@ -20,6 +21,11 @@ export default function RegistrationManagementPage({ params }: { params: Promise
   const [inviteError, setInviteError] = useState("");
   const [sessionToken, setSessionToken] = useState("");
   const [currentUserId, setCurrentUserId] = useState("");
+  const [notice, setNotice] = useState<{ ok: boolean; text: string } | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [confirmRemoveId, setConfirmRemoveId] = useState("");
+  const [guestName, setGuestName] = useState("");
+  const [guestJersey, setGuestJersey] = useState("");
 
   useEffect(() => {
     async function load() {
@@ -30,7 +36,7 @@ export default function RegistrationManagementPage({ params }: { params: Promise
 
       // Load event
       let ev = null;
-      const { data } = await supabase.from('events').select('*').eq('id', slug).single();
+      const { data } = await supabase.from('events').select('*').eq(...eventKey(slug)).single();
       if (data) ev = data;
       else {
         const { data: bySlug } = await supabase.from('events').select('*').eq('slug', slug).single();
@@ -91,67 +97,65 @@ export default function RegistrationManagementPage({ params }: { params: Promise
       setLoading(false);
     }
     load();
-  }, [slug, registrationId, supabase]);
+  }, [slug, registrationId, supabase, reloadKey]);
+
+  // Inline messages rather than alert()/confirm(), which embedded and in-app browsers block.
+  async function call(path: string, method: string, body?: unknown, failText = "Something went wrong") {
+    const token = (await supabase.auth.getSession()).data.session?.access_token;
+    const res = await fetch(`/api/v1/events/${event.id}/registrations/${registrationId}${path}`, {
+      method,
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(typeof data.detail === "string" ? data.detail : failText);
+    }
+  }
 
   async function handleInvite(friendId: string) {
     try {
       setInviteError("");
-      const res = await fetch(`/api/v1/events/${event.id}/registrations/${registrationId}/invitations`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
-        },
-        body: JSON.stringify({ invited_user_id: friendId })
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.detail || "Failed to invite");
-      }
-      alert("Invitation sent!");
-      window.location.reload();
+      await call("/invitations", "POST", { invited_user_id: friendId }, "Failed to invite");
+      setNotice({ ok: true, text: "Invitation sent." });
+      setReloadKey(k => k + 1);
     } catch (err: any) {
       setInviteError(err.message);
     }
   }
 
-  async function handleRemove(playerId: string) {
-    if (!confirm("Are you sure you want to remove this player from your squad?")) return;
-    
+  async function handleRemove(p: any) {
+    // two taps instead of a confirm() dialog
+    if (confirmRemoveId !== p.id) { setConfirmRemoveId(p.id); return; }
     try {
-      const res = await fetch(`/api/v1/events/${event.id}/registrations/${registrationId}/players/${playerId}`, {
-        method: "DELETE",
-        headers: {
-          "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
-        }
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.detail || "Failed to remove player");
-      }
-      alert("Player removed from squad.");
-      window.location.reload();
+      await (p.user_id ? call(`/players/${p.user_id}`, "DELETE", undefined, "Failed to remove player") : call(`/guest-players/${p.id}`, "DELETE", undefined, "Failed to remove player"));
+      setNotice({ ok: true, text: "Player removed from squad." });
+      setConfirmRemoveId("");
+      setReloadKey(k => k + 1);
     } catch (err: any) {
-      alert(err.message);
+      setNotice({ ok: false, text: err.message });
+    }
+  }
+
+  async function handleAddGuest(e: React.FormEvent) {
+    e.preventDefault();
+    try {
+      await call("/guest-players", "POST", { guest_name: guestName.trim(), jersey_number: guestJersey ? Number(guestJersey) : null }, "Failed to add player");
+      setNotice({ ok: true, text: `${guestName.trim()} added to the squad.` });
+      setGuestName(""); setGuestJersey("");
+      setReloadKey(k => k + 1);
+    } catch (err: any) {
+      setNotice({ ok: false, text: err.message });
     }
   }
 
   async function handleSubmitRegistration() {
     try {
-      const res = await fetch(`/api/v1/events/${event.id}/registrations/${registration.id}/submit`, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
-        }
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.detail || "Failed to submit");
-      }
-      alert("Registration submitted to organizer!");
-      window.location.reload();
+      await call("/submit", "POST", undefined, "Failed to submit");
+      setNotice({ ok: true, text: "Registration submitted to the organizer." });
+      setReloadKey(k => k + 1);
     } catch (err: any) {
-      alert(err.message);
+      setNotice({ ok: false, text: err.message });
     }
   }
 
@@ -199,8 +203,12 @@ export default function RegistrationManagementPage({ params }: { params: Promise
               )}
             </div>
 
+            {notice && (
+              <div role="status" className={`border p-3 font-body-md ${notice.ok ? 'border-primary-container bg-primary-container/10 text-primary-container' : 'border-error bg-error/10 text-error'}`}>{notice.text}</div>
+            )}
+
             <div className="border border-outline-variant bg-surface">
-              <h2 className="font-headline-lg-mobile text-headline-lg-mobile uppercase tracking-tighter text-on-surface p-6 border-b border-outline-variant bg-surface-container">Squad</h2>
+              <h2 className="font-headline-lg-mobile text-headline-lg-mobile uppercase tracking-tighter text-on-surface p-6 border-b border-outline-variant bg-surface-container">Squad ({players.length})</h2>
               {players.length === 0 ? (
                 <p className="p-6 font-body-md text-on-surface-variant">No players added yet.</p>
               ) : (
@@ -208,18 +216,18 @@ export default function RegistrationManagementPage({ params }: { params: Promise
                   {players.map(p => (
                     <li key={p.id} className="p-4 flex justify-between items-center gap-4 hover:bg-surface-variant transition-colors">
                       <div className="min-w-0">
-                        <div className="font-headline-sm uppercase tracking-tighter text-on-surface truncate">{p.users?.display_name || p.users?.username || 'Unknown User'}</div>
-                        <div className="font-mono text-xs text-on-surface-variant mt-1">{p.users?.unique_code}</div>
+                        <div className="font-headline-sm uppercase tracking-tighter text-on-surface truncate">{p.users?.display_name || p.users?.username || p.guest_name || 'Unknown User'}</div>
+                        <div className="font-mono text-xs text-on-surface-variant mt-1">{p.users?.unique_code || 'NO ACCOUNT'}{p.jersey_number ? ` · #${p.jersey_number}` : ''}</div>
                       </div>
                       <div className="flex gap-2 items-center shrink-0">
                         {p.is_captain_for_event && <span className="border border-primary-container text-primary-container text-[10px] px-2 py-1 font-label-caps uppercase tracking-widest">CAPTAIN</span>}
                         <span className="border border-outline-variant bg-surface-variant text-on-surface-variant text-[10px] px-2 py-1 font-label-caps uppercase tracking-widest">{p.status}</span>
                         {isCaptain && isDraft && !isRosterLocked && !p.is_captain_for_event && (
                           <button
-                            onClick={() => handleRemove(p.user_id)}
+                            onClick={() => handleRemove(p)}
                             className="text-error hover:text-error/70 text-[10px] px-2 py-1 ml-2 font-label-caps uppercase tracking-widest transition-colors"
                           >
-                            Remove
+                            {confirmRemoveId === p.id ? 'Tap again to confirm' : 'Remove'}
                           </button>
                         )}
                       </div>
@@ -231,7 +239,19 @@ export default function RegistrationManagementPage({ params }: { params: Promise
           </div>
 
           {isCaptain && isDraft && !isRosterLocked && (
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-1 space-y-8">
+              <form onSubmit={handleAddGuest} className="border border-outline-variant bg-surface p-6 space-y-3">
+                <h2 className="font-headline-lg-mobile text-headline-lg-mobile uppercase tracking-tighter text-on-surface">Add a player without an account</h2>
+                <input
+                  required maxLength={60} value={guestName} onChange={e => setGuestName(e.target.value)} placeholder="PLAYER NAME"
+                  className="w-full p-3 bg-background border border-outline-variant focus:outline-none focus:border-primary-container font-body-md text-on-surface"
+                />
+                <input
+                  type="number" min={1} max={99} value={guestJersey} onChange={e => setGuestJersey(e.target.value)} placeholder="JERSEY NUMBER (optional)"
+                  className="w-full p-3 bg-background border border-outline-variant focus:outline-none focus:border-primary-container font-body-md text-on-surface"
+                />
+                <button className="w-full bg-primary-container text-on-primary-container px-4 py-3 font-label-caps text-label-caps uppercase tracking-widest hover:bg-primary-fixed transition-colors">Add to squad</button>
+              </form>
               <div className="border border-outline-variant bg-surface p-6 sticky top-6">
                 <h2 className="font-headline-lg-mobile text-headline-lg-mobile uppercase tracking-tighter text-on-surface mb-4">Invite Friends</h2>
                 {inviteError && <div className="border border-error bg-error/10 text-error font-body-md p-3 mb-4">{inviteError}</div>}

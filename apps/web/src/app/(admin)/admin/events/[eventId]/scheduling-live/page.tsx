@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Loader2, Play, Calendar, Trophy, AlertCircle, Clock, Zap, CheckCircle2, XCircle, UserPlus, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { FormatSetupPanel } from '@/components/events/FormatSetupPanel';
 
 const generateUUID = () => {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
@@ -15,6 +16,23 @@ const generateUUID = () => {
   });
 };
 
+/** Drawn knockout games are decided by a shoot-out: the higher score wins and the bracket advances. */
+function PensForm({ homeName, awayName, disabled, onSubmit }: { homeName?: string; awayName?: string; disabled: boolean; onSubmit: (home: number, away: number) => void }) {
+  const [h, setH] = useState('');
+  const [a, setA] = useState('');
+  const valid = h !== '' && a !== '' && Number(h) !== Number(a);
+  const field = 'w-12 bg-background border border-error text-error px-2 py-1 text-center font-mono text-sm';
+  return (
+    <span className="inline-flex items-center gap-2 border border-error/60 px-2 py-1">
+      <span className="font-label-caps text-[10px] uppercase tracking-widest text-error">DRAW. PENS:</span>
+      <input aria-label={`${homeName || 'Home'} penalties`} type="number" min={0} className={field} value={h} onChange={(e) => setH(e.target.value)} />
+      <span className="text-error">-</span>
+      <input aria-label={`${awayName || 'Away'} penalties`} type="number" min={0} className={field} value={a} onChange={(e) => setA(e.target.value)} />
+      <button disabled={!valid || disabled} onClick={() => onSubmit(Number(h), Number(a))} className="bg-error px-3 py-1 font-label-caps text-[10px] uppercase tracking-widest text-on-error disabled:opacity-40">SAVE</button>
+    </span>
+  );
+}
+
 export default function SchedulingLivePage() {
   const params = useParams();
   const eventId = params.eventId as string;
@@ -22,7 +40,9 @@ export default function SchedulingLivePage() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+  // Inline message rather than alert(), which embedded and in-app browsers block.
+  const [refereeNotice, setRefereeNotice] = useState<string | null>(null);
+
   const [unassignedFixtures, setUnassignedFixtures] = useState<any[]>([]);
   const [matchReferees, setMatchReferees] = useState<Record<string, any[]>>({});
   const [refereeCodeInputs, setRefereeCodeInputs] = useState<Record<string, string>>({});
@@ -31,13 +51,17 @@ export default function SchedulingLivePage() {
   const [assignments, setAssignments] = useState<any[]>([]);
   const [fields, setFields] = useState<any[]>([]);
   const [event, setEvent] = useState<any>(null);
+  const [teamCount, setTeamCount] = useState(0);
+  const [matchCount, setMatchCount] = useState(0);
+  const [format, setFormat] = useState<string | null>(null);
+  const [matchInfo, setMatchInfo] = useState<Record<string, any>>({});
   
   useEffect(() => {
     fetchData();
 
     // Setup Realtime
     const assignmentsSubscription = supabase
-      .channel('public:slot_field_assignments')
+      .channel(`scheduling:assignments:${eventId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'slot_field_assignments' }, payload => {
         console.log('Assignment change received!', payload);
         fetchData(); // Simplest way to sync in Phase 3
@@ -45,14 +69,14 @@ export default function SchedulingLivePage() {
       .subscribe();
       
     const matchesSubscription = supabase
-      .channel('public:matches')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, payload => {
+      .channel(`scheduling:matches:${eventId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'matches', filter: `event_id=eq.${eventId}` }, () => {
         fetchData();
       })
       .subscribe();
 
     const eventSubscription = supabase
-      .channel('public:events')
+      .channel(`scheduling:event:${eventId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'events', filter: `id=eq.${eventId}` }, payload => {
         setEvent(payload.new);
       })
@@ -80,6 +104,20 @@ export default function SchedulingLivePage() {
       setAssignments(assignmentsRes.data || []);
       setFields(fieldsRes.data || []);
       setEvent(eventRes.data);
+
+      const [teamsCount, matchesCount, settingsRes] = await Promise.all([
+        supabase.from('event_team_registrations').select('*', { count: 'exact', head: true }).eq('event_id', eventId).eq('status', 'APPROVED'),
+        supabase.from('matches').select('*', { count: 'exact', head: true }).eq('event_id', eventId),
+        supabase.from('event_settings').select('tournament_format').eq('event_id', eventId).maybeSingle(),
+      ]);
+      const { data: infoRows } = await supabase
+        .from('matches')
+        .select('id, match_state, home_score, away_score, metadata, winner_registration_id, home_registration_id, away_registration_id, group:groups(name), bracket:brackets!bracket_id(round_name, position), home_team:event_team_registrations!home_registration_id(team_name), away_team:event_team_registrations!away_registration_id(team_name)')
+        .eq('event_id', eventId);
+      setMatchInfo(Object.fromEntries((infoRows || []).map((r: any) => [r.id, r])));
+      setTeamCount(teamsCount.count || 0);
+      setMatchCount(matchesCount.count || 0);
+      setFormat(settingsRes.data?.tournament_format ?? null);
 
       // Load Tournament Referees
       const { data: tRefs } = await supabase
@@ -123,47 +161,12 @@ export default function SchedulingLivePage() {
     const { error } = await supabase.rpc('invite_match_referee', { p_match_id: matchId, p_unique_code: codeToSend });
     setLoading(false);
     if (error) {
-      alert(error.message);
+      setRefereeNotice(error.message);
+      fetchData(); // put the dropdown back to what is actually saved
     } else {
-      // Don't alert on dropdown change to make it feel seamless
-      if (!directCode) alert('REFEREE INVITED! THEY WILL RECEIVE A NOTIFICATION.');
+      setRefereeNotice(null);
       setRefereeCodeInputs(prev => ({ ...prev, [matchId]: '' }));
       fetchData();
-    }
-  };
-
-  const handleGenerateFixtures = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token || '';
-      
-      const res = await fetch(`/api/v1/events/${eventId}/fixtures/generate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ idempotency_key: generateUUID() })
-      });
-
-      if (!res.ok) {
-        let errorMsg = "FAILED TO GENERATE FIXTURES";
-        try {
-          const errorData = await res.json();
-          errorMsg = errorData.detail || errorData.message || errorMsg;
-        } catch {
-          errorMsg = await res.text() || res.statusText;
-        }
-        throw new Error(errorMsg);
-      }
-
-      await fetchData();
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -224,6 +227,31 @@ export default function SchedulingLivePage() {
       setLoading(false);
     }
   };
+
+  const handleSetWinner = async (matchId: string, winnerId: string, pens?: { home: number; away: number }) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(`/api/v1/events/${eventId}/matches/${matchId}/winner`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token || ''}` },
+        body: JSON.stringify({ winner_registration_id: winnerId, shootout_home: pens?.home, shootout_away: pens?.away })
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.detail || 'FAILED TO SET WINNER');
+      }
+      await fetchData();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const stageLabel = (info: any) =>
+    info?.bracket ? (info.bracket.round_name === 'THIRD_PLACE' ? '3RD PLACE' : `${info.bracket.round_name}${['FINAL', 'THIRD_PLACE'].includes(info.bracket.round_name) ? '' : ' ' + info.bracket.position}`) : (info?.group?.name || 'LEAGUE');
 
   const handleToggleBroadcast = async (newState: 'LIVE' | 'COMPLETED') => {
     setLoading(true);
@@ -312,7 +340,16 @@ export default function SchedulingLivePage() {
 
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-8 items-start">
           {/* Actions & Stats */}
-          <div className="xl:col-span-1 space-y-8 lg:sticky lg:top-24">
+          <div className="xl:col-span-1 space-y-8">
+            <FormatSetupPanel
+              eventId={eventId}
+              teamCount={teamCount}
+              matchCount={matchCount}
+              capacity={assignments.length}
+              initialFormat={format}
+              onChanged={fetchData}
+            />
+
             <div className="border border-outline-variant bg-surface p-6">
               <h2 className="font-headline-sm uppercase tracking-tighter text-on-surface mb-2">SCHEDULE ENGINE</h2>
               <p className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant mb-6">
@@ -333,17 +370,6 @@ export default function SchedulingLivePage() {
                   GENERATE NEXT FIXTURE
                 </button>
                 
-                {unassignedFixtures.length === 0 && assignments.length === 0 && (
-                  <button 
-                    onClick={handleGenerateFixtures} 
-                    disabled={loading} 
-                    className="w-full border border-primary-container text-primary-container hover:bg-primary-container/10 py-4 font-headline-sm uppercase tracking-tighter transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Zap className="h-5 w-5" />}
-                    GENERATE FIXTURES
-                  </button>
-                )}
-
                 <button
                   onClick={() => window.open(`/admin/events/${eventId}/matches/create`, '_blank')}
                   className="w-full border border-outline-variant text-on-surface hover:bg-surface-variant py-4 font-label-caps text-[10px] uppercase tracking-widest transition-colors flex items-center justify-center gap-2"
@@ -382,7 +408,10 @@ export default function SchedulingLivePage() {
                 <Calendar className="text-on-surface" size={20} />
                 <h2 className="font-headline-sm uppercase tracking-tighter text-on-surface">LIVE ASSIGNMENT GRID</h2>
               </div>
-              
+              {refereeNotice && (
+                <div role="alert" className="m-4 border border-error bg-error/10 p-3 font-body-sm text-error">{refereeNotice}</div>
+              )}
+
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead className="bg-background border-b border-outline-variant">
@@ -441,10 +470,30 @@ export default function SchedulingLivePage() {
                             <td className="px-6 py-4">
                               {assignment.fixture_id ? (
                                 <div className="flex flex-wrap items-center gap-3">
-                                  <span className="inline-flex items-center gap-2 px-3 py-1 bg-primary-container/10 text-primary-container border border-primary-container/30 font-label-caps text-[10px] uppercase tracking-widest">
-                                    <CheckCircle2 size={12} />
-                                    ASSIGNED ({assignment.fixture_id.substring(0, 8)})
-                                  </span>
+                                  {(() => {
+                                    const info = matchInfo[assignment.fixture_id];
+                                    return (
+                                      <>
+                                        <span className="inline-flex items-center gap-2 px-3 py-1 bg-primary-container/10 text-primary-container border border-primary-container/30 font-label-caps text-[10px] uppercase tracking-widest">
+                                          <CheckCircle2 size={12} />
+                                          {stageLabel(info)}
+                                        </span>
+                                        <span className="font-label-caps text-[11px] uppercase tracking-widest text-on-surface">
+                                          {info?.home_team?.team_name || 'TBD'} <span className="text-on-surface-variant">vs</span> {info?.away_team?.team_name || 'TBD'}
+                                          {info?.match_state === 'COMPLETED' && <span className="ml-2 font-mono text-primary-container">{info.home_score}-{info.away_score}</span>}
+                                          {info?.metadata?.shootout && <span className="ml-2 font-mono text-on-surface-variant">(pens {info.metadata.shootout.home}-{info.metadata.shootout.away})</span>}
+                                        </span>
+                                        {info?.bracket && info.match_state === 'COMPLETED' && info.home_score === info.away_score && !info.winner_registration_id && (
+                                          <PensForm
+                                            homeName={info.home_team?.team_name}
+                                            awayName={info.away_team?.team_name}
+                                            disabled={loading}
+                                            onSubmit={(h, a2) => handleSetWinner(assignment.fixture_id, h > a2 ? info.home_registration_id : info.away_registration_id, { home: h, away: a2 })}
+                                          />
+                                        )}
+                                      </>
+                                    );
+                                  })()}
                                   
                                   <button 
                                     onClick={() => window.open(`/events/${event?.slug || eventId}/matches/${assignment.fixture_id}`, '_blank')}

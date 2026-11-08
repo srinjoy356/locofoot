@@ -14,6 +14,9 @@ export default function FriendsPage() {
   const [blockedUsers, setBlockedUsers] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<User[]>([]);
+  const [searched, setSearched] = useState(false);
+  // Inline messages rather than alert(), which embedded and in-app browsers block.
+  const [notice, setNotice] = useState<{ ok: boolean; text: string } | null>(null);
   const supabase = createClient();
 
   const loadData = async () => {
@@ -68,31 +71,33 @@ export default function FriendsPage() {
     if (!searchQuery) return;
 
     // Use RPC to search securely by exact unique code
-    const { data } = await supabase.rpc("search_user_by_unique_code", { search_code: searchQuery });
-    
+    const { data } = await supabase.rpc("search_user_by_unique_code", { search_code: searchQuery.trim() });
+
     setSearchResults((data as unknown as User[]) || []);
+    setSearched(true);
+    setNotice(null);
   };
 
   const sendRequest = async (userId: string) => {
     if (!currentUser) return;
-    
+
     // Use the RPC which gracefully handles canceled/rejected previous relationships
     const { error } = await supabase.rpc("send_friend_request", { target_user_id: userId });
-    
-    if (!error) loadData();
-    else alert(error.message);
+
+    if (!error) { setNotice({ ok: true, text: "Friend request sent." }); loadData(); }
+    else setNotice({ ok: false, text: error.message });
   };
 
   const updateStatus = async (id: string, status: FriendshipStatus) => {
     const { error } = await supabase.from("friendships").update({ status }).eq("id", id);
     if (!error) loadData();
-    else alert(error.message);
+    else setNotice({ ok: false, text: error.message });
   };
 
   const handleMessage = async (userId: string) => {
     const { data: convId, error } = await supabase.rpc("get_or_create_direct_conversation", { target_user_id: userId });
     if (error) {
-      alert("Failed to start conversation: " + error.message);
+      setNotice({ ok: false, text: "Failed to start conversation: " + error.message });
       return;
     }
     // Need to navigate, so we'll just use window.location or next/navigation
@@ -103,7 +108,7 @@ export default function FriendsPage() {
     if (!confirm("Are you sure you want to block this user?")) return;
     const { error } = await supabase.from("blocks").insert({ blocker_id: currentUser.id, blocked_id: userId });
     if (error) {
-      alert("Failed to block user: " + error.message);
+      setNotice({ ok: false, text: "Failed to block user: " + error.message });
     } else {
       loadData();
     }
@@ -137,6 +142,14 @@ export default function FriendsPage() {
             </button>
           </form>
 
+          {notice && (
+            <div role="status" className={`mt-6 border p-3 font-body-md ${notice.ok ? 'border-primary-container bg-primary-container/10 text-primary-container' : 'border-error bg-error/10 text-error'}`}>{notice.text}</div>
+          )}
+
+          {searched && searchResults.length === 0 && (
+            <p className="mt-6 font-body-md text-on-surface-variant">No player found with that code. Check it and try again.</p>
+          )}
+
           {searchResults.length > 0 && (
             <div className="mt-8">
               <h2 className="font-headline-sm uppercase tracking-tighter mb-4 text-on-surface">Search Results</h2>
@@ -145,12 +158,21 @@ export default function FriendsPage() {
                   <li key={u.id} className="flex flex-col md:flex-row justify-between items-start md:items-center p-4 bg-background hover:bg-surface-variant transition-colors gap-4">
                     <span className="font-headline-sm uppercase">{u.display_name || u.username || u.unique_code}</span>
                     <div className="flex gap-2 w-full md:w-auto">
-                      <button 
-                        onClick={() => sendRequest(u.id)}
-                        className="flex-1 md:flex-none border border-primary-container bg-primary-container/10 hover:bg-primary-container/20 text-primary-container px-4 py-2 font-label-caps text-[10px] uppercase tracking-widest transition-colors"
-                      >
-                        Add Friend
-                      </button>
+                      {(() => {
+                        const rel = friendships.find(f => f.status !== 'REJECTED' && f.status !== 'CANCELLED' && ((f.requester_id === u.id) || (f.addressee_id === u.id)));
+                        if (rel) {
+                          const label = rel.status === 'ACCEPTED' ? 'Already friends' : rel.requester_id === currentUser.id ? 'Request sent' : 'Wants to be your friend';
+                          return <span className="flex-1 md:flex-none px-4 py-2 font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant border border-outline-variant text-center">{label}</span>;
+                        }
+                        return (
+                          <button
+                            onClick={() => sendRequest(u.id)}
+                            className="flex-1 md:flex-none border border-primary-container bg-primary-container/10 hover:bg-primary-container/20 text-primary-container px-4 py-2 font-label-caps text-[10px] uppercase tracking-widest transition-colors"
+                          >
+                            Add Friend
+                          </button>
+                        );
+                      })()}
                       <button 
                         onClick={() => handleBlock(u.id)}
                         className="flex-1 md:flex-none border border-error bg-error/10 hover:bg-error/20 text-error px-4 py-2 font-label-caps text-[10px] uppercase tracking-widest transition-colors"

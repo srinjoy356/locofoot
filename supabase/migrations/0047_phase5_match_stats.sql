@@ -137,7 +137,7 @@ SELECT
     mpr.is_potm AS is_mvp
 FROM public.match_participation mp
 LEFT JOIN public.event_team_players etp ON etp.id = mp.event_player_id
-LEFT JOIN auth.users u ON u.id = etp.user_id
+LEFT JOIN public.users u ON u.id = etp.user_id
 LEFT JOIN public.player_match_stats_view pms ON pms.match_id = mp.match_id AND pms.event_player_id = mp.event_player_id
 LEFT JOIN public.match_player_ratings mpr ON mpr.match_id = mp.match_id AND mpr.event_player_id = mp.event_player_id;
 

@@ -16,8 +16,9 @@ export default function LineupPage({ params }: { params: Promise<{ slug: string,
   const [matchData, setMatchData] = useState<any>(null);
   const [eventData, setEventData] = useState<any>(null);
   const [teamRegistrationId, setTeamRegistrationId] = useState<string | null>(null);
-  const [debug, setDebug] = useState<any>({});
-  
+  // Inline message rather than alert(), which embedded and in-app browsers block.
+  const [notice, setNotice] = useState<{ ok: boolean; text: string } | null>(null);
+
   const [players, setPlayers] = useState<any[]>([]);
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<Set<string>>(new Set());
   
@@ -81,13 +82,6 @@ export default function LineupPage({ params }: { params: Promise<{ slug: string,
       }
       
       if (!userTeamId) {
-        setDebug({
-          sessionUserId: session.user.id,
-          eventOrganizerId: event?.organizer_id,
-          isOrganizer,
-          userTeams,
-          eventData: event
-        });
         setIsLoading(false);
         return;
       }
@@ -101,6 +95,7 @@ export default function LineupPage({ params }: { params: Promise<{ slug: string,
           user_id,
           jersey_number,
           position,
+          guest_name,
           users ( display_name )
         `)
         .eq('event_registration_id', userTeamId)
@@ -177,13 +172,13 @@ export default function LineupPage({ params }: { params: Promise<{ slug: string,
       
       if (res.ok) {
         setLineupStatus('SUBMITTED');
-        alert('Lineup submitted successfully!');
+        setNotice({ ok: true, text: 'Lineup submitted. The referee will confirm it before kick-off.' });
       } else {
-        const errorData = await res.json();
-        alert(`Error: ${errorData.detail || 'Failed to submit lineup'}`);
+        const errorData = await res.json().catch(() => ({}));
+        setNotice({ ok: false, text: typeof errorData.detail === 'string' ? errorData.detail : 'Failed to submit lineup' });
       }
     } catch (e) {
-      alert('Network error occurred.');
+      setNotice({ ok: false, text: 'Network error. Check your connection and try again.' });
     } finally {
       setIsSubmitting(false);
     }
@@ -199,10 +194,7 @@ export default function LineupPage({ params }: { params: Promise<{ slug: string,
     <div className="w-full flex items-center justify-center min-h-[50vh] bg-background">
       <div className="text-center p-6 border border-error bg-error/10">
         <h2 className="font-headline-sm uppercase tracking-tighter text-error mb-2">ACCESS DENIED</h2>
-        <p className="font-body-md text-on-surface-variant mb-6">You are not authorized to manage lineups for this match.</p>
-        <pre className="text-left p-4 bg-surface-variant text-on-surface-variant font-mono text-[10px] uppercase">
-          {JSON.stringify(debug, null, 2)}
-        </pre>
+        <p className="font-body-md text-on-surface-variant">You are not authorized to manage lineups for this match.</p>
       </div>
     </div>
   );
@@ -273,7 +265,7 @@ export default function LineupPage({ params }: { params: Promise<{ slug: string,
                       {isSelected && <svg className="w-4 h-4 text-on-primary-container" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}
                     </div>
                     <div>
-                      <div className="font-headline-sm uppercase tracking-tighter text-on-surface">{p.users?.display_name || 'UNKNOWN PLAYER'}</div>
+                      <div className="font-headline-sm uppercase tracking-tighter text-on-surface">{p.users?.display_name || p.guest_name || 'UNKNOWN PLAYER'}</div>
                       <div className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant mt-1 flex gap-3">
                         {p.jersey_number && <span>#{p.jersey_number}</span>}
                         {p.position && <span>{p.position}</span>}
@@ -298,6 +290,10 @@ export default function LineupPage({ params }: { params: Promise<{ slug: string,
             )}
           </div>
         </div>
+
+        {notice && (
+          <div role="status" className={`mt-6 border p-3 font-body-md ${notice.ok ? 'border-primary-container bg-primary-container/10 text-primary-container' : 'border-error bg-error/10 text-error'}`}>{notice.text}</div>
+        )}
 
         <div className="mt-8 flex justify-end">
           <button

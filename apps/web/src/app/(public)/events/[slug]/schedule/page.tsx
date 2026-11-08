@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { eventKey } from '@/lib/utils';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
@@ -8,6 +9,10 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Clock, CalendarDays, MapPin } from 'lucide-react';
 import { format } from 'date-fns';
 import { TurfHero } from '@/components/shared/TurfHero';
+import { TournamentOverview } from '@/components/events/TournamentOverview';
+const stageName = (b: { round_name: string; position: number }) =>
+  b.round_name === 'THIRD_PLACE' ? '3rd place' : b.round_name === 'FINAL' ? 'Final' : `${b.round_name} ${b.position}`;
+
 export default function PublicSchedulePage() {
   const params = useParams();
   const slug = params.slug as string;
@@ -18,18 +23,21 @@ export default function PublicSchedulePage() {
   
   useEffect(() => {
     fetchEventAndSchedule();
+  }, [slug]);
 
-    const matchesSubscription = supabase
-      .channel('public:matches')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, payload => {
+  // subscribe only to this event's matches once we know its id (an unfiltered channel refetches on every event's edits)
+  useEffect(() => {
+    if (!event?.id) return;
+    const channel = supabase
+      .channel(`schedule:matches:${event.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'matches', filter: `event_id=eq.${event.id}` }, () => {
         fetchEventAndSchedule();
       })
       .subscribe();
-
     return () => {
-      supabase.removeChannel(matchesSubscription);
+      supabase.removeChannel(channel);
     };
-  }, [slug]);
+  }, [event?.id]);
 
   const fetchEventAndSchedule = async () => {
     try {
@@ -38,7 +46,7 @@ export default function PublicSchedulePage() {
       if (evBySlug) {
         eventData = evBySlug;
       } else {
-        const { data: evById } = await supabase.from('events').select('*').eq('id', slug).maybeSingle();
+        const { data: evById } = await supabase.from('events').select('*').eq(...eventKey(slug)).maybeSingle();
         eventData = evById;
       }
       
@@ -51,6 +59,8 @@ export default function PublicSchedulePage() {
           id,
           scheduled_start,
           status,
+          group:groups(name),
+          bracket:brackets!bracket_id(round_name, position),
           home_team:event_team_registrations!home_registration_id(team_name, team_short_name, logo_media_id),
           away_team:event_team_registrations!away_registration_id(team_name, team_short_name, logo_media_id),
           venue_field:venue_fields(name)
@@ -79,7 +89,8 @@ export default function PublicSchedulePage() {
 
       {/* Main Content */}
       <div className="flex-1 w-full bg-background px-margin-mobile md:px-gutter py-8">
-        <div className="max-w-container-max mx-auto">
+        <div className="max-w-container-max mx-auto space-y-12">
+          <TournamentOverview eventId={event.id} />
           {schedule.length === 0 ? (
             <div className="w-full border border-outline-variant bg-[#151816] flex flex-col items-center justify-center py-24 opacity-60">
               <span className="material-symbols-outlined text-6xl text-outline-variant mb-4">calendar_month</span>
@@ -108,6 +119,11 @@ export default function PublicSchedulePage() {
                         {format(new Date(match.scheduled_start), 'HH:mm')}
                       </span>
                     </div>
+                    {(match.group || match.bracket) && (
+                      <span className="mt-0 md:mt-2 inline-block w-fit border border-primary-container/40 px-2 py-0.5 font-label-caps text-[9px] uppercase tracking-widest text-primary-container">
+                        {match.bracket ? stageName(match.bracket) : match.group.name}
+                      </span>
+                    )}
                     <div className="flex items-center gap-2 mt-0 md:mt-2">
                       <span className="material-symbols-outlined text-on-surface-variant text-sm">location_on</span>
                       <span className="font-label-caps text-label-caps text-on-surface-variant uppercase truncate max-w-[120px]">

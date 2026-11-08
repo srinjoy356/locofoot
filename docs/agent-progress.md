@@ -139,3 +139,48 @@ Phase 4: Match Live Operations (COMPLETE).
 
 ### Next Phase
 Phase 6: Broadcast / Media (PENDING)
+
+## Competition engine, live recorder and pitch upgrade (2026-10-13)
+
+### What changed
+- **Formats:** one-click League / Home&Away / Knockout / Groups + Knockout (with third place) from the Scheduling page
+  (`FormatSetupPanel`), group tables and bracket on the public schedule and stats pages (`TournamentOverview`), stage labels
+  on fixtures, pens-winner picker for drawn knockout games, reset-and-regenerate while no match has started.
+- **Recorder:** "Quick scorer" mode (tap the player with the ball, tap a teammate = pass, tap an opponent = tackle,
+  sticky action bar, optional shot-location sheet), an offline-safe retrying event queue, honest error reporting, real undo.
+- **Pitch:** landscape pitch with markings, formation layouts, ball-chasing shape, lofted passes with shadow, shot outcomes
+  (goal/saved/blocked/post/wide), cards and substitutions; replaying the same event works; pitch is sticky above the timeline.
+- **Security:** see decisions.md (self-promotion to SUPER_ADMIN, unguarded scheduling/officiating/lineup routes, ratings RLS).
+
+### Verification (local Supabase, all migrations applied from scratch)
+- API: 40 passed, 1 skipped (`pytest apps/api/tests`). New: `test_tournament_format` (pure), `test_tournament_flow`,
+  `test_match_recording`, `test_match_officiating`, `test_security_rls`. The old direct-service phase 4 test was replaced.
+- Web: 28 vitest tests; `tsc --noEmit` clean. UI driven in the browser: format setup, generation, group tables, bracket,
+  quick scorer (pass/tackle/goal/undo/offline retry), live pitch via realtime.
+
+### Known limits
+- Knockout matches already filled are not re-opened when an earlier result is corrected.
+- `tie_break_order`, fair-play ranking and penalty shoot-out recording are not implemented.
+- Lint: the codebase still has many `no-explicit-any` errors (pre-existing).
+
+## Predictions, recording speed and after-match data (2026-10-13)
+- Added: virtual-coin predictions (`/predict`, panel on match pages, leaderboards), batch recording + Quick scorer speed tools,
+  live reactions and a commentary feed on the match page, match report text, 38 web unit tests.
+- Fixed: assists/shots/minutes/aerial inconsistencies, players hub 500 for guest players, broken tournament-records and team-stats
+  endpoints, chat messages failing on a rebuilt database, missing `get_event_player_names`, duplicated dead code in the statistics router.
+- Verification (local Supabase from scratch): 78 API tests, `scripts/realtime-check.cjs` 17/17, 38 vitest, tsc clean; every page of the app loads
+  without console errors; browser-driven checks for predictions, recorder bursts/keyboard/keeper save, reactions across clients.
+- Known gaps: the captain "team settings" page still targets removed `teams`/`team_members` tables (edit link hidden); penalty shoot-out
+  kicks are not recorded kick by kick; reactions are not persisted.
+
+## Full tournament playthrough (2026-10-20)
+- Drove a complete event through the browser on the local stack: organizer sign-up, 24 accounts, 8 teams (friends, invitations, guests,
+  seeds), 12+1+12 format with two groups, random then seeded draw, referees and a scorer, 12 group games, semi-finals (one decided on
+  penalties), third place and final, lifecycle to COMPLETED, per-match and tournament stats. 164 screenshots and the report are in `docs/event-run/`.
+- Found and fixed: DRAFT-event RLS loop, profile visibility errors, referee double booking, kick-off without confirmed lineups,
+  full-time clock jump, raw errors on late invitation accept, scorer able to run referee actions through the API, recorder page open to
+  anyone, audit log without player names, shoot-out result invisible on the grid and match page, dashboard duties list.
+- Verification: 93 API tests passed (14 files run one by one), 1 skipped; 38 vitest; `tsc --noEmit` clean; `next build` succeeds.
+- Not exercised in this run (no live match left when the fans arrived): live predictions on this event, reactions, a second recorder
+  on the same match. Covered by `test_predictions.py` and `scripts/realtime-check.cjs` only.
+- Time shortcut: the match clock was fast-forwarded by shifting `half_started_at` in the database; every other action went through the UI.

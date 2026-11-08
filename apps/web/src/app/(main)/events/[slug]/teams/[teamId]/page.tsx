@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Users, Settings } from 'lucide-react';
+import { ArrowLeft, Users } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { ShareButton } from '@/components/shared/ShareButton';
 import { QRCodeBlock } from '@/components/shared/QRCodeBlock';
@@ -25,21 +25,9 @@ async function TeamStatsContent({ slug, teamId }: { slug: string, teamId: string
   const supabase = await createClient();
   const { data: roster } = await supabase
     .from('event_team_players')
-    .select('id, users(unique_code, display_name, media_assets(secure_url))')
+    .select('id, guest_name, jersey_number, users(unique_code, display_name, media_assets(secure_url))')
+    .order('jersey_number', { nullsFirst: false })
     .eq('event_registration_id', teamId);
-
-  // Check if current user is captain
-  let isCaptain = false;
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session) {
-    const { data: regData } = await supabase.from('event_team_registrations').select('team_id').eq('id', teamId).single();
-    if (regData) {
-      const { data: memberData } = await supabase.from('team_members').select('role').eq('team_id', regData.team_id).eq('user_id', session.user.id).single();
-      if (memberData?.role === 'CAPTAIN') {
-        isCaptain = true;
-      }
-    }
-  }
 
   return (
     <div className="w-full bg-background min-h-screen text-on-surface">
@@ -69,12 +57,7 @@ async function TeamStatsContent({ slug, teamId }: { slug: string, teamId: string
           </div>
 
           <div className="print:hidden flex flex-col md:flex-row items-center gap-4 shrink-0">
-            {isCaptain && (
-              <Link href={`/events/${slug}/teams/${teamId}/settings`} className="border border-primary-container bg-primary-container/10 text-primary-container hover:bg-primary-container/20 px-4 py-2 flex items-center gap-2 font-label-caps text-[10px] uppercase tracking-widest transition-colors">
-                <Settings size={16} />
-                <span>Edit Team</span>
-              </Link>
-            )}
+            {/* The captain settings page still targets the removed teams/team_members tables, so no edit link until it is rebuilt */}
             <ShareButton url={`/events/${slug}/teams/${teamId}`} title="Share Team" />
           </div>
         </div>
@@ -132,25 +115,26 @@ async function TeamStatsContent({ slug, teamId }: { slug: string, teamId: string
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-outline-variant">
             {roster?.map((player) => {
               const user = player.users as any;
-              if (!user?.unique_code) return null;
-              return (
-                <Link 
-                  key={player.id} 
-                  href={`/players/${user.unique_code}`}
-                  className="flex items-center gap-4 p-4 hover:bg-surface-variant transition-colors group"
-                >
+              const name = user?.display_name || player.guest_name || 'Player';
+              const body = (
+                <>
                   <div className="w-12 h-12 border border-outline-variant bg-background flex items-center justify-center relative shrink-0">
-                    {user.media_assets?.secure_url ? (
-                      <Image src={user.media_assets.secure_url} alt={user.display_name} fill className="object-cover grayscale group-hover:grayscale-0 transition-all" unoptimized />
+                    {user?.media_assets?.secure_url ? (
+                      <Image src={user.media_assets.secure_url} alt={name} fill className="object-cover grayscale group-hover:grayscale-0 transition-all" unoptimized />
                     ) : (
-                      <span className="font-headline-sm uppercase text-on-surface-variant">{user.display_name?.charAt(0) || '?'}</span>
+                      <span className="font-headline-sm uppercase text-on-surface-variant">{player.jersey_number ?? name.charAt(0)}</span>
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="font-headline-sm uppercase tracking-tighter text-on-surface truncate">{user.display_name}</div>
-                    <div className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">{user.unique_code}</div>
+                    <div className="font-headline-sm uppercase tracking-tighter text-on-surface truncate">{name}</div>
+                    <div className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">{user?.unique_code || (player.jersey_number ? `#${player.jersey_number}` : 'Guest')}</div>
                   </div>
-                </Link>
+                </>
+              );
+              return user?.unique_code ? (
+                <Link key={player.id} href={`/players/${user.unique_code}`} className="flex items-center gap-4 p-4 hover:bg-surface-variant transition-colors group">{body}</Link>
+              ) : (
+                <div key={player.id} className="flex items-center gap-4 p-4 group">{body}</div>
               );
             })}
             

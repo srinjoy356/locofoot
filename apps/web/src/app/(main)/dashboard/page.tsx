@@ -55,10 +55,12 @@ export default function DashboardPage() {
       // 2. All matches in events where they are a Tournament Referee
       const { data: eventRoles } = await supabase
         .from("event_roles")
-        .select("event_id")
+        .select("event_id, role")
         .eq("user_id", session.user.id)
-        .eq("role", "REFEREE");
-        
+        .in("role", ["REFEREE", "SCORER"]);
+      // only tournament referees may cover any match with the referee console; scorers get the recorder
+      const refereeEvents = new Set((eventRoles || []).filter(r => r.role === "REFEREE").map(r => r.event_id));
+
       let tournamentMatches: any[] = [];
       if (eventRoles && eventRoles.length > 0) {
         const eventIds = eventRoles.map(r => r.event_id);
@@ -77,8 +79,16 @@ export default function DashboardPage() {
       
       const allMatches = [...(explicitMatches || []), ...tournamentMatches];
       // Deduplicate by match id
+      const assignedIds = new Set((explicitMatches || []).map((m: any) => m.matches.id));
       const uniqueMatches = Array.from(new Map(allMatches.map(item => [item.matches.id, item])).values());
-      setRefereeMatches(uniqueMatches);
+
+      // name the teams, mark the user's own assignments, and list them in kick-off order
+      const teamIds = [...new Set(uniqueMatches.flatMap((m: any) => [m.matches.home_registration_id, m.matches.away_registration_id]).filter(Boolean))] as string[];
+      const { data: teams } = teamIds.length ? await supabase.from("event_team_registrations").select("id, team_name").in("id", teamIds) : { data: [] as any[] };
+      const teamName = Object.fromEntries((teams || []).map((t: any) => [t.id, t.team_name]));
+      setRefereeMatches(uniqueMatches
+        .map((m: any) => ({ ...m, title: `${teamName[m.matches.home_registration_id] || 'TBD'} vs ${teamName[m.matches.away_registration_id] || 'TBD'}`, mine: assignedIds.has(m.matches.id), canReferee: assignedIds.has(m.matches.id) || refereeEvents.has(m.matches.event_id) }))
+        .sort((a: any, b: any) => (b.mine - a.mine) || String(a.matches.scheduled_start || '').localeCompare(String(b.matches.scheduled_start || ''))));
     }
     loadData();
   }, [router, supabase]);
@@ -139,23 +149,34 @@ export default function DashboardPage() {
 
         {refereeMatches.length > 0 && (
           <div className="space-y-4">
-            <h3 className="font-headline-lg-mobile uppercase tracking-tighter text-error border-b border-error pb-2">My Referee Assignments</h3>
+            <h3 className="font-headline-lg-mobile uppercase tracking-tighter text-error border-b border-error pb-2">My Match Duties</h3>
             <div className="grid grid-cols-1 border border-outline-variant bg-surface divide-y divide-outline-variant">
               {refereeMatches.map((rm) => (
                 <div key={rm.id} className="p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:bg-surface-variant transition-colors">
                   <div>
-                    <h4 className="font-headline-sm uppercase tracking-tighter text-on-surface">{rm.matches.events.name}</h4>
+                    <h4 className="font-headline-sm uppercase tracking-tighter text-on-surface">{rm.title}</h4>
                     <p className="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest mt-1">
-                      Match ID: <span className="font-mono">{rm.matches.id.substring(0, 8)}</span> <span className="mx-2">|</span> Status: {rm.matches.match_state}
+                      {rm.matches.events.name} <span className="mx-2">|</span> {rm.matches.scheduled_start ? new Date(rm.matches.scheduled_start).toLocaleString([], { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Time TBC'} <span className="mx-2">|</span> {rm.matches.match_state}
+                      {rm.mine ? <span className="ml-2 border border-error px-1.5 py-0.5 text-error">Assigned to you</span> : <span className="ml-2 border border-outline-variant px-1.5 py-0.5">Cover</span>}
                     </p>
                   </div>
-                  <button 
-                    onClick={() => router.push(`/admin/events/${rm.matches.events.id}/matches/${rm.matches.id}/referee`)}
-                    className="border border-error bg-error/10 hover:bg-error/20 text-error px-6 py-4 font-label-caps text-label-caps uppercase tracking-widest transition-colors flex items-center gap-2"
-                  >
-                    Command Center
-                    <span className="material-symbols-outlined text-sm">arrow_forward</span>
-                  </button>
+                  <div className="flex gap-2">
+                    {rm.canReferee && (
+                      <button
+                        onClick={() => router.push(`/admin/events/${rm.matches.events.id}/matches/${rm.matches.id}/referee`)}
+                        className="border border-error bg-error/10 hover:bg-error/20 text-error px-6 py-4 font-label-caps text-label-caps uppercase tracking-widest transition-colors flex items-center gap-2"
+                      >
+                        Command Center
+                        <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                      </button>
+                    )}
+                    <button
+                      onClick={() => router.push(`/admin/events/${rm.matches.events.id}/matches/${rm.matches.id}/recorder`)}
+                      className="border border-outline-variant hover:border-on-surface text-on-surface-variant hover:text-on-surface px-6 py-4 font-label-caps text-label-caps uppercase tracking-widest transition-colors"
+                    >
+                      Recorder
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

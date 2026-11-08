@@ -1,5 +1,6 @@
 'use client';
 
+import { DEFAULT_FORMAT_CONFIG, planFixtures, type TournamentFormat } from '@/lib/tournamentFormat';
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
@@ -53,15 +54,10 @@ export default function AdminSlotsPage() {
             
           if (teamErr) console.error("Error fetching teams:", teamErr);
             
-          let matches = 0;
-          const n = teamCount || 0;
-          if (settings.tournament_format === 'ROUND_ROBIN') {
-            matches = (n * (n - 1)) / 2;
-          } else if (settings.tournament_format === 'KNOCKOUT') {
-            matches = n > 0 ? n - 1 : 0;
-          } else {
-            matches = n; 
-          }
+          // Real fixtures if already generated, otherwise a plan using the default format options
+          const { count: existing } = await supabase.from('matches').select('*', { count: 'exact', head: true }).eq('event_id', eventId);
+          const plan = planFixtures((settings.tournament_format || 'ROUND_ROBIN') as TournamentFormat, teamCount || 0, DEFAULT_FORMAT_CONFIG);
+          const matches = existing || (plan.valid ? plan.total : teamCount || 0);
           setTotalMatches(matches);
         }
         

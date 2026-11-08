@@ -36,6 +36,16 @@ class EventTeamInvitationCreate(BaseModel):
 class EventTeamInvitationStatusUpdate(BaseModel):
     status: InvitationStatus
 
+class TeamSeedUpdate(BaseModel):
+    """1 = strongest. Null clears the seed. Groups are dealt in snake order from the seeds, so strong teams are spread out."""
+    seed: Optional[int] = Field(default=None, ge=1, le=64)
+
+class GuestPlayerAdd(BaseModel):
+    """A squad member without an account, added by the captain."""
+    guest_name: str = Field(min_length=1, max_length=60)
+    jersey_number: Optional[int] = Field(default=None, ge=1, le=99)
+    position: Optional[str] = Field(default=None, max_length=20)
+
 class EventRosterPlayerAdd(BaseModel):
     user_id: Optional[str] = None
     guest_name: Optional[str] = None

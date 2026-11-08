@@ -20,6 +20,7 @@ export function PublicNav({
 }) {
   const pathname = usePathname();
   const exploreActive = isActive(pathname, "/explore");
+  const predictActive = isActive(pathname, "/predict");
   
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
@@ -87,6 +88,17 @@ export function PublicNav({
               <span className="material-symbols-outlined text-[22px] shrink-0" style={exploreActive ? { fontVariationSettings: "'FILL' 1" } : undefined}>travel_explore</span>
               <span className="font-label-caps text-label-caps uppercase tracking-widest">Explore</span>
             </Link>
+            <Link
+              href="/predict"
+              className={`group relative flex items-center gap-3 pl-3 pr-2 py-2.5 border-l-2 transition-colors ${
+                predictActive
+                  ? "border-primary-container bg-primary-container/10 text-primary-container"
+                  : "border-transparent text-on-surface-variant hover:text-on-surface hover:bg-surface-variant"
+              }`}
+            >
+              <span className="material-symbols-outlined text-[22px] shrink-0" style={predictActive ? { fontVariationSettings: "'FILL' 1" } : undefined}>emoji_events</span>
+              <span className="font-label-caps text-label-caps uppercase tracking-widest">Predict</span>
+            </Link>
           </div>
         </div>
 
@@ -106,6 +118,10 @@ export function PublicNav({
         <Link href="/explore" className={`flex flex-col items-center justify-center active:scale-90 transition-transform ${exploreActive ? "text-primary-container" : "text-on-surface-variant opacity-80"}`}>
           <span className="material-symbols-outlined" style={exploreActive ? { fontVariationSettings: "'FILL' 1" } : undefined}>travel_explore</span>
           <span className="font-label-caps text-label-caps mt-1 text-[10px] uppercase">Explore</span>
+        </Link>
+        <Link href="/predict" className={`flex flex-col items-center justify-center active:scale-90 transition-transform ${predictActive ? "text-primary-container" : "text-on-surface-variant opacity-80"}`}>
+          <span className="material-symbols-outlined">emoji_events</span>
+          <span className="font-label-caps text-label-caps mt-1 text-[10px] uppercase">Predict</span>
         </Link>
         <Link href="/login" className="flex flex-col items-center justify-center text-on-surface-variant opacity-80 active:scale-90 transition-transform">
           <span className="material-symbols-outlined">login</span>

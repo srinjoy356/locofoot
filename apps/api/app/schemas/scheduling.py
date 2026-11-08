@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional
+from typing import List, Literal, Optional
 from datetime import datetime
 from uuid import UUID
 from enum import Enum
@@ -42,6 +42,17 @@ class ScheduleStateUpdateResponse(BaseModel):
 
 class GenerateFixturesRequest(BaseModel):
     idempotency_key: UUID
+    tournament_format: Optional[str] = None  # falls back to the event's saved format
+    group_count: int = Field(2, ge=2, le=16)  # GROUP_KNOCKOUT only
+    advance_per_group: int = Field(2, ge=1, le=8)  # GROUP_KNOCKOUT only
+    third_place: bool = True
+    double_round_robin_groups: bool = False  # GROUP_KNOCKOUT: home and away inside each group
+    draw: Literal["SEEDED", "RANDOM"] = "SEEDED"  # SEEDED: strongest first (set seeds on the registrations page); RANDOM: shuffled
+
+class KnockoutWinnerRequest(BaseModel):
+    winner_registration_id: UUID
+    shootout_home: Optional[int] = Field(None, ge=0, le=99)  # penalty shoot-out score, if one was played
+    shootout_away: Optional[int] = Field(None, ge=0, le=99)
 
 class GenerateFixturesResponse(BaseModel):
     success: bool

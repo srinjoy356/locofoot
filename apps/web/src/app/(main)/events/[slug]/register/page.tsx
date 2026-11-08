@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, use } from "react";
+import { eventKey } from '@/lib/utils';
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
@@ -22,7 +23,7 @@ export default function EventRegistrationPage({ params }: { params: Promise<{ sl
   useEffect(() => {
     async function load() {
       // For this demo, let's look up by id first
-      const { data } = await supabase.from('events').select('*').eq('id', slug).single();
+      const { data } = await supabase.from('events').select('*').eq(...eventKey(slug)).single();
       if (data) setEvent(data);
       else {
         const { data: bySlug } = await supabase.from('events').select('*').eq('slug', slug).single();

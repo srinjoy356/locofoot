@@ -61,6 +61,9 @@ only so nothing is accidentally built twice.
 | `POST /registrations/{id}/lock` | **FastAPI** | Explicit roster lock; further edits require `admin override` reason |
 | `PATCH /event-team-players/{id}` | **FastAPI** | Jersey number / position edits; blocked once roster is locked unless caller is admin (reason required, logged) |
 | `POST /event-team-players/{id}/withdraw` | **FastAPI** | Team withdrawal mid-event → `WITHDRAWN`, never deleted |
+| `POST /events/{id}/registrations/{reg_id}/guest-players` | **FastAPI** | Captain adds a squad member without an account (`guest_name`, optional `jersey_number`, `position`). DRAFT only, unlocked roster, squad cap and jersey rules apply; audited |
+| `DELETE /events/{id}/registrations/{reg_id}/guest-players/{player_id}` | **FastAPI** | Captain removes a guest from a DRAFT squad |
+| `PUT /events/{id}/registrations/{reg_id}/seed` | **FastAPI** | Event admin sets or clears a team's seed (1 = strongest, unique per event, 409 on a clash). Seeds drive the seeded group draw |
 
 ## Scheduling
 
@@ -131,3 +134,40 @@ only so nothing is accidentally built twice.
 | `GET /admin/events/{id}/dashboard` | **FastAPI** | Aggregated command-centre payload (§66/§131) — cheap enough to be Supabase direct too, but kept in FastAPI if it later needs cross-event platform metrics |
 | `GET /admin/audit-logs` | **FastAPI** | Filtered audit trail view, `PLATFORM_ADMIN`/event-admin scoped |
 | `POST /admin/events/{id}/archive` | **FastAPI** | `COMPLETED → ARCHIVED`, never deletes |
+
+## Competition engine (implemented 2026-10-13)
+
+Prefix `/api/v1/events/{event_id}`. "Admin" = `EVENT_OWNER` or `EVENT_ADMIN`.
+
+| Method & Path | Auth | Purpose |
+|---|---|---|
+| `POST /fixtures/generate` | Admin | Builds the whole format in one call. Body: `idempotency_key`, `draw` (`SEEDED` default, snake-dealt from seeds, or `RANDOM`, shuffled), `tournament_format` (`ROUND_ROBIN`, `DOUBLE_ROUND_ROBIN`, `KNOCKOUT`, `GROUP_KNOCKOUT`; defaults to the saved format), `group_count`, `advance_per_group`, `third_place`, `double_round_robin_groups`. Creates groups, fixtures, bracket rows and placeholder knockout matches. 400 if fixtures already exist |
+| `POST /fixtures/reset` | Admin | Deletes fixtures, groups and bracket and empties the slots. 400 once any match has left `SCHEDULED` |
+| `POST /matches/{match_id}/winner` | Admin, manager or referee | Decides a drawn knockout match. Body: `winner_registration_id`, optional `shootout_home`/`shootout_away` (must agree with the winner). Advances the bracket |
+| `GET /standings/groups` | Public (non-draft events) | Group tables recomputed from completed group matches |
+| `GET /bracket` | Public (non-draft events) | Knockout rounds with resolved teams, placeholders (`Winner of SF1`, `Group A #2`), scores and shoot-out |
+| `POST /schedule/next`, `/slots/*`, `/fixtures/manual`, `/schedule/unassign` | Admin | Live scheduler. A knockout game is only placed after the games that decide its teams |
+| `POST /schedule/override` | Admin | Not implemented (501) |
+
+Match officiating (`/api/v1/events/{event_id}/matches/{match_id}`): `referee/state`, `referee/forfeit` and `referee/event` (POST, PATCH) require
+event staff, a REFEREE role or an assignment on that match; a SCORER (recorder) is refused with 403. `timeline/event` (POST, PATCH,
+**DELETE `/{timeline_event_id}`** = undo, audited) additionally accepts a SCORER. State changes enforce the transition table and kick-off
+needs both lineups confirmed (409 otherwise). `lineups/submit|confirm` require staff or that team's captain. Recording is idempotent on the
+client `id`; a repeat answers `{"duplicate": true}`, any other database error is a 400/500.
+
+## Predictions (implemented 2026-10-13)
+
+Prefix `/api/v1/predictions`. Odds are public; placing needs a signed-in user.
+
+| Method & Path | Auth | Purpose |
+|---|---|---|
+| `GET /live` | Public | Matches open for predictions (live first, then the next kick-offs) |
+| `GET /matches/{match_id}` | Optional | Markets with live odds, suspension state, eligibility and, when signed in, your bets. Creates the markets on first read |
+| `POST /matches/{match_id}/bets` | User | `market_id`, `selection`, `stake` (1-500), `odds` (the price shown), optional `idempotency_key`. 409 `ODDS_CHANGED` / `SUSPENDED` / `MARKET_CLOSED`, 403 `NOT_ELIGIBLE`, 400 `INSUFFICIENT_COINS` |
+| `POST /matches/{match_id}/pause` | Event staff | Freeze or resume predictions for a match |
+| `GET /wallet`, `POST /wallet/refill` | User | Balance (creates the wallet with the starter coins); refill when broke |
+| `GET /bets/me` | User | Your bet history with match context |
+| `GET /leaderboard?event_id=` | Public | Profit ranking, global or per event; private profiles show as "Anonymous player" |
+
+`POST /api/v1/events/{id}/matches/{match}/timeline/events` records up to 100 timeline events in one request and returns a result per event
+(`ok`, `duplicate` or `error`).

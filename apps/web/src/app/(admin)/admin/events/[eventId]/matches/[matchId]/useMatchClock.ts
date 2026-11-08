@@ -17,7 +17,7 @@ export function useMatchClock(eventId: string, matchId: string) {
       const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(eventId);
       
       const promises: any[] = [
-        supabase.from('matches').select('match_state, match_started_at, half_started_at, paused_at').eq('id', matchId).maybeSingle(),
+        supabase.from('matches').select('match_state, match_started_at, half_started_at, paused_at, metadata, home_score, away_score').eq('id', matchId).maybeSingle(),
         supabase.from('match_state_transitions').select('previous_state, new_state').eq('match_id', matchId).order('created_at', { ascending: false }).limit(20)
       ];
       
@@ -93,12 +93,14 @@ export function useMatchClock(eventId: string, matchId: string) {
       
       let baseSeconds = 0;
       const { firstHalfMins, secondHalfMins } = getMatchTimeLimits();
-      
-      if (matchState === 'SECOND_HALF' && eventSettings) {
+      // a paused or finished match keeps counting from the period it was in, not from zero
+      const phase = ['PAUSED', 'FULL_TIME', 'COMPLETED'].includes(matchState) ? previousActiveState : matchState;
+
+      if (phase === 'SECOND_HALF' && eventSettings) {
         baseSeconds = firstHalfMins * 60;
-      } else if (matchState === 'EXTRA_TIME_1' && eventSettings) {
+      } else if (phase === 'EXTRA_TIME_1' && eventSettings) {
         baseSeconds = (firstHalfMins + secondHalfMins) * 60;
-      } else if (matchState === 'EXTRA_TIME_2' && eventSettings) {
+      } else if (phase === 'EXTRA_TIME_2' && eventSettings) {
         baseSeconds = (firstHalfMins + secondHalfMins + eventSettings.extra_time_minutes / 2) * 60;
       }
 
@@ -122,7 +124,7 @@ export function useMatchClock(eventId: string, matchId: string) {
     }
     
     return () => clearInterval(timer);
-  }, [matchState, matchData, eventSettings]);
+  }, [matchState, matchData, eventSettings, previousActiveState]);
 
   const formatClock = () => {
     let baseTimeMinutes = 45; // safe default
@@ -150,13 +152,14 @@ export function useMatchClock(eventId: string, matchId: string) {
       
       const { firstHalfMins, secondHalfMins } = getMatchTimeLimits();
       
-      if (matchState === 'LIVE' || matchState === 'PAUSED' || matchState === 'HALF_TIME') {
+      const phase = ['PAUSED', 'COMPLETED'].includes(matchState) ? previousActiveState : matchState;
+      if (phase === 'LIVE' || phase === 'HALF_TIME') {
         baseTimeMinutes = firstHalfMins;
-      } else if (matchState === 'SECOND_HALF' || matchState === 'FULL_TIME') {
+      } else if (phase === 'SECOND_HALF' || phase === 'FULL_TIME') {
         baseTimeMinutes = firstHalfMins + secondHalfMins;
-      } else if (matchState === 'EXTRA_TIME_1' || matchState === 'EXTRA_TIME_BREAK') {
+      } else if (phase === 'EXTRA_TIME_1' || phase === 'EXTRA_TIME_BREAK') {
         baseTimeMinutes = firstHalfMins + secondHalfMins + (eventSettings.extra_time_minutes / 2);
-      } else if (matchState === 'EXTRA_TIME_2') {
+      } else if (phase === 'EXTRA_TIME_2') {
         baseTimeMinutes = firstHalfMins + secondHalfMins + eventSettings.extra_time_minutes;
       }
     }
@@ -206,5 +209,7 @@ export function useMatchClock(eventId: string, matchId: string) {
     return elapsed >= totalMins * 60;
   };
 
-  return { elapsed, formatClock, matchState, eventSettings, getPeriod, isHalfTimeAllowed, isFullTimeAllowed, previousActiveState };
+  const scores = { home: matchData?.home_score ?? 0, away: matchData?.away_score ?? 0 };
+
+  return { elapsed, formatClock, matchState, scores, eventSettings, getPeriod, isHalfTimeAllowed, isFullTimeAllowed, previousActiveState };
 }

@@ -1,134 +1,11 @@
 import datetime
 from typing import Optional
 from uuid import UUID
-from fastapi import APIRouter, Depends, Query
-from app.core.supabase_client import get_async_service_supabase
-from supabase import AsyncClient
-from app.schemas.statistics import LeaderboardResponse, LeaderboardRow, TournamentStandingRow
-
-router = APIRouter(prefix="/api/v1/statistics", tags=["Statistics"])
-
-@router.get("/leaderboards/{metric}", response_model=LeaderboardResponse)
-async def get_leaderboard(
-    metric: str,
-    scope: str = Query("event", description="Scope of the leaderboard (event, city, country, all-time)"),
-    event_id: Optional[UUID] = None,
-    limit: int = Query(20, le=100),
-    cursor: int = Query(0, description="Offset cursor for pagination"),
-    supabase: AsyncClient = Depends(get_async_service_supabase)
-):
-    """
-    Get a specific leaderboard metric.
-    Metrics supported: golden-boot, playmaker, dribbles, etc.
-    """
-    # Let's call a flexible RPC we will define: get_leaderboard
-    res = await supabase.rpc("get_leaderboard", {
-        "p_metric": metric,
-        "p_scope": scope,
-        "p_event_id": str(event_id) if event_id else None,
-        "p_limit": limit,
-        "p_offset": cursor
-    }).execute()
-    
-    player_ids = [r["event_player_id"] for r in res.data]
-    unique_codes = {}
-    if player_ids:
-        # Join event_team_players with users to get unique_code
-        etp_res = await supabase.table("event_team_players").select("id, user_id, users(unique_code)").in_("id", player_ids).execute()
-        for etp in etp_res.data:
-            users_data = etp.get("users")
-            if users_data and isinstance(users_data, dict):
-                unique_codes[etp["id"]] = users_data.get("unique_code")
-
-    data = []
-    for row in res.data:
-        data.append(LeaderboardRow(
-            event_player_id=row.get("event_player_id"),
-            player_unique_code=unique_codes.get(row.get("event_player_id")),
-            player_name=row.get("player_name", "Unknown"),
-            team_name=row.get("team_name", "Unknown"),
-            team_registration_id=row.get("team_registration_id"),
-            matches_played=row.get("matches_played", 0),
-            minutes_played=row.get("minutes_played", 0),
-            value=row.get("value", 0)
-        ))
-
-    return LeaderboardResponse(
-        metric=metric,
-        scope=scope,
-        filters={"event_id": str(event_id)} if event_id else {},
-        threshold=None,
-        data=data,
-        next_cursor=cursor + limit if len(data) == limit else None,
-        generated_at=datetime.datetime.utcnow().isoformat()
-    )
-
-
-@router.get("/standings/{event_id}", response_model=list[TournamentStandingRow])
-async def get_tournament_standings(
-    event_id: UUID,
-    supabase: AsyncClient = Depends(get_async_service_supabase)
-):
-    """
-    Get tournament standings.
-    """
-    # Fetch event settings for points
-    event_res = await supabase.table("event_settings").select("*").eq("event_id", str(event_id)).execute()
-    settings = event_res.data[0] if event_res.data else {}
-    
-    points_win = settings.get("points_win", 3)
-    points_draw = settings.get("points_draw", 1)
-    points_loss = settings.get("points_loss", 0)
-
-    res = await supabase.table("tournament_standings_view").select("*").eq("event_id", str(event_id)).execute()
-    
-    if not res.data:
-        return []
-
-    team_ids = [r["team_id"] for r in res.data]
-    teams_res = await supabase.table("event_team_registrations").select("id, team_name").in_("id", team_ids).execute()
-    team_names = {t["id"]: t["team_name"] for t in teams_res.data}
-    
-    data = []
-    for row in res.data:
-        points = (row["wins"] * points_win) + (row["draws"] * points_draw) + (row["losses"] * points_loss)
-        data.append(TournamentStandingRow(
-            team_registration_id=row.get("team_id"),
-            team_name=team_names.get(row.get("team_id"), "Unknown Team"),
-            matches_played=row.get("matches_played", 0),
-            wins=row.get("wins", 0),
-            draws=row.get("draws", 0),
-            losses=row.get("losses", 0),
-            goals_for=row.get("goals_for", 0),
-            goals_against=row.get("goals_against", 0),
-            goal_difference=row.get("goal_difference", 0),
-            points=points
-        ))
-        
-    # Python-side sort based on tie-break rules, since points are dynamic
-    data.sort(key=lambda x: (x.points, x.goal_difference, x.goals_for), reverse=True)
-    return data
-
-from app.schemas.statistics import PlayerStatsResponse, TeamStatsResponse
-from pydantic import BaseModel
-
-class TournamentPlayerStatsRow(BaseModel):
-    event_player_id: UUID
-    player_unique_code: str
-    player_name: str
-    team_registration_id: UUID
-    team_name: str
-    matches_played: int
-    minutes_played: int
-    goals: int
-    penalty_goals: int
-import datetime
-from typing import Optional
-from uuid import UUID
 from fastapi import APIRouter, Depends, Query, HTTPException
 from app.core.supabase_client import get_async_service_supabase
 from supabase import AsyncClient
 from app.schemas.statistics import LeaderboardResponse, LeaderboardRow, TournamentStandingRow
+from app.services.tournament_format import rank_teams
 
 router = APIRouter(prefix="/api/v1/statistics", tags=["Statistics"])
 
@@ -194,44 +71,27 @@ async def get_tournament_standings(
     supabase: AsyncClient = Depends(get_async_service_supabase)
 ):
     """
-    Get tournament standings.
+    League table: every approved team (also before it has played), league/group matches only (knockout games are
+    not table games), ordered by points, goal difference, goals for, then head-to-head. Recomputed on every call.
     """
-    # Fetch event settings for points
-    event_res = await supabase.table("event_settings").select("*").eq("event_id", str(event_id)).execute()
-    settings = event_res.data[0] if event_res.data else {}
-    
-    points_win = settings.get("points_win", 3)
-    points_draw = settings.get("points_draw", 1)
-    points_loss = settings.get("points_loss", 0)
+    eid = str(event_id)
+    settings = ((await supabase.table("event_settings").select("points_win, points_draw, points_loss").eq("event_id", eid).execute()).data or [{}])[0]
+    pts = (settings.get("points_win", 3), settings.get("points_draw", 1), settings.get("points_loss", 0))
+    regs = (await supabase.table("event_team_registrations").select("id, team_name, group_id").eq("event_id", eid).eq("status", "APPROVED").execute()).data
+    groups = {g["id"]: g["name"] for g in (await supabase.table("groups").select("id, name").eq("event_id", eid).execute()).data}
+    matches = (await supabase.table("matches").select("home_registration_id, away_registration_id, home_score, away_score")
+               .eq("event_id", eid).eq("match_state", "COMPLETED").is_("bracket_id", "null").execute()).data
 
-    res = await supabase.table("tournament_standings_view").select("*").eq("event_id", str(event_id)).execute()
-    
-    if not res.data:
-        return []
-
-    team_ids = [r["team_id"] for r in res.data]
-    teams_res = await supabase.table("event_team_registrations").select("id, team_name").in_("id", team_ids).execute()
-    team_names = {t["id"]: t["team_name"] for t in teams_res.data}
-    
-    data = []
-    for row in res.data:
-        points = (row["wins"] * points_win) + (row["draws"] * points_draw) + (row["losses"] * points_loss)
-        data.append(TournamentStandingRow(
-            team_registration_id=row.get("team_id"),
-            team_name=team_names.get(row.get("team_id"), "Unknown Team"),
-            matches_played=row.get("matches_played", 0),
-            wins=row.get("wins", 0),
-            draws=row.get("draws", 0),
-            losses=row.get("losses", 0),
-            goals_for=row.get("goals_for", 0),
-            goals_against=row.get("goals_against", 0),
-            goal_difference=row.get("goal_difference", 0),
-            points=points
-        ))
-        
-    # Python-side sort based on tie-break rules, since points are dynamic
-    data.sort(key=lambda x: (x.points, x.goal_difference, x.goals_for), reverse=True)
-    return data
+    rows = []
+    for gid in (sorted(groups, key=lambda g: groups[g]) or [None]):
+        members = [r for r in regs if r["group_id"] == gid] if gid else regs
+        names = {r["id"]: r["team_name"] for r in members}
+        for rank, t in enumerate(rank_teams(list(names), matches, *pts), start=1):
+            rows.append(TournamentStandingRow(
+                team_registration_id=t["team_id"], team_name=names[t["team_id"]], matches_played=t["played"], wins=t["won"], draws=t["drawn"],
+                losses=t["lost"], goals_for=t["gf"], goals_against=t["ga"], goal_difference=t["gd"], points=t["points"],
+                position=rank, group_name=groups.get(gid)))
+    return rows
 
 from app.schemas.statistics import PlayerStatsResponse, TeamStatsResponse
 from pydantic import BaseModel
@@ -288,51 +148,17 @@ async def get_tournament_players_statistics(
     """
     res = await supabase.table("tournament_player_stats_view").select("*").eq("event_id", str(event_id)).execute()
     
+    # SUM() over a player with no rows is NULL, and guests have no unique code: treat both as empty instead of failing the whole table
+    int_fields = [n for n, f in TournamentPlayerStatsRow.model_fields.items() if f.annotation is int]
     data = []
     for r in res.data:
-        data.append(TournamentPlayerStatsRow(
-            event_player_id=r["event_player_id"],
-            player_unique_code=r.get("player_unique_code", ""),
-            player_name=r.get("player_name", "Unknown"),
-            team_registration_id=r["team_registration_id"],
-            team_name=r.get("team_name", "Unknown"),
-            matches_played=r.get("matches_played", 0),
-            minutes_played=r.get("minutes_played") or 0,
-            goals=r.get("goals") or 0,
-            penalty_goals=r.get("penalty_goals") or 0,
-            assists=r.get("assists") or 0,
-            goal_contributions=r.get("goal_contributions") or 0,
-            shots=r.get("shots") or 0,
-            shots_on_target=r.get("shots_on_target") or 0,
-            passes_attempted=r.get("passes_attempted") or 0,
-            passes_completed=r.get("passes_completed") or 0,
-            key_passes=r.get("key_passes") or 0,
-            through_balls=r.get("through_balls") or 0,
-            crosses=r.get("crosses") or 0,
-            big_chances_created=r.get("big_chances_created") or 0,
-            dribbles_attempted=r.get("dribbles_attempted") or 0,
-            successful_dribbles=r.get("successful_dribbles") or 0,
-            ankle_breakers=r.get("ankle_breakers") or 0,
-            nutmegs=r.get("nutmegs") or 0,
-            tackles_attempted=r.get("tackles_attempted") or 0,
-            tackles=r.get("tackles") or 0,
-            interceptions=r.get("interceptions") or 0,
-            recoveries=r.get("recoveries") or 0,
-            clearances=r.get("clearances") or 0,
-            blocks=r.get("blocks") or 0,
-            aerials_won=r.get("aerials_won") or 0,
-            saves=r.get("saves") or 0,
-            penalty_saves=r.get("penalty_saves") or 0,
-            saves_1v1=r.get("saves_1v1") or 0,
-            aerial_claims=r.get("aerial_claims") or 0,
-            sweeper_actions=r.get("sweeper_actions") or 0,
-            fouls_committed=r.get("fouls_committed") or 0,
-            fouls_drawn=r.get("fouls_drawn") or 0,
-            yellow_cards=r.get("yellow_cards") or 0,
-            red_cards=r.get("red_cards") or 0,
-            average_rating=r.get("average_rating")
-        ))
-        
+        row = {k: r.get(k) for k in TournamentPlayerStatsRow.model_fields}
+        for k in int_fields:
+            row[k] = int(row[k] or 0)
+        row["player_unique_code"] = row["player_unique_code"] or ""
+        row["player_name"] = row["player_name"] or "Unknown"
+        row["team_name"] = row["team_name"] or "Unknown"
+        data.append(TournamentPlayerStatsRow(**row))
     return data
 
 @router.get("/players/{event_player_id}")
@@ -388,48 +214,31 @@ async def get_team_statistics(
     team_registration_id: UUID,
     supabase: AsyncClient = Depends(get_async_service_supabase)
 ):
-    """
-    Get aggregated statistics for a specific team.
-    """
-    # Get team name
-    team_res = await supabase.table("event_team_registrations").select("team_name").eq("id", str(team_registration_id)).execute()
-    team_name = team_res.data[0]["team_name"] if team_res.data else "Unknown Team"
-
-    res = await supabase.table("tournament_standings_view").select("*").eq("team_id", str(team_registration_id)).execute()
-    
-    if not res.data:
-        return {
-            "team_registration_id": team_registration_id,
-            "team_name": team_name,
-            "matches_played": 0,
-            "wins": 0,
-            "draws": 0,
-            "losses": 0,
-            "goals_for": 0,
-            "goals_against": 0,
-            "goal_difference": 0,
-            "points": 0,
-            "clean_sheets": 0,
-            "yellow_cards": 0,
-            "red_cards": 0
-        }
-        
-    row = res.data[0]
-    return {
-        "team_registration_id": team_registration_id,
-        "team_name": team_name,
-        "matches_played": row.get("matches_played", 0),
-        "wins": row.get("wins", 0),
-        "draws": row.get("draws", 0),
-        "losses": row.get("losses", 0),
-        "goals_for": row.get("goals_for", 0),
-        "goals_against": row.get("goals_against", 0),
-        "goal_difference": row.get("goal_difference", 0),
-        "points": row.get("points", 0),
-        "clean_sheets": row.get("clean_sheets", 0),
-        "yellow_cards": row.get("yellow_cards", 0),
-        "red_cards": row.get("red_cards", 0)
-    }
+    """One team's record, recomputed from completed matches (knockout games count for the record, not for league points)."""
+    rid = str(team_registration_id)
+    reg = (await supabase.table("event_team_registrations").select("team_name, event_id").eq("id", rid).execute()).data
+    team_name = reg[0]["team_name"] if reg else "Unknown Team"
+    s = ((await supabase.table("event_settings").select("points_win, points_draw, points_loss").eq("event_id", reg[0]["event_id"]).execute()).data or [{}])[0] if reg else {}
+    pw, pd, pl = s.get("points_win", 3), s.get("points_draw", 1), s.get("points_loss", 0)
+    played = (await supabase.table("matches").select("home_registration_id, away_registration_id, home_score, away_score, bracket_id")
+              .eq("match_state", "COMPLETED").or_(f"home_registration_id.eq.{rid},away_registration_id.eq.{rid}").execute()).data
+    out = {"team_registration_id": rid, "team_name": team_name, "matches_played": 0, "wins": 0, "draws": 0, "losses": 0, "goals_for": 0,
+           "goals_against": 0, "goal_difference": 0, "points": 0, "clean_sheets": 0, "yellow_cards": 0, "red_cards": 0}
+    for m in played:
+        gf, ga = (m["home_score"], m["away_score"]) if m["home_registration_id"] == rid else (m["away_score"], m["home_score"])
+        out["matches_played"] += 1
+        out["goals_for"] += gf
+        out["goals_against"] += ga
+        out["clean_sheets"] += ga == 0
+        key = "wins" if gf > ga else "draws" if gf == ga else "losses"
+        out[key] += 1
+        if not m["bracket_id"]:
+            out["points"] += pw if gf > ga else pd if gf == ga else pl
+    out["goal_difference"] = out["goals_for"] - out["goals_against"]
+    cards = (await supabase.table("referee_events").select("event_type").eq("event_registration_id", rid).in_("event_type", ["YELLOW_CARD", "RED_CARD"]).execute()).data
+    out["yellow_cards"] = sum(c["event_type"] == "YELLOW_CARD" for c in cards)
+    out["red_cards"] = sum(c["event_type"] == "RED_CARD" for c in cards)
+    return out
 
 
 @router.get("/tournament-kpis/{event_id}")
@@ -554,38 +363,38 @@ async def get_match_player_performance(
 
 
 
+async def _player_names(supabase: AsyncClient, player_ids: list[str]) -> dict[str, str]:
+    if not player_ids:
+        return {}
+    rows = (await supabase.table("event_team_players").select("id, guest_name, user_id").in_("id", player_ids).execute()).data
+    user_ids = [r["user_id"] for r in rows if r["user_id"]]
+    users = {u["id"]: u for u in (await supabase.table("users").select("id, display_name, username").in_("id", user_ids).execute()).data} if user_ids else {}
+    return {r["id"]: (users.get(r["user_id"], {}).get("display_name") or users.get(r["user_id"], {}).get("username") or r["guest_name"] or "Unknown") for r in rows}
+
+
 @router.get("/tournament-records/{event_id}/goals")
 async def get_tournament_goals(
     event_id: UUID,
     supabase: AsyncClient = Depends(get_async_service_supabase)
 ):
-    """Get all goals scored in a tournament."""
-    # Use RPC or complex join
-    # Actually, postgrest can do:
-    res = await supabase.table("match_timeline_events") \
-        .select("id, display_minute, metadata, matches!inner(event_id, title), actor:actor_player_id(users(display_name, username))") \
-        .eq("matches.event_id", str(event_id)) \
-        .eq("event_type", "SHOT") \
-        .eq("metadata->>result", "GOAL") \
-        .order("created_at", desc=True) \
-        .execute()
-    
-    return res.data
+    """All goals scored in a tournament, newest first."""
+    res = await supabase.table("match_timeline_events")         .select("id, match_id, display_minute, metadata, actor_player_id, assist_player_id, actor_registration_id, matches!inner(event_id)")         .eq("matches.event_id", str(event_id)).eq("event_type", "SHOT").eq("metadata->>result", "GOAL")         .order("created_at", desc=True).execute()
+    names = await _player_names(supabase, list({x for r in res.data for x in (r["actor_player_id"], r["assist_player_id"]) if x}))
+    return [{"id": r["id"], "match_id": r["match_id"], "minute": r["display_minute"], "scorer": names.get(r["actor_player_id"]),
+             "assist": names.get(r["assist_player_id"]), "team_registration_id": r["actor_registration_id"], "penalty": (r["metadata"] or {}).get("situation") == "PENALTY"}
+            for r in res.data]
+
 
 @router.get("/tournament-records/{event_id}/cards")
 async def get_tournament_cards(
     event_id: UUID,
     supabase: AsyncClient = Depends(get_async_service_supabase)
 ):
-    """Get all cards issued in a tournament."""
-    res = await supabase.table("match_timeline_events") \
-        .select("id, display_minute, event_type, matches!inner(event_id, title), actor:actor_player_id(users(display_name, username))") \
-        .eq("matches.event_id", str(event_id)) \
-        .in_("event_type", ["YELLOW_CARD", "RED_CARD"]) \
-        .order("created_at", desc=True) \
-        .execute()
-    
-    return res.data
+    """All cards shown in a tournament (cards are referee events), newest first."""
+    res = await supabase.table("referee_events")         .select("id, match_id, display_minute, event_type, event_player_id, event_registration_id, matches!inner(event_id)")         .eq("matches.event_id", str(event_id)).in_("event_type", ["YELLOW_CARD", "RED_CARD"])         .order("created_at", desc=True).execute()
+    names = await _player_names(supabase, list({r["event_player_id"] for r in res.data if r["event_player_id"]}))
+    return [{"id": r["id"], "match_id": r["match_id"], "minute": r["display_minute"], "card": r["event_type"], "player": names.get(r["event_player_id"]),
+             "team_registration_id": r["event_registration_id"]} for r in res.data]
 
 @router.get("/advanced/clutch/{event_id}")
 async def get_advanced_clutch(
